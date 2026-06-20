@@ -1,0 +1,15 @@
+# Data and downloaded files
+SOLEXS_downloads/data/
+VELC_DOWNLOADS/
+*.fits
+*.zip
+*.pdf
+
+# Model files
+SOLEXS_downloads/models/
+*.pkl
+
+# Caches and logs
+__pycache__/
+*.log
+SOLEXS_downloads/scripts/catboost_info/
