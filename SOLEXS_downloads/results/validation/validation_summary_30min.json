@@ -1,0 +1,19 @@
+{
+  "horizon": "30min",
+  "n_samples": 137027,
+  "n_onsets": 2452,
+  "n_features": 473,
+  "lomo_tss_mean": 0.2767,
+  "lomo_tss_std": 0.1257,
+  "lomo_auc_mean": 0.6412,
+  "best_model": "XGBoost",
+  "best_model_tss": 0.2946,
+  "calib_ece_raw": 0.016090570811849194,
+  "calib_ece_platt": 0.005371205499702571,
+  "calib_ece_iso": 0.0019030829930393944,
+  "calib_tss_raw": 0.0137,
+  "calib_tss_platt": -0.0,
+  "calib_tss_iso": 0.2316,
+  "most_important_group": "Delta features",
+  "most_important_group_drop": 0.0111
+}

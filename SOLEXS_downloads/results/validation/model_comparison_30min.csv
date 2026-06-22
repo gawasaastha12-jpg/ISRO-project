@@ -1,0 +1,5 @@
+model,n_folds,tss_mean,tss_std,auc_mean,sens_mean,spec_mean
+XGBoost,5,0.2946,0.051,0.6901,0.7689,0.5257
+LightGBM,5,0.2754,0.0756,0.6347,0.6656,0.6098
+MLP,5,0.2676,0.0608,0.6978,0.5739,0.6938
+LogisticReg,5,0.2452,0.0346,0.6516,0.722,0.5232

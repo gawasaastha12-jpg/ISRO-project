@@ -1,0 +1,13 @@
+group,n_features_removed,tss_without,tss_drop
+Temporal grad,98,0.0498,0.0267
+Spectral,39,0.0549,0.0216
+Peak evol (G9),26,0.0552,0.0213
+2nd-order (G8),26,0.062,0.0145
+Slope features,42,0.0633,0.0132
+Delta features,16,0.0653,0.0112
+Roll window,30,0.0664,0.0101
+Multi-scale,39,0.0681,0.0084
+Rolling (G7),62,0.0708,0.0057
+Morphology,39,0.0747,0.0018
+Basic stats,308,0.1015,-0.025
+Lag features,385,0.1613,-0.0848

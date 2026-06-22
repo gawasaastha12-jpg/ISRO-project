@@ -1,0 +1,19 @@
+{
+  "horizon": "5min",
+  "n_samples": 140022,
+  "n_onsets": 2505,
+  "n_features": 473,
+  "lomo_tss_mean": 0.6481,
+  "lomo_tss_std": 0.0623,
+  "lomo_auc_mean": 0.8443,
+  "best_model": "XGBoost",
+  "best_model_tss": 0.6885,
+  "calib_ece_raw": 0.009292652538086508,
+  "calib_ece_platt": 0.003621511742290719,
+  "calib_ece_iso": 0.0009341762315857523,
+  "calib_tss_raw": 0.5466,
+  "calib_tss_platt": 0.4111,
+  "calib_tss_iso": 0.6621,
+  "most_important_group": "Peak evol (G9)",
+  "most_important_group_drop": 0.031
+}

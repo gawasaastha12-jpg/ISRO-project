@@ -1,0 +1,19 @@
+{
+  "horizon": "60min",
+  "n_samples": 133433,
+  "n_onsets": 2400,
+  "n_features": 473,
+  "lomo_tss_mean": 0.1737,
+  "lomo_tss_std": 0.076,
+  "lomo_auc_mean": 0.576,
+  "best_model": "LogisticReg",
+  "best_model_tss": 0.2104,
+  "calib_ece_raw": 0.017396601337107825,
+  "calib_ece_platt": 0.005332027258120786,
+  "calib_ece_iso": 0.0022065148865687504,
+  "calib_tss_raw": 0.0116,
+  "calib_tss_platt": -0.0,
+  "calib_tss_iso": 0.1595,
+  "most_important_group": "Temporal grad",
+  "most_important_group_drop": 0.0267
+}
