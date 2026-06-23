@@ -1,6 +1,7 @@
 # Data and downloaded files
 SOLEXS_downloads/data/
-VELC_DOWNLOADS/
+VELC_DOWNLOADS/*
+!VELC_DOWNLOADS/VELC_SCRIPTS/
 *.fits
 *.zip
 *.pdf
