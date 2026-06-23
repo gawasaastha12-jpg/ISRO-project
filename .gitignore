@@ -2,6 +2,8 @@
 SOLEXS_downloads/data/
 VELC_DOWNLOADS/*
 !VELC_DOWNLOADS/VELC_SCRIPTS/
+!VELC_DOWNLOADS/features
+!VELC_DOWNLOADS/processed_images
 *.fits
 *.zip
 *.pdf
