@@ -1,0 +1,6 @@
+rank,frame_idx,filename,distance,similarity,Coronal_State,Novelty_Class,Novelty_Score,activity_score,gain
+1,2,VS1_T26_0212_003435_20260324_035710_HG_lev1_V2_1.fits,1.6517,0.7598,Unknown,Unknown,0.0,0.0,HG
+2,4,VS1_T26_0212_003435_20260324_035759_HG_lev1_V2_1.fits,2.2131,0.6921,Unknown,Unknown,0.0,0.0,HG
+3,6,VS1_T26_0212_003435_20260324_035848_HG_lev1_V2_1.fits,3.2284,0.5845,Unknown,Unknown,0.0,0.0,HG
+4,8,VS1_T26_0212_003435_20260324_035937_HG_lev1_V2_1.fits,4.9458,0.4393,Unknown,Unknown,0.0,0.0,HG
+5,40,VS1_T26_0219_003442_20260325_164726_HG_lev1_V2_1.fits,5.0854,0.4292,Unknown,Unknown,0.0,0.0,HG

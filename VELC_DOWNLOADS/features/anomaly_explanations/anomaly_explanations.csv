@@ -1,0 +1,26 @@
+Frame_ID,filename,DATE-OBS,Novelty_Score,Novelty_Class,Coronal_State,Most_Anomalous_Feature,Most_Anomalous_Z,Second_Feature,Second_Z,Third_Feature,Third_Z
+0,VS1_T26_0212_003435_20260324_035621_HG_lev1_V2_1.fits,2026-03-24 03:56:21.921680,0.6344612732793365,Highly Anomalous,Active Corona,Coronal_Index,2.253,Spatial_Index,1.594,Brightness_Index,1.433
+1,VS1_T26_0212_003435_20260324_035621_LG_lev1_V2_1.fits,2026-03-24 03:56:21.921680,0.6005167758089228,Highly Anomalous,Structured Corona,Coronal_Index,-1.898,Brightness_Index,-1.791,Morphology_Index,1.148
+2,VS1_T26_0212_003435_20260324_035710_HG_lev1_V2_1.fits,2026-03-24 03:57:10.824395,0.5999854640672267,Highly Anomalous,Active Corona,Coronal_Index,2.061,Spatial_Index,1.474,Brightness_Index,1.422
+3,VS1_T26_0212_003435_20260324_035710_LG_lev1_V2_1.fits,2026-03-24 03:57:10.824395,0.5059851478544689,Unusual,Structured Corona,Brightness_Index,-1.489,Coronal_Index,-1.3,Morphology_Index,1.078
+4,VS1_T26_0212_003435_20260324_035759_HG_lev1_V2_1.fits,2026-03-24 03:57:59.726975,0.577005116774942,Highly Anomalous,Active Corona,Coronal_Index,2.067,Spatial_Index,1.462,Brightness_Index,1.422
+5,VS1_T26_0212_003435_20260324_035759_LG_lev1_V2_1.fits,2026-03-24 03:57:59.726975,0.5388935466768693,Unusual,Structured Corona,Brightness_Index,-1.459,Morphology_Index,1.424,Coronal_Index,-1.209
+6,VS1_T26_0212_003435_20260324_035848_HG_lev1_V2_1.fits,2026-03-24 03:58:48.629690,0.5783531279918055,Highly Anomalous,Active Corona,Coronal_Index,2.0,Brightness_Index,1.417,Spatial_Index,1.411
+7,VS1_T26_0212_003435_20260324_035848_LG_lev1_V2_1.fits,2026-03-24 03:58:48.629690,0.5062597312850571,Unusual,Structured Corona,Brightness_Index,-1.404,Morphology_Index,1.38,Coronal_Index,-1.178
+8,VS1_T26_0212_003435_20260324_035937_HG_lev1_V2_1.fits,2026-03-24 03:59:37.532405,0.6237127031902544,Highly Anomalous,Active Corona,Coronal_Index,1.911,Spatial_Index,1.315,Brightness_Index,1.234
+13,VS1_T26_0219_003442_20260325_163602_LG_lev1_V2_1.fits,2026-03-25 16:36:02.063210,0.5343277347795828,Unusual,Structured Corona,Coronal_Index,-1.877,Brightness_Index,-1.525,Spatial_Index,-1.405
+17,VS1_T26_0219_003442_20260325_163739_LG_lev1_V2_1.fits,2026-03-25 16:37:39.868505,0.545499693107645,Unusual,Structured Corona,Coronal_Index,-1.874,Brightness_Index,-1.553,Spatial_Index,-1.435
+22,VS1_T26_0219_003442_20260325_164006_LG_lev1_V2_1.fits,2026-03-25 16:40:06.576390,0.5070543521088756,Unusual,Structured Corona,Coronal_Index,-1.779,Brightness_Index,-1.43,Spatial_Index,-1.319
+55,VS1_T26_0219_003442_20260325_165309_LG_lev1_V2_1.fits,2026-03-25 16:53:09.018540,0.52443169385404,Unusual,Structured Corona,Coronal_Index,-1.63,Brightness_Index,-1.472,Spatial_Index,-0.973
+58,VS1_T26_0219_003442_20260325_165446_HG_lev1_V2_1.fits,2026-03-25 16:54:46.823835,0.5491055582686095,Unusual,Quiet Corona,Spatial_Index,1.188,Brightness_Index,1.044,Morphology_Index,-0.97
+59,VS1_T26_0219_003442_20260325_165446_LG_lev1_V2_1.fits,2026-03-25 16:54:46.823835,0.5303584301164442,Unusual,Structured Corona,Coronal_Index,-1.811,Brightness_Index,-1.519,VELC_Scientific_Activity,-1.106
+60,VS1_T26_0219_003442_20260325_165535_LG_lev1_V2_1.fits,2026-03-25 16:55:35.726425,0.5812356835274647,Highly Anomalous,Structured Corona,Coronal_Index,-1.822,VELC_Scientific_Activity,-1.568,Brightness_Index,-1.554
+61,VS1_T26_0219_003442_20260325_165535_HG_lev1_V2_1.fits,2026-03-25 16:55:35.726425,0.5267034992179428,Unusual,Quiet Corona,Spatial_Index,1.293,Brightness_Index,1.061,Texture_Index,0.993
+62,VS1_T26_0219_003442_20260325_165624_HG_lev1_V2_1.fits,2026-03-25 16:56:24.629130,0.5733114638538157,Unusual,Active Corona,Spatial_Index,1.349,Brightness_Index,1.267,Coronal_Index,1.24
+63,VS1_T26_0219_003442_20260325_165624_LG_lev1_V2_1.fits,2026-03-25 16:56:24.629130,0.6944346151766477,Highly Anomalous,Structured Corona,Coronal_Index,-2.85,Brightness_Index,-2.159,VELC_Scientific_Activity,-2.061
+64,VS1_T26_0219_003442_20260325_165713_HG_lev1_V2_1.fits,2026-03-25 16:57:13.531720,0.5086957512532784,Unusual,Quiet Corona,Spatial_Index,1.189,Brightness_Index,1.046,Morphology_Index,-0.97
+83,VS1_T26_0219_003442_20260325_170433_LG_lev1_V2_1.fits,2026-03-25 17:04:33.655500,0.5099157591440333,Unusual,Highly Structured Corona,VELC_Scientific_Activity,1.981,Texture_Index,-1.286,Morphology_Index,1.228
+85,VS1_T26_0219_003442_20260325_170522_LG_lev1_V2_1.fits,2026-03-25 17:05:22.558215,0.5323880743822236,Unusual,Highly Structured Corona,VELC_Scientific_Activity,2.184,Texture_Index,-1.399,Gradient_Index,1.364
+89,VS1_T26_0219_003442_20260325_170700_LG_lev1_V2_1.fits,2026-03-25 17:07:00.363260,0.5740846092418921,Highly Anomalous,Highly Structured Corona,VELC_Scientific_Activity,2.545,Morphology_Index,1.425,Texture_Index,-1.404
+93,VS1_T26_0219_003442_20260325_170838_LG_lev1_V2_1.fits,2026-03-25 17:08:38.168565,0.621916814244363,Highly Anomalous,Highly Structured Corona,VELC_Scientific_Activity,2.909,Gradient_Index,1.518,Morphology_Index,1.496
+97,VS1_T26_0219_003442_20260325_171015_LG_lev1_V2_1.fits,2026-03-25 17:10:15.973860,0.5473741562650302,Unusual,Highly Structured Corona,VELC_Scientific_Activity,2.471,Gradient_Index,1.366,Morphology_Index,1.332
