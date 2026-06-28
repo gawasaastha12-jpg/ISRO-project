@@ -728,8 +728,9 @@ def run_pipeline():
                 for lc in lc_files:
                     try:
                         with fits.open(lc) as hdul:
-                            data   = hdul[1].data
+                            data = hdul[1].data
                             counts = np.array(data["COUNTS"])
+                            times  = np.array(data["TIME"])
                             counts = np.nan_to_num(counts)
                     except Exception:
                         continue
@@ -739,7 +740,19 @@ def run_pipeline():
                         feats  = extract_features(window)
                         if feats is None:
                             continue
+                        # --------------------------------------------------
+                        # Window timing information
+                        # --------------------------------------------------
 
+                        window_start = times[start]
+                        window_end = times[start + WINDOW_SIZE - 1]
+
+                        feats["window_start_time"] = window_start
+                        feats["window_end_time"] = window_end
+                        feats["window_mid_time"] = (window_start + window_end) / 2.0
+
+                        # window number inside this file
+                        feats["window_index"] = start
                         if feats["label"] == 0:
                             if np.random.rand() > QUIET_KEEP_FRACTION:
                                 continue

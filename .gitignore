@@ -7,7 +7,8 @@ VELC_DOWNLOADS/*
 *.fits
 *.zip
 *.pdf
-
+HE1OS
+frontend
 # Model files
 SOLEXS_downloads/models/
 *.pkl
@@ -16,3 +17,8 @@ SOLEXS_downloads/models/
 __pycache__/
 *.log
 SOLEXS_downloads/scripts/catboost_info/
+
+# Generated features and outputs
+He1os_script/features/
+outputs/
+fusion_engine/outputs/
