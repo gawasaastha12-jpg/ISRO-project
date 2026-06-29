@@ -8,7 +8,6 @@ VELC_DOWNLOADS/*
 *.zip
 *.pdf
 HE1OS
-frontend
 # Model files
 SOLEXS_downloads/models/
 *.pkl
