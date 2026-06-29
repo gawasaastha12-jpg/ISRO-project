@@ -82,13 +82,13 @@ export default function EnhancedAsteroidBelt({ onComplete }: EnhancedAsteroidBel
 
       const mesh = new THREE.Mesh(geometry, material);
 
-      // Random position in field
+      // Random position in field (aligned with camera path for dynamic collisions)
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 200 + 50;
+      const radius = Math.random() * 250;
 
       mesh.position.set(
         Math.cos(angle) * radius,
-        (Math.random() - 0.5) * 100,
+        (Math.random() - 0.5) * 20,
         Math.sin(angle) * radius - 500
       );
 

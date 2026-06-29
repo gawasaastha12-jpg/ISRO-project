@@ -145,7 +145,10 @@ export default function WormholeTransition({
       renderer.render(scene, camera);
 
       if (progress >= 1) {
-        cancelAnimationFrame(animationFrameRef.current);
+        console.log('WormholeTransition: Completed. Progress:', progress, 'Elapsed:', elapsed, 'Duration:', duration);
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
         onComplete?.();
       }
     };
