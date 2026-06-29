@@ -1,91 +1,83 @@
 import React, { useEffect, useState } from 'react';
-import { BrainCircuit, GitCommit, GitBranch } from 'lucide-react';
-import { MOCK_AI_FEATURES } from '../../lib/mock-data';
+import { BrainCircuit, Flame, Activity } from 'lucide-react';
+import { useDashboard } from '../../contexts/DashboardContext';
+import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts';
 
-export function ExplainableAIPanel() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function HeliosActivityPanel() {
+  const { data } = useDashboard();
+  const hel1os = data?.instruments?.hel1os;
+  const hel1osData = [{ flux: hel1os?.flux || 0 }, { flux: hel1os?.flux || 0 }];
 
   return (
-    <div className="flex flex-col p-4 bg-cosmic-navy/50 border border-border/50 rounded-lg h-full relative overflow-hidden">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold tracking-wide uppercase text-sm flex items-center" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-          <BrainCircuit className="w-4 h-4 mr-2 text-starlight-white" />
-          Explainable AI (SHAP)
-        </h3>
+    <div className="flex flex-col p-6 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] gsap-panel">
+      <div className="text-muted-foreground flex items-center space-x-2 mb-6">
+        <Flame className="w-4 h-4 text-[#ff9f1c] drop-shadow-[0_0_8px_rgba(255,159,28,0.8)]" />
+        <span className="font-bold tracking-wider text-xs uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>HEL1OS Activity</span>
       </div>
-      
-      <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-        <div className="text-xs text-muted-foreground uppercase mb-2 border-b border-border/30 pb-1">Top Contributing Features</div>
-        
-        {MOCK_AI_FEATURES.map((feature, i) => (
-          <div key={feature.name} className="flex flex-col space-y-1 group">
-            <div className="flex justify-between text-xs">
-              <span className="text-starlight-white font-medium">{feature.name}</span>
-              <span className="text-electric-blue" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{feature.value}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              {/* Waterfall bar */}
-              <div className="flex-1 h-1.5 bg-black rounded-full overflow-hidden flex justify-end">
-                <div 
-                  className="h-full bg-electric-blue transition-all duration-1000 ease-out origin-right" 
-                  style={{ 
-                    width: mounted ? `${feature.impact}%` : '0%',
-                    transform: mounted ? 'scaleX(1)' : 'scaleX(0)'
-                  }} 
-                />
-              </div>
-              <span className="text-[9px] text-muted-foreground w-12 text-right">{feature.raw}</span>
-            </div>
+
+      <div className="flex-1 flex flex-col justify-between">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-muted-foreground uppercase">Hard X-ray Flux</span>
+            <span className="text-2xl font-black text-[#ff9f1c]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{hel1os?.flux?.toExponential(1) || '0.0e0'}</span>
           </div>
-        ))}
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] text-muted-foreground uppercase">Current State</span>
+            <span className="text-sm font-bold text-starlight-white">{hel1os?.activity_state || '--'}</span>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+            <span>Recent Bursts</span>
+            <span className="text-starlight-white">{hel1os?.recent_bursts || 0} in 1hr</span>
+          </div>
+          <div className="w-full h-1 bg-black rounded-full overflow-hidden">
+            <div className="h-full bg-[#ff9f1c]" style={{ width: '75%' }} />
+          </div>
+        </div>
+
+        <div className="h-16 w-full mt-6">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={hel1osData}>
+              <YAxis domain={['dataMin', 'dataMax']} hide />
+              <Line type="monotone" dataKey="flux" stroke="#ff9f1c" strokeWidth={2} dot={false} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
 }
 
-import { MOCK_FUSION_REASONING } from '../../lib/mock-data';
+export function ExplainableAIPanel() {
+  const { data } = useDashboard();
+  const explainability = data?.analytics?.explainability?.horizons || {};
+  const horizons = ['5m', '10m', '15m', '30m', '60m', '120m', '180m'];
 
-export function FusionReasoningPanel() {
   return (
-    <div className="flex flex-col p-4 bg-cosmic-navy/50 border border-border/50 rounded-lg h-full relative overflow-hidden">
+    <div className="flex flex-col p-6 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] gsap-panel overflow-hidden">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold tracking-wide uppercase text-sm flex items-center text-starlight-white" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-          <GitCommit className="w-4 h-4 mr-2" />
-          Fusion Reasoning
+        <h3 className="font-bold tracking-wide uppercase text-xs flex items-center text-muted-foreground" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+          <BrainCircuit className="w-4 h-4 mr-2 text-[#7c3aed] drop-shadow-[0_0_8px_rgba(124,58,237,0.8)]" />
+          Explainable AI (Top Features by Horizon)
         </h3>
       </div>
-      
-      <div className="flex flex-col h-full relative">
-        {/* Connection Line */}
-        <div className="absolute left-4 top-4 bottom-12 w-px bg-border z-0"></div>
 
-        <div className="space-y-6 z-10 flex-1">
-          {MOCK_FUSION_REASONING.map((node, i) => (
-            <div key={node.id} className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full bg-cosmic-navy border border-border flex items-center justify-center shrink-0 shadow-lg">
-                <span className="text-[10px] font-bold text-muted-foreground">{node.confidence}%</span>
-              </div>
-              <div className="flex flex-col pt-1">
-                <span className="text-xs font-bold text-starlight-white">{node.component}</span>
-                <span className="text-xs text-muted-foreground">{node.reason}</span>
-              </div>
+      <div className="flex flex-row space-x-2 overflow-x-auto custom-scrollbar pb-2">
+        {horizons.map(h => (
+          <div key={h} className="min-w-[120px] flex-1 bg-white/5 border border-white/10 rounded p-2 flex flex-col">
+            <div className="text-[10px] font-bold text-[#00d9ff] border-b border-white/10 pb-1 mb-2 text-center">{h}</div>
+            <div className="flex flex-col space-y-2">
+              {(explainability[h] || []).map((feature: any, idx: number) => (
+                <div key={idx} className="flex flex-col">
+                  <span className="text-[9px] text-starlight-white truncate" title={feature.name}>{feature.name}</span>
+                  <span className="text-[10px] text-[#00ff88]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{feature.value}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-border/30 flex items-center space-x-3 z-10">
-           <div className="w-8 h-8 rounded-full bg-green-500/20 border border-green-500 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-             <GitBranch className="w-4 h-4 text-green-400" />
-           </div>
-           <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground uppercase">Final Confidence</span>
-              <span className="text-sm font-bold text-green-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>67.9% (Converged)</span>
-           </div>
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

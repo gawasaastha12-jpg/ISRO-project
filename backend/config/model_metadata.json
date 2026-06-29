@@ -1,0 +1,92 @@
+{
+  "solexs": {
+    "forecast_5min": {
+      "version": "v3.2",
+      "trained_on": "2026-06-21",
+      "dataset": "forecast_5min.csv",
+      "accuracy": 0.94,
+      "f1": 0.91,
+      "auc": 0.97
+    },
+    "forecast_10min": {
+      "version": "v3.2",
+      "trained_on": "2026-06-21",
+      "dataset": "forecast_10min.csv",
+      "accuracy": 0.93,
+      "f1": 0.90,
+      "auc": 0.96
+    },
+    "forecast_15min": {
+      "version": "v3.2",
+      "trained_on": "2026-06-21",
+      "dataset": "forecast_15min.csv",
+      "accuracy": 0.92,
+      "f1": 0.89,
+      "auc": 0.95
+    },
+    "forecast_30min": {
+      "version": "v3.2",
+      "trained_on": "2026-06-21",
+      "dataset": "forecast_30min.csv",
+      "accuracy": 0.90,
+      "f1": 0.88,
+      "auc": 0.94
+    },
+    "forecast_60min": {
+      "version": "v3.2",
+      "trained_on": "2026-06-21",
+      "dataset": "forecast_60min.csv",
+      "accuracy": 0.87,
+      "f1": 0.85,
+      "auc": 0.91
+    },
+    "forecast_120min": {
+      "version": "v3.1",
+      "trained_on": "2026-05-15",
+      "dataset": "forecast_120min.csv",
+      "accuracy": 0.83,
+      "f1": 0.81,
+      "auc": 0.87
+    },
+    "forecast_180min": {
+      "version": "v3.1",
+      "trained_on": "2026-05-15",
+      "dataset": "forecast_180min.csv",
+      "accuracy": 0.80,
+      "f1": 0.78,
+      "auc": 0.84
+    }
+  },
+  "hel1os": {
+    "version": "v2.0",
+    "trained_on": "2026-01-10",
+    "dataset": "hel1os_features.csv",
+    "accuracy": 0.96,
+    "f1": 0.95,
+    "auc": 0.98
+  },
+  "velc": {
+    "version": "v1.4",
+    "trained_on": "2025-11-20",
+    "dataset": "velc_coronal_images.zip",
+    "accuracy": 0.89,
+    "f1": 0.88,
+    "auc": 0.93
+  },
+  "correlation": {
+    "version": "v1.1",
+    "trained_on": "2026-02-15",
+    "dataset": "CORRELATED_SOLAR_EVENTS.csv",
+    "accuracy": 0.91,
+    "f1": 0.89,
+    "auc": 0.94
+  },
+  "fusion": {
+    "version": "v2.2",
+    "trained_on": "2026-04-10",
+    "dataset": "bayesian_priors.json",
+    "accuracy": 0.95,
+    "f1": 0.94,
+    "auc": 0.98
+  }
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Waves, Flame, Scan, BrainCircuit } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts';
-import { generateLightcurveData } from '../../lib/mock-data';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 // Small sparkline component for trends
 const Sparkline = ({ data, color }: { data: any[], color: string }) => (
@@ -16,10 +16,19 @@ const Sparkline = ({ data, color }: { data: any[], color: string }) => (
 );
 
 export function IntelligenceCards() {
-  // Generate some random data for sparklines
-  const solexsData = generateLightcurveData().slice(-20);
-  const hel1osData = generateLightcurveData().slice(-20);
-  const velcData = generateLightcurveData().slice(-20);
+  const { data } = useDashboard();
+  
+  const solexs = data?.instruments?.solexs || {};
+  const hel1os = data?.instruments?.hel1os || {};
+  const velc = data?.instruments?.velc || {};
+  const fusion = data?.analytics?.fusion || {};
+
+  // For sparklines we use the scalar current value just to render a flat line since history isn't fetched
+  const rawSolexsProb = solexs.forecast_confidence ?? solexs.confidence ?? solexs.probability ?? 0;
+  const solexsProbPct = rawSolexsProb <= 1.0 ? rawSolexsProb * 100 : rawSolexsProb;
+  const solexsData = [{ flux: solexsProbPct }, { flux: solexsProbPct }];
+  const hel1osData = [{ flux: hel1os.activity_score || 0 }, { flux: hel1os.activity_score || 0 }];
+  const velcData = [{ flux: velc.novelty_score || 0 }, { flux: velc.novelty_score || 0 }];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
@@ -36,17 +45,17 @@ export function IntelligenceCards() {
         <div className="space-y-3">
           <div className="flex justify-between items-end">
             <span className="text-sm text-muted-foreground">Forecast</span>
-            <span className="text-xl font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>B-Class</span>
+            <span className="text-xl font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{solexs.forecast || '--'}</span>
           </div>
           
           <div className="flex justify-between items-end">
             <span className="text-sm text-muted-foreground">Trend</span>
-            <span className="text-sm font-bold text-green-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Rising ↑</span>
+            <span className="text-sm font-bold text-green-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{solexs.trajectory || '--'}</span>
           </div>
           
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Peaks detected</span>
-            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>3 in last 1hr</span>
+            <span className="text-sm text-muted-foreground">Forecast Probability</span>
+            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{((solexs.forecast_confidence ?? solexs.confidence ?? 0) <= 1.0 ? (solexs.forecast_confidence ?? solexs.confidence ?? 0) * 100 : (solexs.forecast_confidence ?? solexs.confidence ?? 0)).toFixed(1)}%</span>
           </div>
         </div>
         
@@ -66,17 +75,17 @@ export function IntelligenceCards() {
         <div className="space-y-3">
           <div className="flex justify-between items-end">
             <span className="text-sm text-muted-foreground">Activity</span>
-            <span className="text-xl font-bold text-orange-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>High</span>
+            <span className="text-xl font-bold text-orange-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{hel1os.activity_score?.toFixed(1) || '0.0'}</span>
           </div>
           
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Flux State</span>
-            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Hard</span>
+            <span className="text-sm text-muted-foreground">State</span>
+            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{hel1os.activity_state || '--'}</span>
           </div>
           
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Delta (5m)</span>
-            <span className="text-sm font-bold text-red-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>+2.4σ</span>
+            <span className="text-sm text-muted-foreground">Recent Bursts</span>
+            <span className="text-sm font-bold text-red-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{hel1os.recent_bursts || 0}</span>
           </div>
         </div>
 
@@ -95,18 +104,18 @@ export function IntelligenceCards() {
         
         <div className="space-y-3">
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Coronal State</span>
-            <span className="text-xl font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Active</span>
+            <span className="text-sm text-muted-foreground">Status</span>
+            <span className="text-xl font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{velc.status || '--'}</span>
           </div>
           
           <div className="flex justify-between items-end">
             <span className="text-sm text-muted-foreground">Novelty Score</span>
-            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>84/100</span>
+            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{velc.novelty_score || '0'}</span>
           </div>
           
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Structures</span>
-            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>2 Loops detected</span>
+            <span className="text-sm text-muted-foreground">Anomalies</span>
+            <span className="text-sm font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{velc.anomaly_boxes || 0} detected</span>
           </div>
         </div>
 
@@ -125,24 +134,24 @@ export function IntelligenceCards() {
         
         <div className="space-y-3">
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Confidence</span>
-            <span className="text-xl font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>67.9%</span>
+            <span className="text-sm text-muted-foreground">Fusion Confidence</span>
+            <span className="text-xl font-bold text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{(((fusion.forecast_confidence ?? fusion.confidence ?? 0) <= 1.0 ? (fusion.forecast_confidence ?? fusion.confidence ?? 0) * 100 : (fusion.forecast_confidence ?? fusion.confidence ?? 0))).toFixed(1)}%</span>
           </div>
           
           <div className="flex justify-between items-end">
             <span className="text-sm text-muted-foreground">Risk</span>
-            <span className="text-sm font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Elevated</span>
+            <span className="text-sm font-bold text-yellow-500" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{fusion.alert_level || 'NORMAL'}</span>
           </div>
           
           <div className="flex justify-between items-end">
-            <span className="text-sm text-muted-foreground">Bayesian Fusion</span>
-            <span className="text-sm font-bold text-green-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>Converged</span>
+            <span className="text-sm text-muted-foreground">Forecast</span>
+            <span className="text-sm font-bold text-green-400" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{fusion.forecast ?? fusion.prediction ?? '--'}</span>
           </div>
         </div>
 
         {/* Confidence Meter */}
         <div className="w-full h-2 bg-black rounded-full mt-6 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500" style={{ width: '67.9%' }} />
+          <div className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500" style={{ width: `${((fusion.forecast_confidence ?? fusion.confidence ?? 0) <= 1.0 ? (fusion.forecast_confidence ?? fusion.confidence ?? 0) * 100 : (fusion.forecast_confidence ?? fusion.confidence ?? 0))}%` }} />
         </div>
       </div>
     </div>

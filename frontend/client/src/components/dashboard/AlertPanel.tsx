@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Info, CheckCircle2, AlertCircle, ShieldAlert, History, User } from 'lucide-react';
-import { MOCK_ALERTS } from '../../lib/mock-data';
+import { AlertTriangle, Info, CheckCircle2, AlertCircle, ShieldAlert, History, User, ChevronRight } from 'lucide-react';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 export function AlertPanel() {
+  const { data } = useDashboard();
+  const alerts = data?.alerts?.history || [];
   const [activeTab, setActiveTab] = useState('Current');
 
   const tabs = ['Current', 'History', 'Acknowledged', 'Resolved'];
@@ -53,20 +55,15 @@ export function AlertPanel() {
         </div>
       </div>
 
-      {/* Active Alert (always visible) */}
-      <div className={`mb-4 p-3 rounded-lg border ${getAlertColor(MOCK_ALERTS[0].level)} flex items-start space-x-3`}>
-         <div className="mt-1">{getAlertIcon(MOCK_ALERTS[0].level)}</div>
-         <div className="flex-1">
-            <div className="flex justify-between items-center">
-               <span className="font-bold uppercase tracking-wider text-sm">{MOCK_ALERTS[0].level}</span>
-               <span className="text-[10px] text-muted-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{MOCK_ALERTS[0].timestamp}</span>
-            </div>
-            <p className="text-xs text-starlight-white mt-1">{MOCK_ALERTS[0].reason}</p>
-         </div>
-      </div>
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+        {alerts.filter((a: any) => a.level === 'SEVERE').length > 0 && (
+          <div className="flex items-center space-x-2 bg-red-500/20 border border-red-500/30 p-2 rounded text-xs text-red-400 mb-4 animate-pulse">
+            <ShieldAlert className="w-4 h-4" />
+            <span>CRITICAL ALERT ACTIVE. SYSTEM OVERRIDE DISABLED.</span>
+          </div>
+        )}
 
-      <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-        {activeTab === 'History' && MOCK_ALERTS.map((alert, idx) => (
+        {alerts.map((alert: any, idx: number) => (
           <div key={idx} className="flex flex-col space-y-1 p-2 bg-black/30 border border-white/5 rounded">
             <div className="flex justify-between items-center">
               <span className={`text-[10px] font-bold ${getAlertColor(alert.level).split(' ')[0]}`}>{alert.level}</span>

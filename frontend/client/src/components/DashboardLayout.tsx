@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import MissionStatusBar from './dashboard/MissionStatusBar';
-import { LiveFlareGauge, MissionSummary } from './dashboard/MissionOverview';
-import { IntelligenceCards } from './dashboard/IntelligenceCards';
+import { LiveFlareGauge, ForecastTimeline, FusionDecisionCard } from './dashboard/MissionOverview';
 import { CrossInstrumentTimeline } from './dashboard/CrossInstrumentTimeline';
 import { LightCurvePanel } from './dashboard/LightCurvePanel';
 import { CoronalImageViewer } from './dashboard/CoronalImageViewer';
-import { ExplainableAIPanel, FusionReasoningPanel } from './dashboard/AIContextPanels';
-import { BackendHealth, InstrumentHealth } from './dashboard/HealthPanels';
+import { ExplainableAIPanel, HeliosActivityPanel } from './dashboard/AIContextPanels';
+import { BackendHealth, InstrumentHealthHeatmap, CorrelationEngineWidget } from './dashboard/HealthPanels';
 import { AlertPanel } from './dashboard/AlertPanel';
+import { PredictionHistoryPanel } from './dashboard/PredictionHistoryPanel';
+import gsap from 'gsap';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -16,14 +17,30 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, alertState = 'NORMAL' }: DashboardLayoutProps) {
 
+  useEffect(() => {
+    // GSAP sequential entrance animation
+    const delays = [0, 150, 250, 350, 500, 700, 900, 1100];
+    
+    delays.forEach(delay => {
+      gsap.fromTo(`.gsap-delay-${delay}`, 
+        { opacity: 0, y: 30 }, 
+        { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: delay / 1000, clearProps: 'all' }
+      );
+    });
+  }, []);
 
   return (
-    <div className={`flex flex-col h-screen bg-cosmic-black text-foreground overflow-hidden transition-colors duration-1000 ${
-      alertState !== 'NORMAL' ? 'border-[3px] border-red-500 animate-pulse' : ''
-    }`}>
+    <div className={`flex flex-col h-screen bg-cosmic-black text-foreground overflow-hidden relative`}>
       
-      {/* Global Status Bar */}
-      <MissionStatusBar />
+      {/* Border Pulse Overlay */}
+      <div className={`absolute inset-0 z-50 pointer-events-none transition-all duration-1000 ${
+        (alertState === 'SEVERE' || alertState === 'ALERT') ? 'border-[4px] border-red-500 animate-pulse shadow-[inset_0_0_50px_rgba(239,68,68,0.5)]' : 'border-0'
+      }`} />
+
+      {/* Global Status Bar (Delay 0ms) */}
+      <div className="gsap-delay-0 z-20">
+        <MissionStatusBar />
+      </div>
 
       {/* Background layer for Three.js */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -32,47 +49,65 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
 
       {/* Main Grid Content */}
       <div className="flex-1 overflow-y-auto p-4 z-10 custom-scrollbar">
-        <div className="max-w-[1920px] mx-auto space-y-4">
+        <div className="max-w-[1920px] mx-auto flex flex-col space-y-4">
           
-          {/* Row 1: Mission Overview (Gauge & Summary) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-64">
-             <div className="md:col-span-1">
+          {/* Row 1: Mission Overview (Gauge, Timeline, Fusion) */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-64">
+             <div className="lg:col-span-1 gsap-delay-150">
                 <LiveFlareGauge />
              </div>
-             <div className="md:col-span-2">
-                <MissionSummary />
+             <div className="lg:col-span-2 gsap-delay-250">
+                <ForecastTimeline />
+             </div>
+             <div className="lg:col-span-1 gsap-delay-350">
+                <FusionDecisionCard />
              </div>
           </div>
 
-          {/* Row 2: Intelligence Cards */}
-          <IntelligenceCards />
-
-          {/* Row 3: Timeline */}
-          <CrossInstrumentTimeline />
-
-          {/* Row 4: Main Analysis (LightCurve & Coronal Viewer) */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <LightCurvePanel />
-            <CoronalImageViewer />
+          {/* Row 2: Main Analysis (SOLEXS 40%, VELC 60%) */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 h-96">
+            <div className="lg:col-span-2 gsap-delay-500">
+              <LightCurvePanel />
+            </div>
+            <div className="lg:col-span-3 gsap-delay-500">
+              <CoronalImageViewer />
+            </div>
           </div>
 
-          {/* Row 5: AI & Context */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-80">
-            <div className="lg:col-span-1">
+          {/* Row 3: Activity & AI (HEL1OS, Explainable AI) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-64">
+            <div className="lg:col-span-1 gsap-delay-700">
+               <HeliosActivityPanel />
+            </div>
+            <div className="lg:col-span-2 gsap-delay-700">
                <ExplainableAIPanel />
             </div>
-            <div className="lg:col-span-1">
-               <FusionReasoningPanel />
-            </div>
-            <div className="lg:col-span-1">
-               <AlertPanel />
-            </div>
           </div>
 
-          {/* Row 6: Health & Infrastructure */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-12">
-             <BackendHealth />
-             <InstrumentHealth />
+          {/* Row 4: Timeline */}
+          <div className="gsap-delay-900">
+            <CrossInstrumentTimeline />
+          </div>
+
+          {/* Row 5: Systems (Correlation, Alerts, Backend, Instrument Health) */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-64">
+             <div className="lg:col-span-1 gsap-delay-1100">
+                <CorrelationEngineWidget />
+             </div>
+             <div className="lg:col-span-1 gsap-delay-1100">
+                <AlertPanel />
+             </div>
+             <div className="lg:col-span-1 gsap-delay-1100">
+                <BackendHealth />
+             </div>
+             <div className="lg:col-span-1 gsap-delay-1100">
+                <InstrumentHealthHeatmap />
+             </div>
+          </div>
+
+          {/* Row 6: Past Events */}
+          <div className="gsap-delay-1100 pb-12">
+             <PredictionHistoryPanel />
           </div>
 
         </div>

@@ -1,9 +1,14 @@
 import React from 'react';
 import { ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, ReferenceLine, ReferenceArea, Scatter, Tooltip } from 'recharts';
-import { generateLightcurveData } from '../../lib/mock-data';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 export function LightCurvePanel() {
-  const data = generateLightcurveData();
+  const { data: dashboard } = useDashboard();
+  const solexs = dashboard?.instruments?.solexs || {};
+  
+  // Use a flat baseline based on the current probability, or 0
+  const baseVal = solexs.probability || 0;
+  const data = Array.from({ length: 20 }, (_, i) => ({ time: `-${20-i}m`, flux: baseVal }));
 
   // Create predicted trajectory data by offsetting from the last point
   const lastPoint = data[data.length - 1];

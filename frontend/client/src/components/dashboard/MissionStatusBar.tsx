@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Clock3, Timer, Orbit, Activity, Cpu, Database } from 'lucide-react';
-import { MOCK_MISSION_DATA } from '../../lib/mock-data';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 export default function MissionStatusBar() {
+  const { data, loading, error, lastUpdated } = useDashboard();
   const [utcTime, setUtcTime] = useState<string>('');
   const [pulse, setPulse] = useState(false);
 
@@ -50,7 +51,7 @@ export default function MissionStatusBar() {
       {/* Top Brand Bar */}
       <div className="flex justify-center items-center py-2 border-b border-border/30">
         <h1 className="text-xl text-starlight-white font-black tracking-widest uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-          {MOCK_MISSION_DATA.missionName}
+          ADITYA-L1 SOLAR INTELLIGENCE PLATFORM
         </h1>
       </div>
       
@@ -65,20 +66,20 @@ export default function MissionStatusBar() {
           </div>
           <div className="flex items-center space-x-2 text-muted-foreground">
             <Timer className="w-4 h-4" />
-            <span>{MOCK_MISSION_DATA.missionTime}</span>
+            <span>T+ 452:12:08</span>
           </div>
           <div className="flex items-center space-x-2 text-muted-foreground">
             <Orbit className="w-4 h-4 text-deep-purple" />
-            <span>{MOCK_MISSION_DATA.orbitPhase}</span>
+            <span>HALO-ORBIT L1</span>
           </div>
         </div>
 
         {/* Center: System Status */}
         <div className="flex items-center space-x-4">
-          {Object.entries(MOCK_MISSION_DATA.status).map(([sys, status]) => (
+          {['API', 'SOLEXS', 'HEL1OS', 'VELC', 'Fusion'].map((sys) => (
             <div key={sys} className="flex items-center space-x-1.5">
               <span className="text-muted-foreground">{sys}</span>
-              <div className={`w-2 h-2 rounded-full ${getStatusColor(status)} ${status !== 'OFFLINE' ? 'animate-pulse' : ''}`} />
+              <div className={`w-2 h-2 rounded-full ${error ? 'bg-red-500' : 'bg-green-500'} ${!error ? 'animate-pulse' : ''}`} />
             </div>
           ))}
         </div>
@@ -88,24 +89,21 @@ export default function MissionStatusBar() {
           <div className="flex items-center space-x-3 text-muted-foreground">
              <div className="flex items-center space-x-1" title="API Latency">
                 <Activity className="w-3.5 h-3.5" />
-                <span>{MOCK_MISSION_DATA.apiLatency}ms</span>
+                <span>{data?.mission_status?.api_latency_ms || '--'}ms</span>
              </div>
-             <div className="flex items-center space-x-1" title="GPU Usage">
-                <Cpu className="w-3.5 h-3.5" />
-                <span>{MOCK_MISSION_DATA.gpuUsage}%</span>
-             </div>
-             <div className="flex items-center space-x-1" title="Data Freshness">
+             <div className="flex items-center space-x-1" title="Last Updated">
                 <Database className="w-3.5 h-3.5" />
-                <span>{MOCK_MISSION_DATA.dataFreshness}</span>
+                <span>{lastUpdated ? lastUpdated.substring(11, 19) + ' UTC' : 'Syncing...'}</span>
              </div>
           </div>
 
           <div className="flex items-center space-x-2 border-l border-border/50 pl-4">
-            <div className={`px-2 py-0.5 rounded text-xs font-bold transition-opacity duration-300 ${pulse ? 'opacity-100' : 'opacity-70'} bg-red-500/20 text-red-400 border border-red-500/30`}>
-              LIVE
+            <div className={`px-2 py-0.5 rounded text-xs font-bold transition-opacity duration-300 flex items-center space-x-1.5 ${pulse ? 'opacity-100' : 'opacity-70'} ${loading ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : (error ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30')}`}>
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500' : (error ? 'bg-red-500' : 'bg-green-500')}`}></div>
+              <span>{loading ? 'SYNCING' : (error ? 'SYNC LOST' : 'LIVE')}</span>
             </div>
-            <div className={`px-3 py-0.5 rounded-full text-xs font-bold ${getAlertColor('LOW')}`}>
-              ALERT: LOW
+            <div className={`px-3 py-0.5 rounded-full text-xs font-bold ${getAlertColor(data?.alerts?.current_alert || 'NORMAL')}`}>
+              ALERT: {data?.alerts?.current_alert || 'NORMAL'}
             </div>
           </div>
         </div>

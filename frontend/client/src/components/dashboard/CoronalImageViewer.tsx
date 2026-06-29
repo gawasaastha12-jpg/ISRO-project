@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Camera, Layers, Zap, Search, Activity, ChevronRight, X } from 'lucide-react';
-import { MOCK_PAST_EVENTS } from '../../lib/mock-data';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 export function CoronalImageViewer() {
+  const { data } = useDashboard();
+  const velc = data?.instruments?.velc || {};
   const [activeTab, setActiveTab] = useState('Original');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -77,7 +79,7 @@ export function CoronalImageViewer() {
           </button>
         </div>
         <div className="p-2 space-y-2 overflow-y-auto h-[calc(100%-53px)]">
-          {MOCK_PAST_EVENTS.map(event => (
+          {(velc.similarity_events || []).map((event: any) => (
             <div key={event.id} className="bg-black/30 border border-white/5 rounded p-2 hover:border-electric-blue/50 cursor-pointer transition-colors group">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-bold text-electric-blue">{event.id}</span>

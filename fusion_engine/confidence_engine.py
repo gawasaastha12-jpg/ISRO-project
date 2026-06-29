@@ -202,7 +202,15 @@ def fuse_prediction(
     Dictionary ready for dashboard.
     """
 
-    rf_probability = probabilities[prediction]
+    rf_probability = probabilities.get(prediction)
+    if rf_probability is None:
+        clean_pred = prediction.replace("-like", "").lower()
+        for k, v in probabilities.items():
+            if k.replace("-like", "").lower() == clean_pred:
+                rf_probability = v
+                break
+        else:
+            rf_probability = 0.0
 
     confidence = compute_fused_confidence(
         rf_probability,

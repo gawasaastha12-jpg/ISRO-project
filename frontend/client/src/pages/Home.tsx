@@ -4,22 +4,32 @@ import CinematicIntro from '@/components/CinematicIntro';
 import ExpandedStoryboardSequence from '@/components/ExpandedStoryboardSequence';
 import { CosmicScene } from '@/lib/three-scene';
 import { audioEngine } from '@/lib/audio-engine';
+import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
 
 export default function Home() {
+  return (
+    <DashboardProvider>
+      <HomeContent />
+    </DashboardProvider>
+  );
+}
+
+function HomeContent() {
   const [showIntro, setShowIntro] = useState(true);
   const [showStoryboard, setShowStoryboard] = useState(false);
   const [scene, setScene] = useState<CosmicScene | null>(null);
-  const [alertState, setAlertState] = useState<'NORMAL' | 'WARNING' | 'SEVERE'>('NORMAL');
+  const { data } = useDashboard();
+  const alertState = data?.alerts?.current_alert || 'NORMAL';
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize audio and solar wind when alert state changes
   useEffect(() => {
     if (scene) {
-      if (alertState === 'WARNING') {
+      if (alertState === 'WARNING' || alertState === 'ALERT') {
         scene.setSolarWindState('M');
         audioEngine.playCollisionImpact();
         // Voice alert
-        const utterance = new SpeechSynthesisUtterance("Warning. Solar flare onset probability has exceeded 35 percent at the 5-minute horizon.");
+        const utterance = new SpeechSynthesisUtterance("Warning. Elevated solar activity detected.");
         window.speechSynthesis.speak(utterance);
       } else if (alertState === 'SEVERE') {
         scene.setSolarWindState('X');
@@ -29,14 +39,6 @@ export default function Home() {
       }
     }
   }, [alertState, scene]);
-
-  // Simulate an alert trigger after 10 seconds for demo purposes
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAlertState('WARNING');
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -53,12 +55,9 @@ export default function Home() {
         backgroundColor: 0x0a0e27,
       });
 
-      // We'll update the solar wind effect in three-scene.ts directly,
-      // but we instantiate the scene here.
       cosmicScene.startRenderLoop();
       setScene(cosmicScene);
 
-      // Handle window resize
       const handleResize = () => {
         if (containerRef.current) {
           const newWidth = containerRef.current.clientWidth;
@@ -84,8 +83,6 @@ export default function Home() {
     return <CinematicIntro onComplete={() => setShowIntro(false)} />;
   }
 
-  // A small button to let the user re-trigger the storyboard if they want
-  // since the new dashboard is immediate. (Optional but good UX)
   if (showStoryboard) {
     return <ExpandedStoryboardSequence onComplete={() => setShowStoryboard(false)} />;
   }
