@@ -16,6 +16,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, alertState = 'NORMAL' }: DashboardLayoutProps) {
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
 
   useEffect(() => {
     // GSAP sequential entrance animation
@@ -75,7 +76,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
           </div>
 
           {/* Row 3: Activity & AI (HEL1OS, Explainable AI) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-64">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[310px]">
             <div className="lg:col-span-1 gsap-delay-700">
                <HeliosActivityPanel />
             </div>
@@ -106,8 +107,66 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
           </div>
 
           {/* Row 6: Past Events */}
-          <div className="gsap-delay-1100 pb-12">
+          <div className="gsap-delay-1100">
              <PredictionHistoryPanel />
+          </div>
+
+          {/* Row 7: Limitations & Future Roadmap */}
+          <div className="gsap-delay-1100 bg-[#0b1022]/80 border border-[#00d9ff]/20 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setRoadmapOpen(!roadmapOpen)}
+              className="w-full p-4 flex justify-between items-center text-xs font-bold text-starlight-white uppercase tracking-wider hover:bg-white/5 transition-colors font-mono"
+            >
+              <span>Current Scope, Limitations & Future Roadmap</span>
+              {roadmapOpen ? <span className="text-muted-foreground">Collapse [-]</span> : <span className="text-[#00d9ff] font-bold">Expand [+]</span>}
+            </button>
+            {roadmapOpen && (
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 font-mono border-t border-white/5 bg-black/20">
+                <div className="space-y-2">
+                  <h4 className="font-bold text-[#ff3b5c] uppercase text-[10px] tracking-wide">Current Operational Scope</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[10px]">
+                    <li>Uses Level-1 calibrated FITS data streams from ISRO PRADAN archive.</li>
+                    <li>Inference cycle triggers immediately upon telemetry file ingestion.</li>
+                    <li>Supports nowcasting horizon: 5–180 minutes.</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-[#00ff88] uppercase text-[10px] tracking-wide">Future Extensions</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[10px]">
+                    <li>Direct telemetry ingestion pipeline for raw spacecraft downlinks.</li>
+                    <li>Additional Aditya-L1 payload integration.</li>
+                    <li>CME prediction.</li>
+                    <li>SEP early warning.</li>
+                    <li>Multi-spacecraft fusion.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer: Data Provenance */}
+          <div className="gsap-delay-1100 flex flex-col md:flex-row justify-between items-center bg-black/40 border border-border/30 rounded p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider gap-4 pb-12">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="font-bold text-starlight-white">Data Provenance:</span>
+              <span className="flex items-center space-x-1">
+                <span className="text-[#00d9ff]">SOLEXS:</span>
+                <span className="text-starlight-white font-bold">600 observation days | 51.8M measurements</span>
+              </span>
+              <span className="text-muted-foreground/30">|</span>
+              <span className="flex items-center space-x-1">
+                <span className="text-[#7c3aed]">HEL1OS:</span>
+                <span className="text-starlight-white font-bold">92 light curves | 2.76M measurements</span>
+              </span>
+              <span className="text-muted-foreground/30">|</span>
+              <span className="flex items-center space-x-1">
+                <span className="text-supernova-gold">VELC:</span>
+                <span className="text-starlight-white font-bold">100 FITS images | 74 extracted features/frame</span>
+              </span>
+            </div>
+            <div className="flex items-center space-x-1.5 border-t md:border-t-0 md:border-l border-border/30 pt-2 md:pt-0 md:pl-4">
+              <span className="text-muted-foreground">Observation Window:</span>
+              <span className="text-orange-400 font-bold">Feb 2024 – Jun 2026</span>
+            </div>
           </div>
 
         </div>

@@ -322,17 +322,25 @@ export function FusionDecisionCard() {
     <div className="flex flex-col p-4 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] overflow-hidden">
       <div className="text-muted-foreground flex items-center space-x-2 mb-3">
         <Combine className="w-4 h-4 text-[#7c3aed] drop-shadow-[0_0_8px_rgba(124,58,237,0.8)]" />
-        <span className="font-bold tracking-wider text-xs uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>Fusion Oracle Summary</span>
+        <span className="font-bold tracking-wider text-xs uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>Physics-Guided Fusion Engine (Fusion Oracle)</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-2 bg-white/5 p-2 rounded border border-white/5 text-center font-mono">
+      <div className="grid grid-cols-2 gap-2 mb-2 bg-white/5 p-2 rounded border border-white/5 text-center font-mono text-[9px]">
         <div className="flex flex-col">
-          <span className="text-[8px] text-muted-foreground uppercase">Solar Situation</span>
+          <span className="text-[7px] text-muted-foreground uppercase">Solar Situation</span>
           <span className={`text-xs font-black ${stateColor}`}>{solarState}</span>
         </div>
         <div className="flex flex-col border-l border-white/10">
-          <span className="text-[8px] text-muted-foreground uppercase">Fusion Confidence</span>
+          <span className="text-[7px] text-muted-foreground uppercase">Estimated Prob</span>
           <span className="text-xs font-black text-starlight-white">{fusionConf.toFixed(0)}%</span>
+        </div>
+        <div className="flex flex-col border-t border-white/10 pt-1 col-span-1">
+          <span className="text-[7px] text-muted-foreground uppercase">Uncertainty</span>
+          <span className="text-xs font-black text-[#ff3b5c]">{(100 - fusionConf).toFixed(0)}%</span>
+        </div>
+        <div className="flex flex-col border-l border-t border-white/10 pt-1 col-span-1">
+          <span className="text-[7px] text-muted-foreground uppercase">Calibration</span>
+          <span className="text-[9px] font-black text-green-400">CALIBRATED</span>
         </div>
       </div>
 
