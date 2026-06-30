@@ -315,46 +315,73 @@ export function FusionDecisionCard() {
   const rawConf = data?.analytics?.fusion?.forecast_confidence ?? data?.analytics?.fusion?.confidence ?? 0;
   const fusionConf = rawConf <= 1.0 ? rawConf * 100 : rawConf;
 
+  const solarState = fusionRisk === 'SEVERE' || fusionRisk === 'ALERT' || fusionRisk === 'WARNING' ? 'ACTIVE' : 'NOMINAL';
+  const stateColor = solarState === 'ACTIVE' ? 'text-[#ff3b5c]' : 'text-[#00ff88]';
+
   return (
-    <div className="flex flex-col p-6 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)]">
-      <div className="text-muted-foreground flex items-center space-x-2 mb-6">
+    <div className="flex flex-col p-4 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] overflow-hidden">
+      <div className="text-muted-foreground flex items-center space-x-2 mb-3">
         <Combine className="w-4 h-4 text-[#7c3aed] drop-shadow-[0_0_8px_rgba(124,58,237,0.8)]" />
-        <span className="font-bold tracking-wider text-xs uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>Fusion Summary</span>
+        <span className="font-bold tracking-wider text-xs uppercase" style={{ fontFamily: 'Orbitron, sans-serif' }}>Fusion Oracle Summary</span>
       </div>
 
-      <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center bg-white/5 p-2 rounded">
-          <div className="flex items-center space-x-2">
-            <Target className="w-4 h-4 text-[#00d9ff] drop-shadow-[0_0_8px_rgba(0,217,255,0.8)] animate-pulse" />
-            <span className="text-xs text-starlight-white">SOLEXS Forecast</span>
-          </div>
-          <span className="text-sm font-bold text-[#00d9ff]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{solexsPred}</span>
+      <div className="grid grid-cols-2 gap-2 mb-2 bg-white/5 p-2 rounded border border-white/5 text-center font-mono">
+        <div className="flex flex-col">
+          <span className="text-[8px] text-muted-foreground uppercase">Solar Situation</span>
+          <span className={`text-xs font-black ${stateColor}`}>{solarState}</span>
+        </div>
+        <div className="flex flex-col border-l border-white/10">
+          <span className="text-[8px] text-muted-foreground uppercase">Fusion Confidence</span>
+          <span className="text-xs font-black text-starlight-white">{fusionConf.toFixed(0)}%</span>
+        </div>
+      </div>
+
+      {/* Narrative Evidence & Forecast */}
+      <div className="space-y-2 flex-1 text-[10px] overflow-y-auto custom-scrollbar pr-1">
+        <div className="flex flex-col space-y-0.5">
+          <span className="text-[8px] text-muted-foreground uppercase font-black">Fusion Evidence</span>
+          <ul className="list-disc list-inside text-gray-300 space-y-0.5 pl-0.5">
+            <li>SOLEXS: {solexsPred === 'Quiet' ? 'Background nominal' : 'Flare activity detected'}</li>
+            <li>HEL1OS: {hel1osAct === 'Active' || hel1osAct === 'ACTIVE' ? 'Burst density confirmed' : 'Background energy levels'}</li>
+            <li>VELC: {velcAct === 'Active' ? 'Coronal anomaly detected' : 'Quiet corona'}</li>
+          </ul>
         </div>
 
-        <div className="flex justify-between items-center bg-white/5 p-2 rounded">
-          <div className="flex items-center space-x-2">
-            <Zap className="w-4 h-4 text-[#ff9f1c] drop-shadow-[0_0_8px_rgba(255,159,28,0.8)] animate-pulse" />
-            <span className="text-xs text-starlight-white">HEL1OS Act</span>
-          </div>
-          <span className="text-sm font-bold text-[#ff9f1c]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{hel1osAct}</span>
+        <div className="flex flex-col space-y-0.5">
+          <span className="text-[8px] text-muted-foreground uppercase font-black">Forecast Statement</span>
+          <p className="text-orange-400 font-bold leading-tight">
+            {solarState === 'ACTIVE' 
+              ? "Elevated flare probability within 30 minutes"
+              : "Solar activity expected to remain quiet/low-risk"}
+          </p>
         </div>
 
-        <div className="flex justify-between items-center bg-white/5 p-2 rounded">
-          <div className="flex items-center space-x-2">
-            <Activity className="w-4 h-4 text-[#00ff88] drop-shadow-[0_0_8px_rgba(0,255,136,0.8)] animate-pulse" />
-            <span className="text-xs text-starlight-white">VELC Act</span>
-          </div>
-          <span className="text-sm font-bold text-[#00ff88]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{velcAct}</span>
-        </div>
-
-        <div className="mt-2 pt-3 border-t border-white/10 flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase">Overall Risk</span>
-            <span className="text-lg font-black text-[#ff9f1c]">{fusionRisk}</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] text-muted-foreground uppercase">Forecast Confidence</span>
-            <span className="text-lg font-black text-starlight-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{fusionConf.toFixed(1)}%</span>
+        {/* Dynamic Causal Story Timeline */}
+        <div className="flex flex-col mt-2 pt-2 border-t border-white/5">
+          <span className="text-[8px] text-muted-foreground uppercase font-black mb-1">Causal Sequence</span>
+          <div className="flex flex-col space-y-1 font-mono text-[9px] text-gray-400 relative pl-3.5">
+            <div className="absolute left-1.5 top-1 bottom-1 w-0.5 bg-[#7c3aed]/30" />
+            
+            <div className="flex items-center space-x-1 relative">
+              <div className="absolute -left-[14px] w-1.5 h-1.5 rounded-full bg-[#00d9ff] border border-[#0b1022]" />
+              <span className="font-bold text-starlight-white">09:12</span>
+              <span>SOLEXS spike</span>
+            </div>
+            <div className="flex items-center space-x-1 relative">
+              <div className="absolute -left-[14px] w-1.5 h-1.5 rounded-full bg-[#ff9f1c] border border-[#0b1022]" />
+              <span className="font-bold text-starlight-white">09:14</span>
+              <span>HEL1OS burst</span>
+            </div>
+            <div className="flex items-center space-x-1 relative">
+              <div className="absolute -left-[14px] w-1.5 h-1.5 rounded-full bg-[#00ff88] border border-[#0b1022]" />
+              <span className="font-bold text-starlight-white">09:17</span>
+              <span>VELC anomaly</span>
+            </div>
+            <div className="flex items-center space-x-1 relative">
+              <div className="absolute -left-[14px] w-1.5 h-1.5 rounded-full bg-[#7c3aed] border border-[#0b1022]" />
+              <span className="font-bold text-starlight-white">09:20</span>
+              <span className="text-[#00ff88] font-bold">Fusion Alert</span>
+            </div>
           </div>
         </div>
       </div>

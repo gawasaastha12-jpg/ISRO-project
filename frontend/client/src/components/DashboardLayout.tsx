@@ -52,7 +52,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
         <div className="max-w-[1920px] mx-auto flex flex-col space-y-4">
           
           {/* Row 1: Mission Overview (Gauge, Timeline, Fusion) */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-64">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[280px]">
              <div className="lg:col-span-1 gsap-delay-150">
                 <LiveFlareGauge />
              </div>

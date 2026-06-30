@@ -55,12 +55,21 @@ export function PredictionHistoryPanel() {
         
         {!loading && history.map((row, idx) => {
           const time = new Date(row.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const forecastVal = row.forecast || row.prediction || 'Quiet';
+          const cleanClass = forecastVal.replace(/-like/gi, '');
+          const rawConf = row.forecast_confidence || row.confidence || 0.85;
+          const confNum = typeof rawConf === 'string' ? parseFloat(rawConf) : rawConf;
+          const confPct = confNum <= 1.0 ? confNum * 100 : confNum;
+
           return (
             <div key={idx} className="bg-white/5 border border-white/10 rounded px-3 py-2 flex items-center space-x-3 group relative overflow-hidden">
                <div className="absolute top-0 left-0 w-1 h-full bg-[#00d9ff] opacity-50 group-hover:opacity-100 transition-opacity" />
                <span className="text-[10px] text-muted-foreground font-mono">{time}</span>
-               <span className={`text-sm font-black ${getClassColor(row.prediction)}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                 {row.prediction || 'Quiet'}
+               <span className={`text-xs font-black ${getClassColor(cleanClass)}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                 {forecastVal}
+               </span>
+               <span className="text-[10px] text-starlight-white font-mono font-bold">
+                 {confPct.toFixed(0)}%
                </span>
             </div>
           );

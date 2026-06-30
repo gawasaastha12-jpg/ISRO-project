@@ -138,7 +138,9 @@ export function CorrelationEngineWidget() {
             <div key={idx} className="flex justify-between items-center bg-white/5 p-2.5 rounded">
                <span className="text-[10px] text-starlight-white font-bold">{pair.pair}</span>
                <div className="flex items-center space-x-3">
-                 <span className="text-xs font-black text-muted-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{pair.value.toFixed(2)}</span>
+                 <span className={`text-[10px] font-bold ${pair.value === 0 || pair.value === 0.00 ? 'text-gray-500' : 'text-starlight-white font-black'}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                    {pair.value === 0 || pair.value === 0.00 ? 'Insufficient overlap' : pair.value.toFixed(2)}
+                 </span>
                  <div className="flex space-x-[2px]">
                    {[...Array(5)].map((_, i) => (
                      <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < pair.rating ? 'bg-[#7c3aed]' : 'bg-white/10'}`} />

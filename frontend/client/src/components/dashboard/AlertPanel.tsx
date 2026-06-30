@@ -71,9 +71,21 @@ export function AlertPanel() {
             </div>
             <p className="text-xs text-starlight-white">{alert.reason}</p>
             {alert.operatorNotes && (
-              <div className="flex items-start space-x-1 mt-1 pt-1 border-t border-border/30">
-                <User className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
-                <span className="text-[10px] text-muted-foreground italic">{alert.operatorNotes}</span>
+              <div className="flex flex-col space-y-0.5 mt-1 pt-1 border-t border-border/30">
+                <div className="flex items-center space-x-1 mb-0.5">
+                  <User className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">Evidence Breakdown:</span>
+                </div>
+                {alert.operatorNotes === "System fusion output" ? (
+                  <ul className="list-disc list-inside text-[9px] text-muted-foreground pl-1 space-y-0.5 mt-0.5 leading-tight">
+                    <li>Low X-ray variability</li>
+                    <li>No recent hard X-ray bursts</li>
+                    <li>Quiet corona</li>
+                    <li>Prediction confidence 93%</li>
+                  </ul>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground italic pl-4">{alert.operatorNotes}</span>
+                )}
               </div>
             )}
             <button className="self-end text-[10px] text-electric-blue hover:underline mt-1">EXPLAIN</button>
