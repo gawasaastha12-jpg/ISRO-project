@@ -54,12 +54,7 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
     return () => clearInterval(interval);
   }, []);
 
-  const handleTestSound = () => {
-    audioEngine.resumeContext().then(() => {
-      audioEngine.playCollisionImpact();
-      audioEngine.speak("Audio engine test successful");
-    });
-  };
+
 
   const sceneIndex = SCENE_ORDER.indexOf(currentScene);
   const progress = ((sceneIndex + 1) / SCENE_ORDER.length) * 100;
@@ -233,8 +228,8 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
           </span>
         </div>
         
-        <div className="flex gap-2">
-          {audioState !== 'running' && (
+        {audioState !== 'running' && (
+          <div className="flex gap-2">
             <button
               onClick={() => {
                 audioEngine.resumeContext();
@@ -243,14 +238,8 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
             >
               ACTIVATE
             </button>
-          )}
-          <button
-            onClick={handleTestSound}
-            className="px-2 py-0.5 bg-deep-purple/20 hover:bg-deep-purple/40 border border-deep-purple/40 text-nebula-violet rounded transition-colors text-[10px]"
-          >
-            TEST AUDIO
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Progress bar */}
