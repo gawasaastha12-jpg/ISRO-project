@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any
 from backend.api.cache import ModelCache
 from fusion_engine.confidence_engine import fuse_prediction
@@ -46,7 +46,7 @@ def get_fusion_and_alert(cache: ModelCache, solexs_data: Dict[str, Any], hel1os_
                 "alert_level": alert.get("alert", "NORMAL"),
                 "priority": 1 if alert.get("alert") in ["SEVERE", "ALERT"] else 0,
                 "recommended_action": alert.get("recommendation", "Monitor nominal operations"),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 "processing_ms": round((time.time() - start_time) * 1000, 2),
                 "engine_versions": {"fusion": version}
             },
@@ -64,9 +64,9 @@ def get_fusion_and_alert(cache: ModelCache, solexs_data: Dict[str, Any], hel1os_
             "fusion": {
                 "status": "ERROR",
                 "message": str(e),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 "processing_ms": round((time.time() - start_time) * 1000, 2)
             },
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2)
         }

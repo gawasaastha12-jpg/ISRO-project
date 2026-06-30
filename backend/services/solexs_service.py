@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, UTC
 from backend.api.cache import ModelCache
 from fusion_engine import pipeline_runner
 from fusion_engine.prediction_core import predict_horizon
@@ -18,7 +18,7 @@ def get_forecast(cache: ModelCache, horizon: str) -> Dict[str, Any]:
         return {
             "status": "OFFLINE",
             "message": f"SOLEXS model or dataset for {horizon} not loaded.",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": 0.0,
             "engine_versions": {"solexs": version}
         }
@@ -48,7 +48,7 @@ def get_forecast(cache: ModelCache, horizon: str) -> Dict[str, Any]:
         return {
             "status": "ERROR",
             "message": str(e),
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": 0.0
         }
 

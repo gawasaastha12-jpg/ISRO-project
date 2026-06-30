@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any
 from backend.api.cache import ModelCache
 
@@ -19,7 +19,7 @@ def get_correlation(cache: ModelCache) -> Dict[str, Any]:
                 "message": "Correlation catalog missing.",
                 "overall_score": 0.0,
                 "pairs": [],
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 "processing_ms": round((time.time() - start_time) * 1000, 2),
                 "engine_versions": {"correlation": version}
             }
@@ -49,7 +49,7 @@ def get_correlation(cache: ModelCache) -> Dict[str, Any]:
                     "rating": 0
                 }
             ],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2),
             "engine_versions": {"correlation": version}
         }
@@ -58,6 +58,6 @@ def get_correlation(cache: ModelCache) -> Dict[str, Any]:
         return {
             "status": "ERROR",
             "message": str(e),
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2)
         }

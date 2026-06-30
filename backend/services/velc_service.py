@@ -1,7 +1,8 @@
 import logging
 import time
 import numpy as np
-from datetime import datetime
+import pandas as pd
+from datetime import datetime, UTC
 from typing import Dict, Any
 from backend.api.cache import ModelCache
 
@@ -23,7 +24,7 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
             "novelty_score": 0.0,
             "anomaly_boxes": 0,
             "similarity_events": [],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2),
             "engine_versions": {"velc": version}
         }
@@ -39,7 +40,7 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
             "Coronal_Index",
             "VELC_Scientific_Activity"
         ]
-        X = latest_row[features].values.reshape(1, -1)
+        X = pd.DataFrame([latest_row[features]])
         X_scaled = scaler.transform(X)
         
         # IsolationForest novelty score calculation
@@ -76,7 +77,7 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
                     "type": "CME Loop Expansion"
                 }
             ],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2),
             "engine_versions": {"velc": version}
         }
@@ -90,7 +91,7 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
             "novelty_score": 0.0,
             "anomaly_boxes": 0,
             "similarity_events": [],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2),
             "engine_versions": {"velc": version}
         }

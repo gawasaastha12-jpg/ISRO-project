@@ -4,7 +4,7 @@ import time
 import os
 import csv
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from .solexs_service import get_multi_horizon_forecast
 from .hel1os_service import get_hel1os_activity
 from .velc_service import get_velc_data
@@ -21,7 +21,7 @@ dashboard_history = []
 
 # Pre-populate with 50 realistic historical entries to avoid empty lists on startup
 for i in range(50):
-    ts = (datetime.utcnow() - pd.Timedelta(minutes=50-i)).isoformat() + "Z"
+    ts = (datetime.now(UTC) - pd.Timedelta(minutes=50-i)).isoformat().replace("+00:00", "Z")
     dashboard_history.append({
         "timestamp": ts,
         "solexs_confidence": round(0.40 + random.random() * 0.30, 4),
@@ -58,7 +58,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     
     global dashboard_history
     dashboard_history.append({
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "solexs_confidence": float(solexs_data.get("forecast_confidence") or solexs_data.get("confidence") or 0.0),
         "hel1os_activity_score": float(hel1os_data.get("activity_score") or 0.0),
         "velc_novelty_score": float(velc_data.get("novelty_score") or 0.0),
@@ -95,7 +95,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     log_path = os.path.join(log_dir, "predictions.csv")
     
     req_id = str(uuid.uuid4())
-    ts_iso = datetime.utcnow().isoformat() + "Z"
+    ts_iso = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     
     multi_h = solexs_data.get("multi_horizon", [])
     get_h = lambda x: next((h["forecast"] for h in multi_h if h["horizon"] == x), "")
@@ -132,10 +132,10 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     return {
         "schema_version": "2.0",
         "mission_status": {
-            "utc": datetime.utcnow().strftime("%H:%M:%S UTC"),
+            "utc": datetime.now(UTC).strftime("%H:%M:%S UTC"),
             "system": "Nominal",
             "api_latency_ms": latency_ms,
-            "last_updated": datetime.utcnow().isoformat() + "Z"
+            "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z")
         },
         "instruments": {
             "solexs": solexs_data,
@@ -153,7 +153,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                 {
                     "id": 1, 
                     "level": alert_data.get("current_alert", "NORMAL"),
-                    "timestamp": alert_data.get("timestamp", datetime.utcnow().isoformat() + "Z"),
+                    "timestamp": alert_data.get("timestamp", datetime.now(UTC).isoformat().replace("+00:00", "Z")),
                     "reason": alert_data.get("reason", "Nominal"),
                     "status": "Active",
                     "operatorNotes": "System fusion output"

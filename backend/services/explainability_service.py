@@ -1,6 +1,6 @@
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any
 from backend.api.cache import ModelCache
 
@@ -71,7 +71,7 @@ def get_explainability(cache: ModelCache) -> Dict[str, Any]:
         "explainability_method": "feature_importance",
         "shap_available": False,
         "horizons": results,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "processing_ms": round((time.time() - start_time) * 1000, 2),
         "engine_versions": {"explainability": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("version", "v3.2")}
     }

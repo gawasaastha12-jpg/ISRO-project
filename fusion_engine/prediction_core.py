@@ -1,6 +1,6 @@
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Dict, Any, List
 import numpy as np
@@ -187,7 +187,7 @@ def predict_horizon(model_bundle: Any, df: Any, horizon: str, cache_metadata: Di
             "trained_on": trained_on,
             "threshold": threshold,
             "processing_ms": processing_ms,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
         }
         
     except Exception as e:

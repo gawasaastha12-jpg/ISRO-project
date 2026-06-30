@@ -22,7 +22,7 @@ Author : Aastha
 
 from pathlib import Path
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, UTC
 
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -127,7 +127,7 @@ def generate_alert(result):
 
     return {
 
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(UTC),
 
         "prediction": prediction,
 

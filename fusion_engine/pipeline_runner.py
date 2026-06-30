@@ -2,7 +2,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, UTC
 
 from .confidence_engine import fuse_prediction
 from .alert_engine import process_alert
@@ -46,7 +46,7 @@ def generate_solexs_data(cache: ModelCache) -> dict:
             "uncertainty": 0.0,
             "prediction_id": "",
             "multi_horizon": [],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "processing_ms": round((time.time() - start_time) * 1000, 2)
         }
         
@@ -104,7 +104,7 @@ def generate_solexs_data(cache: ModelCache) -> dict:
         "margin": nowcast["margin"],
         "prediction_id": nowcast["prediction_id"],
         "multi_horizon": results,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "processing_ms": round((time.time() - start_time) * 1000, 2),
         "engine_versions": {"solexs": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("version", "v3.0")}
     }
@@ -126,7 +126,7 @@ def run_pipeline():
         "activity_state": activity_state,
         "flux": 2.4e-4,
         "recent_bursts": 3,
-        "timestamp": datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
     }
 
     # ----------------- VELC -----------------
@@ -135,7 +135,7 @@ def run_pipeline():
         "novelty_score": 89.5,
         "anomaly_boxes": 3,
         "similarity_events": [],
-        "timestamp": datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
     }
 
     # ----------------- Correlation -----------------
@@ -168,7 +168,7 @@ def run_pipeline():
     alert_data = {
         "current_alert": alert.get("alert", "NORMAL"),
         "history": [
-            {"id": 1, "level": alert.get("alert", "NORMAL"), "timestamp": datetime.utcnow().isoformat() + "Z", "reason": "Current fusion output", "status": "Active", "operatorNotes": alert.get("recommendation", "")}
+            {"id": 1, "level": alert.get("alert", "NORMAL"), "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"), "reason": "Current fusion output", "status": "Active", "operatorNotes": alert.get("recommendation", "")}
         ]
     }
 
@@ -186,10 +186,10 @@ def run_pipeline():
 
     return {
         "mission_status": {
-            "utc": datetime.utcnow().strftime("%H:%M:%S UTC"),
+            "utc": datetime.now(UTC).strftime("%H:%M:%S UTC"),
             "system": "Nominal",
             "api_latency_ms": 42,
-            "last_updated": datetime.utcnow().isoformat() + "Z"
+            "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z")
         },
         "instruments": {
             "solexs": forecast_data,
