@@ -22,7 +22,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await fetchDashboard();
       setData(result);
-      setLastUpdated(result.mission_status.utc);
+      setLastUpdated(result.mission_status.last_updated);
       setError(null);
     } catch (err) {
       console.error("Dashboard Provider error:", err);

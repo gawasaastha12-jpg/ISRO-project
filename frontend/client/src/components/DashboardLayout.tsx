@@ -16,7 +16,6 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, alertState = 'NORMAL' }: DashboardLayoutProps) {
-  const [roadmapOpen, setRoadmapOpen] = useState(false);
 
   useEffect(() => {
     // GSAP sequential entrance animation
@@ -111,38 +110,6 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
              <PredictionHistoryPanel />
           </div>
 
-          {/* Row 7: Limitations & Future Roadmap */}
-          <div className="gsap-delay-1100 bg-[#0b1022]/80 border border-[#00d9ff]/20 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setRoadmapOpen(!roadmapOpen)}
-              className="w-full p-4 flex justify-between items-center text-xs font-bold text-starlight-white uppercase tracking-wider hover:bg-white/5 transition-colors font-mono"
-            >
-              <span>Current Scope, Limitations & Future Roadmap</span>
-              {roadmapOpen ? <span className="text-muted-foreground">Collapse [-]</span> : <span className="text-[#00d9ff] font-bold">Expand [+]</span>}
-            </button>
-            {roadmapOpen && (
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 font-mono border-t border-white/5 bg-black/20">
-                <div className="space-y-2">
-                  <h4 className="font-bold text-[#ff3b5c] uppercase text-[10px] tracking-wide">Current Operational Scope</h4>
-                  <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[10px]">
-                    <li>Uses Level-1 calibrated FITS data streams from ISRO PRADAN archive.</li>
-                    <li>Inference cycle triggers immediately upon telemetry file ingestion.</li>
-                    <li>Supports nowcasting horizon: 5–180 minutes.</li>
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-bold text-[#00ff88] uppercase text-[10px] tracking-wide">Future Extensions</h4>
-                  <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[10px]">
-                    <li>Direct telemetry ingestion pipeline for raw spacecraft downlinks.</li>
-                    <li>Additional Aditya-L1 payload integration.</li>
-                    <li>CME prediction.</li>
-                    <li>SEP early warning.</li>
-                    <li>Multi-spacecraft fusion.</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Footer: Data Provenance */}
           <div className="gsap-delay-1100 flex flex-col md:flex-row justify-between items-center bg-black/40 border border-border/30 rounded p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider gap-4 pb-12">

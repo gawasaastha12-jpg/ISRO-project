@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import BigBangPrologue from './BigBangPrologue';
 import EnhancedCockpitHUD from './EnhancedCockpitHUD';
 import EnhancedAsteroidBelt from './EnhancedAsteroidBelt';
@@ -22,14 +22,25 @@ import { Volume2, VolumeX } from 'lucide-react';
  * 6. Nebula Data Cloud (ambient choir + serenity)
  */
 
+type SceneType = 'bigbang' | 'cockpit' | 'asteroids' | 'star' | 'wormhole' | 'blackhole' | 'nebula' | 'complete';
+
+const SCENE_ORDER: SceneType[] = [
+  'bigbang',
+  'cockpit',
+  'asteroids',
+  'star',
+  'wormhole',
+  'blackhole',
+  'nebula',
+  'complete',
+];
+
 interface ExpandedStoryboardSequenceProps {
   onComplete?: () => void;
 }
 
 export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStoryboardSequenceProps) {
-  const [currentScene, setCurrentScene] = useState<
-    'bigbang' | 'cockpit' | 'asteroids' | 'star' | 'wormhole' | 'blackhole' | 'nebula' | 'complete'
-  >('bigbang');
+  const [currentScene, setCurrentScene] = useState<SceneType>('bigbang');
   const [audioState, setAudioState] = useState<string>('unknown');
 
   useEffect(() => {
@@ -50,23 +61,12 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
     });
   };
 
-  const sceneOrder: Array<'bigbang' | 'cockpit' | 'asteroids' | 'star' | 'wormhole' | 'blackhole' | 'nebula' | 'complete'> = [
-    'bigbang',
-    'cockpit',
-    'asteroids',
-    'star',
-    'wormhole',
-    'blackhole',
-    'nebula',
-    'complete',
-  ];
-
-  const sceneIndex = sceneOrder.indexOf(currentScene);
-  const progress = ((sceneIndex + 1) / sceneOrder.length) * 100;
+  const sceneIndex = SCENE_ORDER.indexOf(currentScene);
+  const progress = ((sceneIndex + 1) / SCENE_ORDER.length) * 100;
 
   const lastTransitionTime = useRef<number>(0);
 
-  const handleSceneComplete = () => {
+  const handleSceneComplete = useCallback(() => {
     const now = Date.now();
     if (now - lastTransitionTime.current < 500) {
       console.warn('ExpandedStoryboardSequence: Ignored duplicate transition call');
@@ -75,13 +75,13 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
     lastTransitionTime.current = now;
 
     const nextIndex = sceneIndex + 1;
-    if (nextIndex < sceneOrder.length) {
-      const nextScene = sceneOrder[nextIndex];
+    if (nextIndex < SCENE_ORDER.length) {
+      const nextScene = SCENE_ORDER[nextIndex];
       setCurrentScene(nextScene);
     } else {
       setCurrentScene('complete');
     }
-  };
+  }, [sceneIndex]);
 
   useEffect(() => {
     // Avoid double speaking on mount if it's bigbang (let BigBangPrologue handle its own)
@@ -263,7 +263,7 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
 
       {/* Scene indicator */}
       <div className="absolute top-8 right-8 text-xs font-mono text-muted-foreground z-20">
-        <div className="text-electric-blue">SCENE {sceneIndex + 1} OF {sceneOrder.length}</div>
+        <div className="text-electric-blue">SCENE {sceneIndex + 1} OF {SCENE_ORDER.length}</div>
         <div className="text-deep-purple">
           {currentScene === 'bigbang' && 'BIG BANG PROLOGUE'}
           {currentScene === 'cockpit' && 'COCKPIT INTRODUCTION'}

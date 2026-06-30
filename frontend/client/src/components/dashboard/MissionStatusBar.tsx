@@ -156,48 +156,48 @@ export default function MissionStatusBar() {
       </div>
 
       {/* Operations Mode & Mission Status Sub-Bar */}
-      <div className="flex flex-row items-center justify-between px-4 py-1.5 bg-black/40 border-t border-border/20 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1.5">
+      <div className="flex flex-row items-center justify-between px-4 py-1.5 bg-black/40 border-t border-border/20 text-[10px] font-mono text-muted-foreground uppercase tracking-wider overflow-x-auto flex-nowrap whitespace-nowrap w-full gap-6 custom-scrollbar">
+        <div className="flex items-center space-x-4 shrink-0">
+          <span className="flex items-center space-x-1.5 shrink-0">
             <span className="text-muted-foreground">Mode:</span>
             <span className="text-[#00d9ff] font-bold bg-[#00d9ff]/10 px-1.5 py-0.5 rounded border border-[#00d9ff]/20">NOWCASTING</span>
           </span>
-          <span className="text-muted-foreground/30">|</span>
-          <span className="flex items-center space-x-1.5">
+          <span className="text-muted-foreground/30 shrink-0">|</span>
+          <span className="flex items-center space-x-1.5 shrink-0">
             <span className="text-muted-foreground">Forecast Horizons:</span>
             <span className="text-starlight-white font-bold">5m • 15m • 30m • 60m • 180m</span>
           </span>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1">
+        <div className="flex items-center space-x-4 shrink-0">
+          <span className="flex items-center space-x-1 shrink-0">
             <span className="text-muted-foreground">Mission Status:</span>
             <span className={`font-bold ${error ? 'text-red-400 animate-pulse' : 'text-green-400'}`}>{derivedStatus}</span>
           </span>
-          <span className="text-muted-foreground/30">|</span>
-          <span className="flex items-center space-x-1">
+          <span className="text-muted-foreground/30 shrink-0">|</span>
+          <span className="flex items-center space-x-1 shrink-0">
             <span className="text-muted-foreground">Instruments Online:</span>
             <span className="text-starlight-white font-bold">{instrumentsOnlineStr}</span>
           </span>
-          <span className="text-muted-foreground/30">|</span>
-          <span className="flex items-center space-x-1">
+          <span className="text-muted-foreground/30 shrink-0">|</span>
+          <span className="flex items-center space-x-1 shrink-0">
             <span className="text-muted-foreground">Observation Coverage:</span>
             <span className="text-starlight-white font-bold">Feb 2024 – Jun 2026</span>
           </span>
-          <span className="text-muted-foreground/30">|</span>
-          <span className="flex items-center space-x-1">
+          <span className="text-muted-foreground/30 shrink-0">|</span>
+          <span className="flex items-center space-x-1 shrink-0">
             <span className="text-orange-400 font-bold">Latest Observation:</span>
             <span className="text-orange-400 font-bold">{relativeObsTime}</span>
           </span>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-4 shrink-0">
+          <span className="flex items-center space-x-1.5 shrink-0">
             <span className="text-muted-foreground">AI Engine:</span>
             <span className="text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">RUNNING</span>
           </span>
-          <span className="text-muted-foreground/30">|</span>
-          <span className="flex items-center space-x-1.5">
+          <span className="text-muted-foreground/30 shrink-0">|</span>
+          <span className="flex items-center space-x-1.5 shrink-0">
             <span className="text-muted-foreground">Master Catalogue:</span>
             <span className="text-electric-blue font-bold">UPDATING</span>
           </span>

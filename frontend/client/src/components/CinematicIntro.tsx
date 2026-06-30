@@ -21,10 +21,15 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const scanlineRef = useRef<HTMLDivElement>(null);
 
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   useEffect(() => {
     // Timeline for intro sequence
     const tl = gsap.timeline({
-      onComplete,
+      onComplete: () => onCompleteRef.current?.(),
     });
 
     // Fade in background
@@ -47,7 +52,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
     // Text typewriter effect
     if (textRef.current) {
       const text = 'COSMIC INTELLIGENCE PLATFORM INITIALIZED\n\nAditya-L1 Solar Observatory\nMission Status: ACTIVE\n\nWelcome, Observer.';
-      textRef.current.textContent = '';
+      textRef.current.innerHTML = '';
 
       let index = 0;
       const typeWriter = () => {
@@ -56,7 +61,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
           if (char === '\n') {
             textRef.current!.innerHTML += '<br />';
           } else {
-            textRef.current!.textContent += char;
+            textRef.current!.innerHTML += char;
           }
           index++;
           setTimeout(typeWriter, 30);
@@ -72,7 +77,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
     return () => {
       tl.kill();
     };
-  }, [onComplete]);
+  }, []);
 
   return (
     <div

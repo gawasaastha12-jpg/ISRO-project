@@ -345,7 +345,7 @@ export function FusionDecisionCard() {
       </div>
 
       {/* Narrative Evidence & Forecast */}
-      <div className="space-y-2 flex-1 text-[10px] overflow-y-auto custom-scrollbar pr-1">
+      <div className="space-y-2 flex-1 text-[10px] overflow-y-auto custom-scrollbar pr-1 max-h-[135px]">
         <div className="flex flex-col space-y-0.5">
           <span className="text-[8px] text-muted-foreground uppercase font-black">Fusion Evidence</span>
           <ul className="list-disc list-inside text-gray-300 space-y-0.5 pl-0.5">

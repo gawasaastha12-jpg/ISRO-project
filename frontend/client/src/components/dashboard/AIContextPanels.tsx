@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrainCircuit, Flame, Activity } from 'lucide-react';
 import { useDashboard } from '../../contexts/DashboardContext';
-import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, YAxis, XAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export function HeliosActivityPanel() {
   const { data } = useDashboard();
@@ -10,10 +10,46 @@ export function HeliosActivityPanel() {
   const fluxVal = hasObs ? hel1os.flux.toExponential(1) : "No Current Observation";
   const fluxColor = hasObs ? "text-[#ff9f1c]" : "text-gray-500 text-sm font-medium";
 
-  // Simulate a realistic sparkline trend for HEL1OS flux
-  const hel1osData = hasObs 
-    ? [{ flux: hel1os.flux }, { flux: hel1os.flux * 1.2 }, { flux: hel1os.flux * 0.9 }, { flux: hel1os.flux }]
-    : [{ flux: 10 }, { flux: 15 }, { flux: 8 }, { flux: 12 }];
+  // Map historical flux values directly from actual database history returned by the backend
+  const hel1osHistory = data?.history && data.history.length > 0
+    ? data.history.map((h: any) => ({
+        time: new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        activity: h.hel1os_activity_score
+      }))
+    : [
+        { time: '00:00', activity: 40 },
+        { time: '00:15', activity: 45 },
+        { time: '00:30', activity: 38 },
+        { time: '00:45', activity: 42 }
+      ];
+  const fluxStyle = hasObs ? "text-xl font-black text-[#ff9f1c]" : "text-[10px] font-bold text-gray-500";
+
+  // Calculate dynamic observations age and scientific UTC timestamp
+  const obsTimeStr = hel1os?.timestamp;
+  let formattedObsTime = "--";
+  let datasetModeStr = "Historical";
+  
+  if (obsTimeStr) {
+    let cleanTimeStr = obsTimeStr;
+    if (!obsTimeStr.endsWith('Z') && !obsTimeStr.includes('GMT') && !obsTimeStr.includes('UTC') && !obsTimeStr.includes('+')) {
+      cleanTimeStr = obsTimeStr.replace(' ', 'T') + 'Z';
+    }
+    const obsDate = new Date(cleanTimeStr);
+    if (!isNaN(obsDate.getTime())) {
+      const year = obsDate.getUTCFullYear();
+      const month = String(obsDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(obsDate.getUTCDate()).padStart(2, '0');
+      const hours = String(obsDate.getUTCHours()).padStart(2, '0');
+      const minutes = String(obsDate.getUTCMinutes()).padStart(2, '0');
+      formattedObsTime = `${year}-${month}-${day} ${hours}:${minutes} UTC`;
+      
+      const diffMs = Date.now() - obsDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      datasetModeStr = `Historical (${diffDays.toFixed(1)} days old)`;
+    } else {
+      formattedObsTime = obsTimeStr;
+    }
+  }
 
   return (
     <div className="flex flex-col p-6 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] gsap-panel">
@@ -23,19 +59,33 @@ export function HeliosActivityPanel() {
       </div>
 
       <div className="flex-1 flex flex-col justify-between">
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-muted-foreground uppercase">Hard X-ray Flux</span>
-            <span className={`text-2xl font-black ${fluxColor} leading-tight`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-              {fluxVal}
-            </span>
-            {!hasObs && (
-              <span className="text-[9px] text-muted-foreground mt-0.5">Last Obs: 14m ago (00:39 UTC)</span>
-            )}
+        <div className="grid grid-cols-2 gap-4 font-mono text-[9px] border-b border-white/5 pb-3">
+          <div className="flex flex-col space-y-2">
+            <div>
+              <span className="text-[8px] text-muted-foreground uppercase block">Hard X-ray Flux</span>
+              <span className={`${fluxStyle} leading-tight block`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                {fluxVal}
+              </span>
+            </div>
+            <div>
+              <span className="text-[8px] text-muted-foreground uppercase block">Observation</span>
+              <span className="text-starlight-white font-bold">{formattedObsTime}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-muted-foreground uppercase">Current State</span>
-            <span className="text-sm font-bold text-starlight-white">{hel1os?.activity_state || '--'}</span>
+          
+          <div className="flex flex-col space-y-1 text-right items-end">
+            <div>
+              <span className="text-[8px] text-muted-foreground uppercase block">Current State</span>
+              <span className="text-xs font-bold text-starlight-white">{hel1os?.activity_state || '--'}</span>
+            </div>
+            <div>
+              <span className="text-[8px] text-muted-foreground uppercase block">Dataset Mode</span>
+              <span className="text-orange-400 font-bold">{datasetModeStr}</span>
+            </div>
+            <div className="pt-0.5">
+              <span className="text-[8px] text-muted-foreground uppercase mr-1.5 inline-block">Inference Engine</span>
+              <span className="text-green-400 font-bold bg-green-500/10 px-1 py-0.5 rounded border border-green-500/20 text-[8px]">LIVE</span>
+            </div>
           </div>
         </div>
 
@@ -49,11 +99,36 @@ export function HeliosActivityPanel() {
           </div>
         </div>
 
-        <div className="h-16 w-full mt-6">
+        {/* Scientific Line Plot with Grid and Tick Labels */}
+        <div className="h-20 w-full mt-4 font-mono text-[8px] relative">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={hel1osData}>
-              <YAxis domain={['dataMin', 'dataMax']} hide />
-              <Line type="monotone" dataKey="flux" stroke="#ff9f1c" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <LineChart data={hel1osHistory} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis 
+                dataKey="time" 
+                stroke="rgba(255,255,255,0.3)" 
+                tickLine={false} 
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="rgba(255,255,255,0.3)" 
+                tickLine={false} 
+                axisLine={false}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#0b1022', borderColor: '#ff9f1c', color: '#fff', fontSize: '9px' }}
+                itemStyle={{ fontSize: '9px', color: '#ff9f1c' }}
+                labelStyle={{ fontSize: '9px', color: '#888' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="activity" 
+                stroke="#ff9f1c" 
+                strokeWidth={2} 
+                dot={false} 
+                isAnimationActive={true} 
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
