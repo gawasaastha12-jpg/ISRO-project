@@ -78,14 +78,21 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
     }
   }, [sceneIndex]);
 
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    if (val >= 0 && val < SCENE_ORDER.length - 1) {
+      setCurrentScene(SCENE_ORDER[val]);
+    }
+  };
+
   useEffect(() => {
+    // Stop previous sounds and narration
+    audioEngine.stopAll();
+
     // Avoid double speaking on mount if it's bigbang (let BigBangPrologue handle its own)
     if (currentScene === 'bigbang') {
       return;
     }
-
-    // Stop previous sounds and narration
-    audioEngine.stopAll();
 
     // Trigger scene-specific audio and narration
     let cleanUpFn: (() => void) | undefined;
@@ -214,33 +221,44 @@ export default function ExpandedStoryboardSequence({ onComplete }: ExpandedStory
         )}
       </div>
 
-      {/* Floating Audio Control Panel */}
-      <div className="absolute top-8 left-8 z-30 font-mono text-xs bg-black/80 border border-electric-blue/40 p-3 rounded backdrop-blur flex flex-col gap-2 shadow-[0_0_15px_rgba(0,217,255,0.2)]">
-        <div className="flex items-center gap-2">
-          {audioState === 'running' ? (
-            <Volume2 className="w-4 h-4 text-electric-blue animate-pulse" />
-          ) : (
-            <VolumeX className="w-4 h-4 text-orange-500" />
-          )}
-          <span className="text-muted-foreground">AUDIO:</span>
-          <span className={audioState === 'running' ? 'text-electric-blue font-bold' : 'text-orange-500 font-bold'}>
-            {audioState.toUpperCase()}
-          </span>
-        </div>
-        
-        {audioState !== 'running' && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                audioEngine.resumeContext();
-              }}
-              className="px-2 py-0.5 bg-electric-blue/20 hover:bg-electric-blue/40 border border-electric-blue/40 text-electric-blue rounded transition-colors text-[10px]"
-            >
-              ACTIVATE
-            </button>
+      {/* Video Control Panel at the bottom */}
+      {currentScene !== 'complete' && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 font-mono text-xs bg-black/85 border border-electric-blue/40 px-6 py-3 rounded-full backdrop-blur flex items-center gap-6 shadow-[0_0_20px_rgba(0,217,255,0.25)] min-w-[500px]">
+          {/* Play/Pause icon (static indicator or toggle) */}
+          <div className="text-electric-blue flex items-center justify-center">
+            <span className="text-[10px] tracking-widest uppercase font-bold animate-pulse text-electric-blue mr-2">PLAYING</span>
+            <div className="w-2 h-2 rounded-full bg-electric-blue animate-ping" />
           </div>
-        )}
-      </div>
+
+          {/* Scene Slider */}
+          <div className="flex-1 flex items-center gap-3">
+            <span className="text-[10px] text-muted-foreground">START</span>
+            <input
+              type="range"
+              min={0}
+              max={SCENE_ORDER.length - 2}
+              value={sceneIndex}
+              onChange={handleSliderChange}
+              className="flex-1 h-1 bg-deep-purple/30 rounded-lg appearance-none cursor-pointer accent-electric-blue focus:outline-none focus:ring-1 focus:ring-electric-blue/50"
+              style={{
+                background: `linear-gradient(to right, #00d9ff 0%, #00d9ff ${((sceneIndex) / (SCENE_ORDER.length - 2)) * 100}%, rgba(42, 47, 74, 0.5) ${((sceneIndex) / (SCENE_ORDER.length - 2)) * 100}%, rgba(42, 47, 74, 0.5) 100%)`
+              }}
+            />
+            <span className="text-[10px] text-muted-foreground">END</span>
+          </div>
+
+          {/* Current scene label */}
+          <div className="text-right text-[10px] tracking-wider text-supernova-gold min-w-[120px]">
+            {currentScene === 'bigbang' && 'PROLOGUE'}
+            {currentScene === 'cockpit' && 'COCKPIT'}
+            {currentScene === 'asteroids' && 'ASTEROIDS'}
+            {currentScene === 'star' && 'SOLAR FLARE'}
+            {currentScene === 'wormhole' && 'WORMHOLE'}
+            {currentScene === 'blackhole' && 'BLACK HOLE'}
+            {currentScene === 'nebula' && 'NEBULA CLOUD'}
+          </div>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-deep-purple/30 z-20">
