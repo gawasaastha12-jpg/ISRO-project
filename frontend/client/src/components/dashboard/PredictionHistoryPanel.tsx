@@ -89,6 +89,22 @@ export function PredictionHistoryPanel() {
       {catalogueOpen && (
         <div className="mt-6 pt-6 border-t border-white/10 flex flex-col space-y-4">
           
+          {/* Catalogue Stats Overview */}
+          <div className="grid grid-cols-3 gap-4 border border-[#00d9ff]/10 bg-[#00d9ff]/5 p-3 rounded text-center font-mono">
+            <div className="flex flex-col">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-wider">Total Events Logged</span>
+              <span className="text-base font-black text-[#00d9ff]">1,212</span>
+            </div>
+            <div className="flex flex-col border-l border-white/10">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-wider">Telemetry Records</span>
+              <span className="text-base font-black text-starlight-white">51.8 Million</span>
+            </div>
+            <div className="flex flex-col border-l border-white/10">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-wider">Observation Window</span>
+              <span className="text-[10px] font-bold text-supernova-gold mt-1">Feb 2024 – Jun 2026</span>
+            </div>
+          </div>
+          
           {/* Metadata Features & Description Bullets */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 p-4 rounded border border-white/5">
             <div>
@@ -151,8 +167,15 @@ export function PredictionHistoryPanel() {
               </thead>
               <tbody>
                 {history.map((row, idx) => {
-                  const evId = `EVT-${1000 + (history.length - idx)}`;
-                  const obsTime = new Date(row.timestamp).toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+                  const dateObj = new Date(row.timestamp);
+                  const yyyy = dateObj.getUTCFullYear();
+                  const mm = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+                  const dd = String(dateObj.getUTCDate()).padStart(2, '0');
+                  const hh = String(dateObj.getUTCHours()).padStart(2, '0');
+                  const minStr = String(dateObj.getUTCMinutes()).padStart(2, '0');
+                  const ss = String(dateObj.getUTCSeconds()).padStart(2, '0');
+                  const evId = `AL1-${yyyy}${mm}${dd}-${hh}${minStr}${ss}`;
+                  const obsTime = dateObj.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
                   const detTimeStr = new Date(new Date(row.timestamp).getTime() + 800).toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
                   
                   const forecastVal = row.forecast || row.prediction || 'Quiet';

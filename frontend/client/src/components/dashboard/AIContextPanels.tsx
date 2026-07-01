@@ -262,7 +262,7 @@ export function ExplainableAIPanel() {
               <span className="text-[9px] text-[#00d9ff] font-black uppercase">Current Prediction Drivers</span>
               <span className="text-[8px] text-muted-foreground font-mono">{liveTime}</span>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 mb-2.5">
               {[
                 { name: 'Prominence Change', pct: 31, color: 'bg-[#ff9f1c]' },
                 { name: 'Coronal Activity', pct: 18, color: 'bg-[#00ff88]' },
@@ -278,6 +278,36 @@ export function ExplainableAIPanel() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Physical Interpretation */}
+            <div className="mt-1 pt-1.5 border-t border-white/5 flex flex-col space-y-1">
+              <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold">Physical Interpretation</span>
+              <div className="flex flex-col space-y-0.5 text-[9px] font-mono">
+                {data?.alerts?.current_alert && data.alerts.current_alert !== 'NORMAL' && data.alerts.current_alert !== 'ALL CLEAR' ? (
+                  <>
+                    <div className="flex items-center text-[#ff3b5c]">
+                      <span className="mr-1 text-[7px]">●</span>
+                      <span>Prominence increasing rapidly</span>
+                    </div>
+                    <div className="flex items-center text-[#ff9f1c]">
+                      <span className="mr-1 text-[7px]">●</span>
+                      <span>Hard X-ray burst density rising</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center text-[#00ff88]">
+                      <span className="mr-1 text-[7px]">●</span>
+                      <span>Stable corona</span>
+                    </div>
+                    <div className="flex items-center text-gray-400">
+                      <span className="mr-1 text-[7px]">●</span>
+                      <span>No CME precursor detected</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

@@ -68,11 +68,11 @@ export function LiveFlareGauge() {
             <circle cx="80" cy="80" r={radius} fill="none" stroke="currentColor" strokeWidth="10" className="text-white/5" strokeDasharray={`${arcLength} ${circumference}`} strokeLinecap="round" />
             <circle cx="80" cy="80" r={radius} fill="none" stroke="currentColor" strokeWidth="10" className={`${getColor(probability)} transition-all duration-1000 ease-out`} strokeDasharray={`${arcLength} ${circumference}`} strokeDashoffset={dashoffset} strokeLinecap="round" />
           </svg>
-          <div className="absolute flex flex-col items-center justify-center mt-2">
-            <span className={`text-3xl font-black ${getColor(probability)}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+          <div className="absolute flex flex-col items-center justify-center mt-2 text-center">
+            <span className={`text-2xl font-black ${getColor(probability)}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
               {probability.toFixed(1)}%
             </span>
-            <span className="text-[8px] text-muted-foreground uppercase tracking-widest mt-1 font-black">Forecast Prob</span>
+            <span className="text-[8px] text-muted-foreground uppercase tracking-widest mt-0.5 font-bold max-w-[80px] leading-tight">Probability of Flare Onset</span>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export function LiveFlareGauge() {
         <div className="flex flex-col space-y-2 justify-center font-mono">
           <div className="bg-white/5 p-2 rounded border border-white/10 flex justify-between items-center">
             <div className="flex flex-col">
-              <span className="text-[8px] text-muted-foreground uppercase">Forecast Prob</span>
+              <span className="text-[8px] text-muted-foreground uppercase">Probability of Flare Onset</span>
               <span className={`text-xs font-black ${getColor(probability)}`}>{probability.toFixed(1)}%</span>
             </div>
             <div className="flex flex-col items-end">
@@ -97,6 +97,12 @@ export function LiveFlareGauge() {
             <div className="text-[9px] text-[#00d9ff] font-bold uppercase">Bayesian</div>
           </div>
         </div>
+      </div>
+      
+      {/* Prediction Horizon details */}
+      <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
+        <span className="text-muted-foreground font-semibold">Current Forecast:</span>
+        <span className="text-[#00d9ff] font-bold">5-minute horizon</span>
       </div>
 
       {/* FSI & Evolution Telemetry */}
@@ -275,8 +281,8 @@ export function ForecastTimeline() {
                   </div>
                 </div>
 
-                <div className="text-[9px] text-muted-foreground font-bold mb-1 uppercase tracking-wide">
-                  {forecast.horizon === 'NOW' ? 'NOW' : forecast.horizon.replace('m', ' min')}
+                <div className="text-[9px] text-muted-foreground font-bold mb-1 uppercase tracking-wide text-center">
+                  {forecast.horizon === 'NOW' ? 'NOW' : `Expected Onset ${forecast.horizon}`}
                 </div>
                 
                 <div className="flex flex-col items-center">

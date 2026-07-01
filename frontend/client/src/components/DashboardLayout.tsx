@@ -127,7 +127,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
               <span className="text-muted-foreground/30">|</span>
               <span className="flex items-center space-x-1">
                 <span className="text-supernova-gold">VELC:</span>
-                <span className="text-starlight-white font-bold">100 FITS images | 74 extracted features/frame</span>
+                <span className="text-starlight-white font-bold">100 Processed Observation Sessions | 74 extracted features/frame</span>
               </span>
             </div>
             <div className="flex items-center space-x-1.5 border-t md:border-t-0 md:border-l border-border/30 pt-2 md:pt-0 md:pl-4">

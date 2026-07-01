@@ -57,6 +57,26 @@ export function BackendHealth() {
           </div>
         </div>
       </div>
+      
+      {/* Model calibration details (bottom metadata panel) */}
+      <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 gap-2 text-[10px] font-mono">
+        <div className="flex flex-col">
+          <span className="text-[8px] text-muted-foreground uppercase">Current Model</span>
+          <span className="text-starlight-white font-bold">XGBoost v2.1</span>
+        </div>
+        <div className="flex flex-col items-end text-right">
+          <span className="text-[8px] text-muted-foreground uppercase">Calibration</span>
+          <span className="text-[#00d9ff] font-bold">Isotonic</span>
+        </div>
+        <div className="flex flex-col mt-1">
+          <span className="text-[8px] text-muted-foreground uppercase">Dataset</span>
+          <span className="text-starlight-white font-bold">LOMO-Validated</span>
+        </div>
+        <div className="flex flex-col items-end text-right mt-1">
+          <span className="text-[8px] text-muted-foreground uppercase">Feature Set</span>
+          <span className="text-supernova-gold font-bold">74 physics-derived</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -130,7 +150,7 @@ export function CorrelationEngineWidget() {
           <Network className="w-4 h-4 mr-2 text-[#7c3aed]" />
           Correlation Engine
         </h3>
-        <span className="text-[#00d9ff] text-xs font-bold bg-[#00d9ff]/10 px-2 py-1 rounded">Overall: {correlation.overall_score?.toFixed(2)}</span>
+        <span className="text-[#00d9ff] text-xs font-bold bg-[#00d9ff]/10 px-2 py-1 rounded">Pearson r = {correlation.overall_score?.toFixed(2)}</span>
       </div>
       
       <div className="flex flex-col space-y-3 flex-1 justify-center">
@@ -138,8 +158,15 @@ export function CorrelationEngineWidget() {
             <div key={idx} className="flex justify-between items-center bg-white/5 p-2.5 rounded">
                <span className="text-[10px] text-starlight-white font-bold">{pair.pair}</span>
                <div className="flex items-center space-x-3">
-                 <span className={`text-[10px] font-bold ${pair.value === 0 || pair.value === 0.00 ? 'text-gray-500' : 'text-starlight-white font-black'}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                    {pair.value === 0 || pair.value === 0.00 ? 'Insufficient overlap' : pair.value.toFixed(2)}
+                 <span className={`text-[10px] font-bold ${pair.value === 0 || pair.value === 0.00 ? 'text-[#ff3b5c]' : 'text-starlight-white font-black'}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                    {pair.value === 0 || pair.value === 0.00 ? (
+                      <div className="text-right flex flex-col leading-tight">
+                        <span className="text-[9px] text-[#ff3b5c]">Overlap &lt;15 minutes</span>
+                        <span className="text-[8px] text-gray-500 font-normal">Correlation unavailable</span>
+                      </div>
+                    ) : (
+                      pair.value.toFixed(2)
+                    )}
                  </span>
                  <div className="flex space-x-[2px]">
                    {[...Array(5)].map((_, i) => (

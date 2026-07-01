@@ -69,7 +69,7 @@ export function AlertPanel() {
               <span className={`text-[10px] font-bold ${getAlertColor(alert.level).split(' ')[0]}`}>{alert.level}</span>
               <span className="text-[10px] text-muted-foreground" style={{ fontFamily: 'JetBrains Mono, monospace' }}>{alert.timestamp}</span>
             </div>
-            <p className="text-xs text-starlight-white">{alert.reason}</p>
+            <p className="text-xs text-starlight-white">{alert.reason === 'Nominal' ? 'Operational Assessment: Nominal' : alert.reason}</p>
             {alert.operatorNotes && (
               <div className="flex flex-col space-y-0.5 mt-1 pt-1 border-t border-border/30">
                 <div className="flex items-center space-x-1 mb-0.5">
