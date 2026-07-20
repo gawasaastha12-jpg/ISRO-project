@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     # API Settings
     API_VERSION: str = "v1"
     API_TITLE: str = "Mission Control API"
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:5173", "*"]
     
     # Engine Refresh & Cache
     CACHE_TTL_SECONDS: int = 5

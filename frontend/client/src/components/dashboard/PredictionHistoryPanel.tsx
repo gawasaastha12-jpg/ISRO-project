@@ -9,7 +9,7 @@ export function PredictionHistoryPanel() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/history');
+        const res = await fetch('http://127.0.0.1:8000/api/v1/history');
         const data = await res.json();
         if (data.status === 'ONLINE' && data.predictions) {
           // reverse so newest is first 
@@ -136,7 +136,7 @@ export function PredictionHistoryPanel() {
           <div className="flex justify-between items-center">
             <span className="text-[10px] text-muted-foreground uppercase font-mono">Showing latest catalogue nowcasts ({history.length} records)</span>
             <a 
-              href="http://localhost:8000/api/v1/history" 
+              href="http://127.0.0.1:8000/api/v1/history" 
               target="_blank"
               rel="noreferrer"
               className="flex items-center space-x-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[10px] text-starlight-white font-bold transition-colors uppercase font-mono hover:text-[#00d9ff]"
