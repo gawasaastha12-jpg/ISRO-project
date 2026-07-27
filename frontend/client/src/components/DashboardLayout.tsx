@@ -52,61 +52,61 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
         <div className="max-w-[1920px] mx-auto flex flex-col space-y-4">
           
           {/* Row 1: Mission Overview (Gauge, Timeline, Fusion) */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[280px]">
-             <div className="lg:col-span-1 gsap-delay-150">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:min-h-[280px]">
+             <div className="lg:col-span-1 gsap-delay-150 h-full">
                 <LiveFlareGauge />
              </div>
-             <div className="lg:col-span-2 gsap-delay-250">
+             <div className="lg:col-span-2 gsap-delay-250 h-full">
                 <ForecastTimeline />
              </div>
-             <div className="lg:col-span-1 gsap-delay-350">
+             <div className="lg:col-span-1 gsap-delay-350 h-full">
                 <FusionDecisionCard />
              </div>
           </div>
 
           {/* Row 2: Main Analysis (SOLEXS 40%, VELC 60%) */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 h-96">
-            <div className="lg:col-span-2 gsap-delay-500">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:min-h-[384px]">
+            <div className="lg:col-span-2 gsap-delay-500 h-full">
               <LightCurvePanel />
             </div>
-            <div className="lg:col-span-3 gsap-delay-500">
+            <div className="lg:col-span-3 gsap-delay-500 h-full">
               <CoronalImageViewer />
             </div>
           </div>
 
           {/* Row 3: Activity & AI (HEL1OS, Explainable AI) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[310px]">
-            <div className="lg:col-span-1 gsap-delay-700">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:min-h-[310px]">
+            <div className="lg:col-span-1 gsap-delay-700 h-full">
                <HeliosActivityPanel />
             </div>
-            <div className="lg:col-span-2 gsap-delay-700">
+            <div className="lg:col-span-2 gsap-delay-700 h-full">
                <ExplainableAIPanel />
             </div>
           </div>
 
           {/* Row 4: Timeline */}
-          <div className="gsap-delay-900">
+          <div className="gsap-delay-900 w-full">
             <CrossInstrumentTimeline />
           </div>
 
           {/* Row 5: Systems (Correlation, Alerts, Backend, Instrument Health) */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-64">
-             <div className="lg:col-span-1 gsap-delay-1100">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:min-h-[256px]">
+             <div className="lg:col-span-1 gsap-delay-1100 h-full">
                 <CorrelationEngineWidget />
              </div>
-             <div className="lg:col-span-1 gsap-delay-1100">
+             <div className="lg:col-span-1 gsap-delay-1100 h-full">
                 <AlertPanel />
              </div>
-             <div className="lg:col-span-1 gsap-delay-1100">
+             <div className="lg:col-span-1 gsap-delay-1100 h-full">
                 <BackendHealth />
              </div>
-             <div className="lg:col-span-1 gsap-delay-1100">
+             <div className="lg:col-span-1 gsap-delay-1100 h-full">
                 <InstrumentHealthHeatmap />
              </div>
           </div>
 
           {/* Row 6: Past Events */}
-          <div className="gsap-delay-1100">
+          <div className="gsap-delay-1100 w-full">
              <PredictionHistoryPanel />
           </div>
 
