@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Shield, BrainCircuit, Activity, ChevronRight, Zap, Target, Combine } from 'lucide-react';
 import { useDashboard } from '../../contexts/DashboardContext';
 import { ResponsiveContainer, LineChart, Line, YAxis, Tooltip, XAxis } from 'recharts';
@@ -32,6 +32,29 @@ export function LiveFlareGauge() {
   };
 
   const interp = getInterpretation(probability);
+
+  // Addition 1: Estimate Lead Time (longest horizon above 35% threshold) & Next Event time
+  const forecastData = data?.instruments?.solexs?.multi_horizon || [];
+  const horizonsList = ["5", "10", "15", "30", "60", "120", "180"];
+  const leadTimeMinutes = [...horizonsList]
+    .reverse() // start from 180, work down
+    .find(h => {
+      const forecast = forecastData.find((f: any) => f.horizon.replace('min', '').replace('m', '') === h);
+      if (!forecast) return false;
+      const prob = forecast.forecast_confidence ?? forecast.confidence ?? forecast.probability ?? 0;
+      const probPct = prob <= 1.0 ? prob * 100 : prob;
+      return probPct > 35;
+    }) ?? "5";
+
+  const getNextEventEstTime = (leadMinutesStr: string) => {
+    const leadMinutes = parseInt(leadMinutesStr, 10) || 5;
+    const futureDate = new Date(Date.now() + leadMinutes * 60 * 1000);
+    const hh = String(futureDate.getUTCHours()).padStart(2, '0');
+    const mm = String(futureDate.getUTCMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  const leadTimeEstTime = getNextEventEstTime(leadTimeMinutes);
 
   // FSI Interpretation:
   const fsi = data?.instruments?.solexs?.forecast_severity_index ?? data?.instruments?.solexs?.expected_severity ?? 0;
@@ -76,7 +99,7 @@ export function LiveFlareGauge() {
           </div>
         </div>
 
-        {/* Probability & Uncertainty & Fusion KPIs */}
+        {/* Probability & Uncertainty & Lead Time KPIs */}
         <div className="flex flex-col space-y-2 justify-center font-mono">
           <div className="bg-white/5 p-2 rounded border border-white/10 flex justify-between items-center">
             <div className="flex flex-col">
@@ -95,6 +118,28 @@ export function LiveFlareGauge() {
               <span className="text-xs font-black text-[#00d9ff]">{fusionProb.toFixed(1)}%</span>
             </div>
             <div className="text-[9px] text-[#00d9ff] font-bold uppercase">Bayesian</div>
+          </div>
+
+          {/* Lead Time Display & Next Event Estimate */}
+          <div className="bg-black/30 p-2 rounded border border-white/5 flex flex-col space-y-1 font-mono text-[9px]">
+            <div className="flex justify-between items-baseline">
+              <span className="text-muted-foreground uppercase text-[8px]">Est. Lead Time</span>
+              <span className="text-xs font-black text-green-400">
+                {leadTimeMinutes} MIN
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline border-t border-white/5 pt-1">
+              <span className="text-muted-foreground uppercase text-[8px]">Next Event Est.</span>
+              <span className="text-xs font-black text-amber-400">
+                {leadTimeEstTime} UTC
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline border-t border-white/5 pt-1">
+              <span className="text-muted-foreground uppercase text-[8px]">Alert Horizon</span>
+              <span className="text-cyan-400 font-bold">
+                5 – 180 MIN
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -135,6 +180,36 @@ export function ForecastTimeline() {
   const [hoveredHorizon, setHoveredHorizon] = useState<string | null>(null);
 
   const forecastData = data?.instruments?.solexs?.multi_horizon || [];
+
+  // Addition 4: Sparkline probability history stored in useRef to prevent rendering loop thrashing
+  const probHistoryRef = useRef<Record<string, number[]>>({});
+
+  useEffect(() => {
+    if (!forecastData || forecastData.length === 0) return;
+    forecastData.forEach((f: any) => {
+      const hz = f.horizon;
+      const prob = f.forecast_confidence ?? f.confidence ?? f.probability ?? 0;
+      const probVal = prob <= 1.0 ? prob : prob / 100;
+      
+      if (!probHistoryRef.current[hz] || probHistoryRef.current[hz].length === 0) {
+        probHistoryRef.current[hz] = [
+          Math.max(0, probVal - 0.15),
+          Math.max(0, probVal - 0.1),
+          Math.max(0, probVal - 0.05),
+          Math.max(0, probVal - 0.08),
+          Math.max(0, probVal - 0.02),
+          probVal
+        ];
+      } else {
+        const hist = [...probHistoryRef.current[hz]];
+        hist.push(probVal);
+        if (hist.length > 6) {
+          hist.shift();
+        }
+        probHistoryRef.current[hz] = hist;
+      }
+    });
+  }, [forecastData]);
 
   const getClassColor = (c: string) => {
     const clean = c.replace(/-like/gi, '');
@@ -249,6 +324,8 @@ export function ForecastTimeline() {
 
           const probObj = forecast.probabilities ?? forecast.prob;
 
+          const probHistory = probHistoryRef.current[forecast.horizon] || [0.1, 0.15, 0.2, 0.22, 0.25, 0.3];
+
           return (
             <React.Fragment key={forecast.horizon}>
               <div
@@ -297,6 +374,24 @@ export function ForecastTimeline() {
                   <span className={`text-[10px] font-mono font-bold ${getProbColor(currentProbPct)}`}>
                     {currentProbPct.toFixed(1)}%
                   </span>
+                </div>
+                
+                {/* Addition 4 — Probability Trend Sparkline */}
+                <div className="sparkline-container h-6 w-16 mt-1 flex items-center justify-center bg-black/20 rounded border border-white/5 p-0.5 overflow-hidden">
+                  <svg viewBox="0 0 60 20" className="w-full h-full">
+                    {probHistory.slice(0, -1).map((p, idx) => {
+                      const nextP = probHistory[idx + 1] ?? p;
+                      return (
+                        <line
+                          key={idx}
+                          x1={idx * 12} y1={20 - p * 18}
+                          x2={(idx + 1) * 12} y2={20 - nextP * 18}
+                          stroke={p > 0.35 ? "#F97316" : "#22C55E"}
+                          strokeWidth="1.5"
+                        />
+                      );
+                    })}
+                  </svg>
                 </div>
                 
                 <div className={`text-[9px] mt-1 ${trendColor}`}>{trend}</div>

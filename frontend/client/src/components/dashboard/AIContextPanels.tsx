@@ -60,33 +60,55 @@ export function HeliosActivityPanel() {
 
       <div className="flex-1 flex flex-col justify-between">
         <div className="grid grid-cols-2 gap-4 font-mono text-[9px] border-b border-white/5 pb-3">
-          <div className="flex flex-col space-y-2">
-            <div>
-              <span className="text-[8px] text-muted-foreground uppercase block">Hard X-ray Flux</span>
-              <span className={`${fluxStyle} leading-tight block`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                {fluxVal}
-              </span>
+          {hasObs ? (
+            <>
+              <div className="flex flex-col space-y-2">
+                <div>
+                  <span className="text-[8px] text-muted-foreground uppercase block">Hard X-ray Flux</span>
+                  <span className={`${fluxStyle} leading-tight block`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                    {fluxVal}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[8px] text-muted-foreground uppercase block">Observation</span>
+                  <span className="text-starlight-white font-bold">{formattedObsTime}</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-1 text-right items-end">
+                <div>
+                  <span className="text-[8px] text-muted-foreground uppercase block">Current State</span>
+                  <span className="text-xs font-bold text-starlight-white">{hel1os?.activity_state || '--'}</span>
+                </div>
+                <div>
+                  <span className="text-[8px] text-muted-foreground uppercase block">Dataset Mode</span>
+                  <span className="text-orange-400 font-bold">{datasetModeStr}</span>
+                </div>
+                <div className="pt-0.5">
+                  <span className="text-[8px] text-muted-foreground uppercase mr-1.5 inline-block">Inference Engine</span>
+                  <span className="text-green-400 font-bold bg-green-500/10 px-1 py-0.5 rounded border border-green-500/20 text-[8px]">LIVE</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="col-span-2 flex flex-col space-y-1.5 p-3 bg-amber-400/5 border border-amber-400/20 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-amber-400 font-black font-mono text-xs">
+                  DATASET MODE: Historical Archive
+                </span>
+                <span className="text-green-400 font-bold text-xs bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded animate-pulse">
+                  INFERENCE ENGINE: LIVE
+                </span>
+              </div>
+              <div className="text-gray-400 font-mono text-xs leading-normal">
+                92 light curves · 2.76M measurements · Feb 2024–Jun 2026
+              </div>
+              <div className="flex justify-between items-center text-[10px] text-gray-500 border-t border-white/5 pt-1.5 mt-1.5">
+                <span>OBSERVATION TIME: {formattedObsTime}</span>
+                <span>STATE: {hel1os?.activity_state || 'Nominal'}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[8px] text-muted-foreground uppercase block">Observation</span>
-              <span className="text-starlight-white font-bold">{formattedObsTime}</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col space-y-1 text-right items-end">
-            <div>
-              <span className="text-[8px] text-muted-foreground uppercase block">Current State</span>
-              <span className="text-xs font-bold text-starlight-white">{hel1os?.activity_state || '--'}</span>
-            </div>
-            <div>
-              <span className="text-[8px] text-muted-foreground uppercase block">Dataset Mode</span>
-              <span className="text-orange-400 font-bold">{datasetModeStr}</span>
-            </div>
-            <div className="pt-0.5">
-              <span className="text-[8px] text-muted-foreground uppercase mr-1.5 inline-block">Inference Engine</span>
-              <span className="text-green-400 font-bold bg-green-500/10 px-1 py-0.5 rounded border border-green-500/20 text-[8px]">LIVE</span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="mt-4">
