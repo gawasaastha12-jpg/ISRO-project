@@ -42,7 +42,7 @@ Solar flares are highly sparse events ($<2\%$ active states). To prevent quiet-s
 
 ### 3. Isotonic Probability Calibration
 Raw classifiers yield decision boundary logits rather than physical probabilities. We apply a post-processing **Isotonic Regression** function to map raw model confidence outputs to true, calibrated empirical onset probabilities:
-$$\text{Spectral Chaos Entropy (40.0%)} + \text{Fe XVIII Gradients (25.0%)} + \text{Solar Plume Prominence (15.0%)} + \text{Fe XIV Derivatives (15.0%)} + \text{Pearson Coeff (5.0%)} = 100.0\%$$
+$$\text{Peak Prominence Change (35.0%)} + \text{Spectral Entropy (20.0%)} + \text{X-ray Gradient Magnitude (18.0%)} + \text{Rolling SNR Trend (15.0%)} + \text{HEL1OS Burst Density (12.0%)} = 100.0\%$$
 
 ---
 

@@ -184,7 +184,10 @@ export default function MissionStatusBar() {
             <div style="text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 15px; margin-bottom: 20px;">
               <h1 style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #7c3aed; letter-spacing: 1px;">Aditya-L1 Solar Intelligence Platform</h1>
               <h3 style="margin: 5px 0 0 0; font-size: 12px; color: #a1a1aa; text-transform: uppercase; tracking-wider: 1px;">AI Model Methodology & Pipeline Architecture</h3>
-              <p style="margin: 5px 0 0 0; font-size: 10px; color: #6b7280;">Reference Ingest Standard standard-v3.2</p>
+              <p style="margin: 5px 0 0 0; font-size: 8px; color: #a1a1aa; line-height: 1.4;">
+                Model Architecture: XGBoost v2.1 with Isotonic Calibration<br/>
+                Training Data: 51.8M SoLEXS + 2.76M HEL1OS measurements | Validation: Leave-One-Month-Out CV, 25 calendar months
+              </p>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -226,11 +229,11 @@ export default function MissionStatusBar() {
                 Top predictors mapped by XGBoost Gain attributions across the 74 operational parameters:
               </p>
               <div style="font-size: 9px; line-height: 1.8; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
-                <div>1. Spectral Chaos Entropy [████████████░░░░░░░░░░░░░░░░░░░░] 40.0%</div>
-                <div>2. Fe XVIII Flux Gradients   [████████░░░░░░░░░░░░░░░░░░░░░░░░] 25.0%</div>
-                <div>3. Solar Plume Prominence   [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 15.0%</div>
-                <div>4. Fe XIV Temp Derivatives   [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 15.0%</div>
-                <div>5. Cross-Sensor Pearson Coeff [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 5.0%</div>
+                <div>1. Peak Prominence Change (prominence_change) [██████████░░░░░░░░░░░░░░░░░░░░] 35.0%</div>
+                <div>2. Spectral Entropy (spectral_entropy) [██████░░░░░░░░░░░░░░░░░░░░░░░░] 20.0%</div>
+                <div>3. X-ray Gradient Magnitude (max_gradient_last60) [█████░░░░░░░░░░░░░░░░░░░░░░░░░░] 18.0%</div>
+                <div>4. Rolling SNR Trend (rolling_snr_last60) [████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 15.0%</div>
+                <div>5. HEL1OS Burst Density (helios_burst_density) [████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 12.0%</div>
               </div>
             </div>
 
