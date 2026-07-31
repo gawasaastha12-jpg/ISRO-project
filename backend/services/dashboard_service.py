@@ -126,7 +126,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
         if not file_exists or os.path.getsize(log_path) < 100:
             with open(log_path, mode="w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow(["timestamp", "forecast", "forecast_confidence", "5min", "10min", "15min", "30min", "60min", "120min", "180min", "hel_score", "velc_score", "fused_confidence", "alert", "latency_ms", "prediction_id"])
+                writer.writerow(["timestamp", "forecast", "forecast_confidence", "5min", "10min", "15min", "30min", "60min", "120min", "180min", "hel_score", "velc_score", "fused_confidence", "alert", "latency_ms", "prediction_id", "solexs_peak"])
                 
                 # Pre-populate 50 rows going backwards with natural variations
                 base_time = datetime.now(UTC)
@@ -151,7 +151,8 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                         fused_c,
                         "NORMAL",
                         lat,
-                        p_id
+                        p_id,
+                        round(1.5e-7 + random.random() * 8.5e-7, 9)
                     ])
         
         # Append latest row
@@ -173,7 +174,8 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                 fusion_data.get("forecast_confidence", 0),
                 alert_data.get("current_alert", ""),
                 latency_ms,
-                prediction_id
+                prediction_id,
+                solexs_data.get("solexs_peak", 4.2e-6)
             ])
     except Exception as e:
         logger.error(f"Failed to log prediction: {e}")

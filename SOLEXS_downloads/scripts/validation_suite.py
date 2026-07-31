@@ -97,7 +97,7 @@ DATA_DIR    = "../data/processed"
 RESULTS_DIR = "../results/validation"
 MODELS_DIR  = "../models"
 
-# Horizon → interim lag dataset filename (produced by onset_pipeline.py)
+# Horizon -> interim lag dataset filename (produced by onset_pipeline.py)
 HORIZON_FILES = {
     "5min":  "lag_12_onset_5min.csv",
     "30min": "lag_12_onset_30min.csv",
@@ -261,7 +261,7 @@ def run_lomo(df: pd.DataFrame, feat_cols: list, horizon: str,
     months = sorted(df["month"].unique())
     months = [m for m in months if m != "unknown"]
 
-    print(f"  Months available: {len(months)}  ({months[0]} → {months[-1]})")
+    print(f"  Months available: {len(months)}  ({months[0]} -> {months[-1]})")
 
     X_all = df[feat_cols].values
     y_all = df[TARGET_COL].values
@@ -329,7 +329,7 @@ def run_lomo(df: pd.DataFrame, feat_cols: list, horizon: str,
     # Save
     out_path = os.path.join(results_dir, f"lomo_results_{horizon}.csv")
     df_results.to_csv(out_path, index=False)
-    print(f"  Saved → {out_path}")
+    print(f"  Saved -> {out_path}")
 
     # Plot TSS by month
     try:
@@ -460,7 +460,7 @@ def run_model_comparison(df: pd.DataFrame, feat_cols: list, horizon: str,
         mean_sens = np.mean([m["sensitivity"] for m in fold_metrics])
         mean_spec = np.mean([m["specificity"] for m in fold_metrics])
 
-        print(f"    → TSS: {mean_tss:+.4f} ± {std_tss:.4f}  "
+        print(f"    -> TSS: {mean_tss:+.4f} ± {std_tss:.4f}  "
               f"AUC: {mean_auc:.4f}  Sens: {mean_sens:.4f}  Spec: {mean_spec:.4f}")
 
         records.append({
@@ -482,7 +482,7 @@ def run_model_comparison(df: pd.DataFrame, feat_cols: list, horizon: str,
 
     out_path = os.path.join(results_dir, f"model_comparison_{horizon}.csv")
     df_cmp.to_csv(out_path, index=False)
-    print(f"  Saved → {out_path}")
+    print(f"  Saved -> {out_path}")
 
     # Bar chart comparison
     try:
@@ -547,7 +547,7 @@ def run_calibration(df: pd.DataFrame, feat_cols: list, horizon: str,
     calib_months = months_sorted[-(2*n_test_months):-n_test_months]
     train_months = months_sorted[:-(2*n_test_months)]
 
-    print(f"  Train months : {train_months[0]} → {train_months[-1]} ({len(train_months)} months)")
+    print(f"  Train months : {train_months[0]} -> {train_months[-1]} ({len(train_months)} months)")
     print(f"  Calib months : {calib_months} ({len(calib_months)} months)")
     print(f"  Test months  : {test_months} ({len(test_months)} months)")
 
@@ -657,7 +657,7 @@ def run_calibration(df: pd.DataFrame, feat_cols: list, horizon: str,
         fig.tight_layout()
         fig.savefig(os.path.join(results_dir, f"calibration_{horizon}.png"), dpi=120)
         plt.close(fig)
-        print(f"  Saved → calibration_{horizon}.png")
+        print(f"  Saved -> calibration_{horizon}.png")
     except Exception as e:
         print(f"  [WARN] Calibration plot failed: {e}")
 
@@ -675,7 +675,7 @@ def run_calibration(df: pd.DataFrame, feat_cols: list, horizon: str,
     }
     joblib.dump(calib_bundle,
                 os.path.join(MODELS_DIR, f"lgbm_onset_{horizon}_calibrated.pkl"))
-    print(f"  Calibrated model saved → lgbm_onset_{horizon}_calibrated.pkl")
+    print(f"  Calibrated model saved -> lgbm_onset_{horizon}_calibrated.pkl")
 
     return {"ece_raw": ece_raw, "ece_platt": ece_platt, "ece_iso": ece_iso,
             "tss_raw": m_raw["tss"], "tss_platt": m_platt["tss"],
@@ -792,7 +792,7 @@ def run_ablation(df: pd.DataFrame, feat_cols: list, horizon: str,
 
     out_path = os.path.join(results_dir, f"ablation_{horizon}.csv")
     df_abl.to_csv(out_path, index=False)
-    print(f"  Saved → {out_path}")
+    print(f"  Saved -> {out_path}")
 
     # Ablation bar chart
     try:

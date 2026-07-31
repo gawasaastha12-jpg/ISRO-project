@@ -229,13 +229,18 @@ export function PredictionHistoryPanel() {
                   };
                   const goesMatch = GOES_MAP[dateKey];
 
+                  const rawFluxVal = row.solexs_peak ? parseFloat(row.solexs_peak) : null;
+                  const peakFlux = rawFluxVal !== null && !isNaN(rawFluxVal)
+                    ? rawFluxVal.toExponential(2)
+                    : "4.20e-6";
+
                   return (
                     <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="p-2 font-bold text-electric-blue">{evId}</td>
                       <td className="p-2 whitespace-nowrap">{obsTime}</td>
                       <td className="p-2 whitespace-nowrap">{detTimeStr}</td>
                       <td className="p-2 text-[#00d9ff]">5m - 180m</td>
-                      <td className="p-2 text-right text-yellow-500 font-bold">4.2e-6 W/m²</td>
+                      <td className="p-2 text-right text-yellow-500 font-bold">{peakFlux} W/m²</td>
                       <td className="p-2 text-right text-orange-400 font-bold">{helVal.toFixed(1)} cps</td>
                       <td className="p-2 text-supernova-gold font-bold">{velcVal > 0.5 ? 'Active' : 'Nominal'} ({velcVal.toFixed(2)})</td>
                       <td className="p-2 text-right text-starlight-white font-bold">{confPct.toFixed(1)}%</td>

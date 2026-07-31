@@ -104,6 +104,7 @@ def generate_solexs_data(cache: ModelCache) -> dict:
         "margin": nowcast["margin"],
         "prediction_id": nowcast["prediction_id"],
         "multi_horizon": results,
+        "solexs_peak": nowcast.get("solexs_peak", 4.2e-6),
         "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "processing_ms": round((time.time() - start_time) * 1000, 2),
         "engine_versions": {"solexs": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("version", "v3.0")}

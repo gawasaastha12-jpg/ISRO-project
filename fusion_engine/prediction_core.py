@@ -43,18 +43,31 @@ def predict_horizon(model_bundle: Any, df: Any, horizon: str, cache_metadata: Di
     threshold = 0.50
     model_sha = "N/A"
     
-    # Feature columns validation
-    feature_cols = [
-        "mean", "median", "std", "iqr", "skew", "kurtosis", "energy", "snr",
-        "max", "min", "peak_count", "peak_ratio", "max_prominence",
-        "detection_threshold", "prominence_multiple", "largest_width", "trend"
-    ]
+    # Feature columns validation - dynamically read from model bundle if present
+    feature_cols = None
+    if isinstance(model_bundle, dict):
+        feature_cols = model_bundle.get("feature_cols")
+    if feature_cols is None:
+        feature_cols = [
+            "mean", "median", "std", "iqr", "skew", "kurtosis", "energy", "snr",
+            "max", "min", "peak_count", "peak_ratio", "max_prominence",
+            "detection_threshold", "prominence_multiple", "largest_width", "trend"
+        ]
     
     missing = [c for c in feature_cols if c not in df.columns]
     if missing:
         raise ValueError(f"Missing columns:\n{missing}")
         
-    latest = df.iloc[-1]
+    # Dynamic telemetry playback simulation (flight simulator)
+    # Advances the sliding window frame index forward every 10 seconds.
+    # We loop over the last 500 rows of the dataset to showcase a continuous active/quiet solar time-series.
+    if len(df) == 0:
+        raise ValueError("DataFrame is empty")
+    playback_length = min(500, len(df))
+    start_offset = len(df) - playback_length
+    frame_idx = start_offset + (int(time.time() / 10) % playback_length)
+    latest = df.iloc[frame_idx]
+    
     X = latest[feature_cols].values.reshape(1, -1)
     
     if isinstance(model_bundle, dict):
@@ -187,7 +200,8 @@ def predict_horizon(model_bundle: Any, df: Any, horizon: str, cache_metadata: Di
             "trained_on": trained_on,
             "threshold": threshold,
             "processing_ms": processing_ms,
-            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            "solexs_peak": float(latest["max"]) * 1e-10
         }
         
     except Exception as e:

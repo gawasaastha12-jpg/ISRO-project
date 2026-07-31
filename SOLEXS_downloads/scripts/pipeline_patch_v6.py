@@ -88,16 +88,16 @@ def rebalance(df: pd.DataFrame, random_state: int = 42) -> pd.DataFrame:
     for lbl, group in df.groupby("label"):
         if lbl == 0:
             keep = group.sample(frac=QUIET_KEEP_FRACTION, random_state=random_state)
-            print(f"  label {lbl}: {len(group):,} → {len(keep):,} (kept {QUIET_KEEP_FRACTION:.0%})")
+            print(f"  label {lbl}: {len(group):,} -> {len(keep):,} (kept {QUIET_KEEP_FRACTION:.0%})")
             parts.append(keep)
 
         elif lbl == 1:
             keep = group.sample(frac=B_CLASS_KEEP_FRACTION, random_state=random_state)
-            print(f"  label {lbl}: {len(group):,} → {len(keep):,} (kept {B_CLASS_KEEP_FRACTION:.0%})")
+            print(f"  label {lbl}: {len(group):,} -> {len(keep):,} (kept {B_CLASS_KEEP_FRACTION:.0%})")
             parts.append(keep)
 
         else:
-            print(f"  label {lbl}: {len(group):,} → {len(group):,} (kept 100%)")
+            print(f"  label {lbl}: {len(group):,} -> {len(group):,} (kept 100%)")
             parts.append(group)
 
     df_down = pd.concat(parts).reset_index(drop=True)
@@ -222,7 +222,7 @@ def build_forecast_datasets(
     print(f"\n[FORECAST] Building {len(horizons_min)} horizon datasets")
     print(f"  Step size: {STEP_SECONDS}s = {STEP_SECONDS/60:.1f} min per index")
     for h, offset in horizon_offsets.items():
-        print(f"  {h:>4} min → shift labels by {offset} rows")
+        print(f"  {h:>4} min -> shift labels by {offset} rows")
 
     feature_cols = [c for c in df.columns if c not in ("label", "source_file")]
     result = {}
@@ -261,7 +261,7 @@ def build_forecast_datasets(
         df_horizon.to_csv(out_path, index=False)
         result[h_min] = df_horizon
 
-        print(f"\n  Horizon {h_min:>4}min → {out_path}")
+        print(f"\n  Horizon {h_min:>4}min -> {out_path}")
         print(f"    Shape: {df_horizon.shape}")
         _print_dist(df_horizon, indent="    ")
 
@@ -338,7 +338,7 @@ def main():
 
     os.makedirs(os.path.dirname(args.out_balanced), exist_ok=True)
     df_balanced.to_csv(args.out_balanced, index=False)
-    print(f"\n[INFO] Balanced dataset saved → {args.out_balanced}")
+    print(f"\n[INFO] Balanced dataset saved -> {args.out_balanced}")
 
     # ── Step 2: Multi-horizon forecast datasets ──────────────────────────────
     build_forecast_datasets(

@@ -78,16 +78,25 @@ class ModelCache:
                     logger.warning(f"SOLEXS model for {h} not found.")
                     
             # Load corresponding datasets for quick inference (latest rows)
-            data_path = os.path.join(root_dir, "SOLEXS_downloads", "data", "processed", "horizons", f"forecast_{h}.csv")
+            # Check if this model is trained on the 74-feature set to determine folder path
+            is_74_model = False
+            model_bundle = self.models.get(f"forecast_{h}")
+            if isinstance(model_bundle, dict) and model_bundle.get("feature_cols") is not None:
+                if len(model_bundle["feature_cols"]) > 20:
+                    is_74_model = True
+            
+            horizons_folder = "horizons_74" if is_74_model else "horizons"
+            data_path = os.path.join(root_dir, "SOLEXS_downloads", "data", "processed", horizons_folder, f"forecast_{h}.csv")
+            
             if os.path.exists(data_path):
                 try:
                     df = pd.read_csv(data_path)
                     self.datasets[f"solexs_{h}"] = df
-                    logger.info(f"Loaded SOLEXS dataset for {h}.")
+                    logger.info(f"Loaded SOLEXS dataset for {h} from {horizons_folder}.")
                 except Exception as e:
                     logger.error(f"Failed to load dataset {data_path}: {e}")
             else:
-                logger.warning(f"Dataset for {h} not found.")
+                logger.warning(f"Dataset for {h} not found at {data_path}.")
                 
     def load_hel1os_data(self, root_dir: str):
         import os

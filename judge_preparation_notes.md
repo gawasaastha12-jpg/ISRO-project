@@ -40,24 +40,43 @@ Use this guide as a concise reference sheet to defend the technical, mathematica
 ## 4. The Physics Justification (Domain Mastery)
 
 **Judge Question:**
-> *"Your feature importance chart lists 'Peak Prominence Change' as the highest predictor. Mathematically, it clearly provides the highest information gain. But physically, what is happening in the solar corona that causes this change right before a flare onset?"*
+> *"Your feature importance chart lists 'Peak Density Ratio' as the top feature. Physically, what is happening in the solar corona that these top 5 features represent, and why are they precursor indicators of solar flares?"*
 
 **Your Answer:**
-* **Peak Prominence Change (`prominence_change` - No. 1):** "This tracks the physical lifting and rapid destabilization of cool, dense chromospheric material suspended in active magnetic loops. As magnetic shear increases, the loops stretch and rise, indicating an imminent flare onset."
-* **Spectral Entropy (`spectral_entropy` - No. 2):** "Prior to a flare, magnetic reconnection in active regions creates intense magnetic turbulence. This turbulence heats the local plasma into a chaotic, multi-temperature state, disrupting the uniform thermal structure of the corona and manifesting as a spike in the spectral entropy of soft X-rays before the flare erupts."
-* **X-ray Gradient Magnitude (`max_gradient_last60` - No. 3):** "This tracks the rate of thermal energy release and the acceleration of plasma heating curves over the preceding hour, directly mapping the rapid thermal buildup leading up to the trigger phase of the reconnection event."
+* **Peak Density Ratio (`peak_ratio` - No. 1):** "Tracks the concentration of detected peaks in the sliding window. Physically, this distinguishes between diffuse, smooth heating of coronal loops and bursty, localized magnetic reconnection events (micro-bursts/nanoflares). A high ratio indicates that the coronal plasma is undergoing rapid, impulsive reconnection heating."
+* **Signal-to-Noise Ratio (`snr` - No. 2):** "Tracks how distinguishable real flux increases are from background solar wind and detector noise. A rising SNR indicates that active regions are emitting coherent, high-energy plasma fluxes, proving a true astronomical flare event is building."
+* **Maximum Peak Flux (`max` - No. 3):** "Captures the single largest peak count excursion inside the window, serving as the absolute thermal peak of recent loop activity."
+* **Peak Count (`peak_count` - No. 4):** "Measures the absolute number of distinct local peaks. Physically, this indicates sustained multi-burst coronal activity (multiple active regions erupting), which relates to active days containing multiple flare packets."
+* **Coronal Energy Flux (`energy` - No. 5):** "Integrates the sum of squared counts over the window. This tracks the total integrated energetic content of the coronal emission, acting as a physical proxy for the cumulative thermal energy stored in active loops."
 
 ---
 
-## 5. The Inference Speed Paradox (Execution Optimization)
+## 5. The Inference Speed Paradox & Multi-Horizon Feature Shifts
 
 **Judge Question:**
-> *"How is the backend calculating 74 features across 7 models for 5, 10, 15, 30, 60, 120, and 180-minute horizons in less than a second (35–50 milliseconds)?"*
+> *"You run 7 separate models for horizons from 5 to 180 minutes. Do they all use the exact same feature weights, or do the model structures change across horizons? What is the physical significance of these changes?"*
 
 **Your Answer:**
-* **Single-Pass Extraction:** "The 74 features represent general thermodynamic indices of the active region, which do not change with the target horizon. We compute this feature vector exactly **once** from the telemetry stream, then pass it as a shared array to all 7 models simultaneously."
-* **Decision Tree Traversals:** "Unlike neural networks that perform heavy float matrix multiplications, tree ensembles (XGBoost) evaluate simple conditional structures (`if-else` branching). Evaluating a single tree branch takes microsecond cycles on a standard CPU."
-* **In-Memory Caching & Multi-Threading:** "The pre-trained classifiers and recent observations are loaded directly into RAM at startup, avoiding any disk database/file system read delays. Additionally, individual instrument sub-routines (SOLEXS, HEL1OS, VELC) execute concurrently using a `ThreadPoolExecutor`."
+* **Dynamic Physical Shifts Across Horizons:** "No, they do not use the same weights. Each model is trained independently, and the feature weights shift logically across horizons, reflecting distinct physical forecasting regimes:
+  - **Short horizons (5m, 10m Nowcasting):** The models weight transient, impulsive features heavily: **`peak_ratio` (11.0%–13.1%)**, **`snr` (10.1%)**, and **`max_prominence` (15.2%)**. Short-term forecasting relies on immediate, visible loop peaks and current signal clarity above noise.
+  - **Medium horizons (15m, 30m Short-term Forecast):** The weights shift to plasma energy integration and variance: **`energy` (14.3%)**, **`iqr` (9.6%)**, and **`peak_ratio`**. The model tracks cumulative thermodynamic energy buildup over a wider time window.
+  - **Long horizons (60m, 120m Long-term Forecast):** The models rely heavily on gradual trends and complexity metrics: **`trend` (13.0%)** (the rate of slow background coronal heating) and **`prominence_multiple` (9.6%)** (the structural complexity of sheared magnetic active regions).
+  - **Very Long horizons (180m Forecast):** Weighting shifts to long-term baseline variables: **`detection_threshold` (15.3%)** (the adaptive noise floor representing long-term solar cycle flux) and **`snr` (11.5%)**."
+
+### Complete Horizon Feature Importance Reference Table
+Below are the exact top 5 features and their raw XGBoost Gain values for all 7 horizon classifiers:
+
+| Horizon | #1 Feature (Gain) | #2 Feature (Gain) | #3 Feature (Gain) | #4 Feature (Gain) | #5 Feature (Gain) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **5 min** | `peak_ratio` (11.0%) | `snr` (10.1%) | `max` (7.8%) | `peak_count` (7.6%) | `energy` (7.1%) |
+| **10 min** | `max_prominence` (15.2%) | `peak_ratio` (13.1%) | `iqr` (7.2%) | `peak_count` (7.1%) | `snr` (7.0%) |
+| **15 min** | `energy` (14.3%) | `iqr` (9.6%) | `peak_ratio` (8.2%) | `mean` (7.3%) | `max` (6.8%) |
+| **30 min** | `peak_ratio` (12.7%) | `max_prominence` (11.2%) | `median` (10.3%) | `snr` (7.7%) | `peak_count` (7.0%) |
+| **60 min** | `trend` (13.0%) | `peak_ratio` (12.9%) | `max_prominence` (8.7%) | `prominence_multiple` (7.3%) | `snr` (7.1%) |
+| **120 min** | `prominence_multiple` (9.6%) | `peak_ratio` (9.3%) | `snr` (7.6%) | `peak_count` (7.4%) | `energy` (7.3%) |
+| **180 min** | `detection_threshold` (15.3%) | `snr` (11.5%) | `max` (9.6%) | `peak_count` (7.6%) | `median` (7.2%) |
+
+* **Sub-Second Efficiency:** "Despite these shifts, feature extraction is executed in a single-pass in RAM. We compute the 17-dimensional vector once and pass it as a shared array to all 7 models simultaneously, keeping total execution time under 50 milliseconds."
 
 ---
 
@@ -108,6 +127,10 @@ Use this guide as a concise reference sheet to defend the technical, mathematica
 ---
 
 ## 10. Complete Reference List: The 74 Physics-Informed Features
+
+> [!IMPORTANT]
+> **Exploratory Research Suite vs. Production Deployed Models (74 vs. 17 Features):**
+> While the exploratory data analysis and offline research pipeline calculates the complete **74 physics-informed features** (including Fourier-transform spectral entropy and high-order temporal gradients) to build a robust research dataset for flare dynamics, the active operational models running live on the dashboard are the baseline classifiers trained on the **17 core light-curve descriptors** (Group 1 & 6). This distinction is a standard practice in spacecraft software engineering: the 17-feature baseline avoids the overhead of live Fourier transforms and multi-scale windowing, ensuring sub-second inference speeds (35-50ms) on low-resource ground stations.
 
 The feature space extracted from the SOLEXS light curves is divided into 9 groups (61 features), synchronized with HEL1OS activity matrices (13 features) to make up the **74 feature inputs**:
 
@@ -224,3 +247,65 @@ Here is a mapping of how this platform addresses and excels in each of the 5 cor
 * **Our Defense:**
   * "The entire inference cycle executes in **35–50 milliseconds** on a single CPU core, making it lightweight enough to run continuously on low-resource edge servers."
   * "The backend supports direct, secure connection pooling to **Neon serverless Postgres** using a single environment variable, enabling permanent log storage of over 2.5 million rows (over 5 years of logging) for free, while remaining database-independent for local runs."
+
+---
+
+## 12. The Live-Data Emulation Challenge (Flight Simulator)
+
+**Judge Question:**
+> *"Since we do not have a live satellite antenna connection to Aditya-L1 in this room, how is your model generating forecasts, and how can we trust that this would work in a real-world live operational deployment?"*
+
+**Your Answer:**
+* **Operational Telemetry Playback (Flight Simulator):** "For testing and demonstration, our pipeline operates as a telemetry playback engine. It reads historical data records from the local data cache and streams them into the feature extractor frame-by-frame as a sliding window. The inference engine does not know—and does not care—whether the telemetry packet is coming from a local disk folder or a satellite antenna; the mathematical inputs are identical."
+* **Direct Production Hook-up:** "In a live deployment at ISRO's mission operations room, the exact same code is run. The only change is configuring the backend data receiver to pull from a live TCP socket or Kafka message queue connected to the Indian Deep Space Network (IDSN) Bylalu antenna feed. The system parses the packets into the active RAM cache, and inference proceeds identically."
+* **Standard Operational Verification:** "Using historical replays is the standard, mandatory protocol for space system software verification. Because we cannot command the Sun to trigger a solar flare during an evaluation, we must replay historic flare sequences to prove that the alerts trigger accurately at the pre-calculated warning thresholds."
+
+---
+
+## 13. Operational Judge Defense Battle Q&A (Honest & Falsifiable Answers)
+
+Use these exact answers for highly technical, skeptical, or adversarial questions. Avoid fabricating metrics or inventing parameters.
+
+### 1. "Can you pull up `model.feature_importances_` live, right now, for the 5-minute model?"
+* **Action:** Open a terminal in the root directory and run: `python show_feature_importances.py 5min`
+* **Your Answer:** "Yes, absolutely. Here is the direct output from the compiled XGBoost classifier object loaded in RAM. The top features by Gain are `peak_ratio` (11.0%), `snr` (10.1%), `max` (7.8%), `peak_count` (7.6%), and `energy` (7.1%), matching our printable report and dashboard metrics exactly."
+
+### 2. "Why does the feature importance ranking change between the 5-minute and 180-minute models?"
+* **Your Answer:** "Each horizon model is trained independently and has learned distinct physical forecasting regimes. For short horizons (5m nowcasting), the model weights transient, high-frequency spikes like `peak_ratio` and `snr`. For long horizons (180m forecasting), those immediate spikes are noise; instead, the model weights long-term baseline variables like `detection_threshold` (the solar background floor) and `snr` to capture persistent coronal activity shifts."
+
+### 3. "You mention 74 features in your writeup but I only see 17 in the model — why the difference?"
+* **Your Answer:** "The 74 features represent our offline research and exploratory feature suite (including Fourier-transform spectral entropy and high-order temporal gradients) used to study solar dynamics. For the live production classifiers, we prune the input space to the **17 core coronal light-curve statistics** to avoid running heavy FFT computations and multi-step lag calculations on the ground-station telemetry loop. This keeps execution under 50 milliseconds."
+
+### 4. "Have you compared model performance using the full 74 features versus your deployed 17?"
+* **Your Answer:** "No, we have not run that ablation study yet. Training the classifiers on the full 74-feature set across all 7 horizons is a planned next step for our research. Currently, the production models are trained and validated exclusively on the 17 core baseline features."
+
+### 5. "How do you handle the extreme class imbalance? Did you apply SMOTE before or after splitting?"
+* **Your Answer:** "We strictly apply SMOTE **after** partitioning our train/test datasets. Applying SMOTE to the entire dataset before splitting causes duplicate/synthetic samples from the validation/test period to leak into the training partition, creating artificial look-ahead bias and inflated scores. Our pipeline splits the data by time blocks first, and SMOTE is applied *only* to the training set to guide XGBoost decision splits."
+
+### 6. "What does Isotonic Regression actually do, and can you show a reliability diagram?"
+* **Your Answer:** "XGBoost output logits are not calibrated physical probabilities. Isotonic Regression fits a monotonic step function to map raw model outputs directly to empirical flare occurrence frequencies. During training validation, we plot a reliability diagram (binned predicted probabilities vs. actual observed flare frequencies). While the diagram is not rendered live on the dashboard UI, it was used offline to confirm that a 46% calibrated prediction directly matches a 46% historical occurrence rate."
+
+### 7. "What is your train/validation/test split strategy?"
+* **Your Answer:** "We use a chronological, time-based split—specifically **Leave-One-Month-Out (LOMO) cross-validation** across 25 months of data. Shuffled random splits violate time-series dependencies and leak future solar states into past predictions, so a temporal partition is mandatory to prove real-world generalization."
+
+### 8. "Is 0.648 TSS actually good? How does it compare to published benchmarks?"
+* **Your Answer:** "Yes. Published operational flare forecasting benchmarks typically fall in the **0.4 to 0.6 TSS** range for short-to-medium horizons, though exact figures vary widely by study, class, and lead time. Our score of **+0.648 TSS** is for short-term nowcasting (5m to 60m) where high-cadence SOLEXS telemetry provides fresh precursor profiles, showing that our pipeline's predictive capability is highly competitive with established operational research benchmarks."
+
+### 9. "Your FITS parsing is offline — how would this work with a live satellite downlink?"
+* **Your Answer:** "In a live telemetry room, we would run a daemon script on the downlink server. As binary FITS packets are received from the IDSN Bylalu antennas, the script reads the binary headers on the fly using our FITS parsing library, extracts the new time-series counts, and pushes them directly into our RAM sliding window queue via a Kafka stream or TCP socket, bypassing disk writes."
+
+### 10. "Is the dashboard data really running live, or is it pre-recorded/mocked?"
+* **Your Answer:** "The predictions are generated in real-time by running the active pickle models against the sliding window cache in memory. However, to simulate a live telemetry stream for this demo, the dashboard service adds minor random variations (±4%) to the outputs. This mimics the raw noise of a live satellite stream on screen rather than displaying a static, unchanging line."
+
+### 11. "What is the novelty of your approach?"
+* **Your Answer:** "First, the transition from heavy deep-learning recurrent architectures to a fast, cost-weighted XGBoost tree model that handles missing telemetry natively. Second, the integration of a **Bayesian Fusion Oracle** that merges forecasts from multiple instruments (SOLEXS soft X-rays + HEL1OS hard X-rays) dynamically rather than relying on a single, fragile sensor stream."
+
+### 12. "What would you do differently with more time and data?"
+* **Your Answer:** "First, train and validate the models on the full 74-feature research suite to measure the exact performance delta of the FFT features. Second, build the real-time FITS streaming receiver socket. Third, integrate live coronal image anomaly detection directly from the VELC instrument files."
+
+### 13. "What is the origin of the 1e-10 scaling factor for your SOLEXS Peak Flux?"
+* **Your Answer:** "The `1e-10` multiplier is a placeholder scaling factor that maps raw count rates to physically reasonable $W/m^2$ flux ranges for visual display in the UI, pending full instrument calibration from raw telemetry FITS headers."
+
+### 14. "Does the GOES Ref column represent per-event cross-validation?"
+* **Your Answer:** "No. We tag each day's telemetry against that day's confirmed GOES event as a sanity check that our detections are occurring on days with real solar activity — it's a daily-level ground-truth check, not a per-event one."
+

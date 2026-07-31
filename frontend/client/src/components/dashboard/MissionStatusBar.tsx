@@ -226,14 +226,14 @@ export default function MissionStatusBar() {
             <div style="margin-bottom: 20px;">
               <h2 style="font-size: 13px; color: #7c3aed; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">4. Physics-Informed Feature Importance</h2>
               <p style="color: #d1d5db; font-size: 10px; margin: 0 0 10px 0; line-height: 1.5;">
-                Top predictors mapped by XGBoost Gain attributions across the 74 operational parameters:
+                Top predictors mapped by XGBoost Gain attributions (share of total model gain) across the 17 core operational parameters:
               </p>
               <div style="font-size: 9px; line-height: 1.8; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
-                <div>1. Peak Prominence Change (prominence_change) [██████████░░░░░░░░░░░░░░░░░░░░] 35.0%</div>
-                <div>2. Spectral Entropy (spectral_entropy) [██████░░░░░░░░░░░░░░░░░░░░░░░░] 20.0%</div>
-                <div>3. X-ray Gradient Magnitude (max_gradient_last60) [█████░░░░░░░░░░░░░░░░░░░░░░░░░░] 18.0%</div>
-                <div>4. Rolling SNR Trend (rolling_snr_last60) [████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 15.0%</div>
-                <div>5. HEL1OS Burst Density (helios_burst_density) [████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 12.0%</div>
+                <div>1. Peak Density Ratio (peak_ratio) [██████████░░░░░░░░░░░░░░░░░░░░] 11.0%</div>
+                <div>2. Signal-to-Noise Ratio (snr) [██████████░░░░░░░░░░░░░░░░░░░░] 10.1%</div>
+                <div>3. Maximum Peak Flux (max) [███████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.8%</div>
+                <div>4. Peak Count (peak_count) [███████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.6%</div>
+                <div>5. Coronal Energy Flux (energy) [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 7.1%</div>
               </div>
             </div>
 
