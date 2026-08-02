@@ -38,14 +38,41 @@ export default function BlackHoleScene({ onComplete }: BlackHoleSceneProps) {
     );
     camera.position.z = 5;
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 0.1);
-    rendererRef.current = renderer;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+      renderer.setClearColor(0x000000, 0.1);
+      rendererRef.current = renderer;
+    } catch (e) {
+      console.warn("BlackHoleScene WebGL failed, falling back to 2D Canvas:", e);
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        const w = canvasRef.current.width = canvasRef.current.clientWidth;
+        const h = canvasRef.current.height = canvasRef.current.clientHeight;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, w, h);
+        
+        ctx.strokeStyle = '#ff6b35';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.ellipse(w/2, h/2, 80, 25, Math.PI / 10, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const timer = setTimeout(() => {
+        onComplete?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
 
     // Create black hole (event horizon)
     const bhGeometry = new THREE.SphereGeometry(1, 64, 64);

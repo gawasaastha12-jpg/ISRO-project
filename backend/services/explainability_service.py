@@ -20,7 +20,12 @@ def get_explainability(cache: ModelCache) -> Dict[str, Any]:
     results = {}
     
     for h in horizons:
-        model = cache.models.get(f"solexs_{h}")
+        model_entry = cache.models.get(f"solexs_{h}")
+        if model_entry is None:
+            results[h.replace("min", "m")] = []
+            continue
+            
+        model = model_entry.get("model") if isinstance(model_entry, dict) else model_entry
         if model is None:
             results[h.replace("min", "m")] = []
             continue

@@ -42,3 +42,6 @@ app.add_middleware(
 )
 
 app.include_router(router)
+# Trigger auto-reload for final multi-horizon model loading
+
+

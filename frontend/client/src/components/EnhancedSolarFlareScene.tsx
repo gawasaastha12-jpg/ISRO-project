@@ -39,14 +39,34 @@ export default function EnhancedSolarFlareScene({ onComplete }: EnhancedSolarFla
     );
     camera.position.z = 6;
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 0.1);
-    rendererRef.current = renderer;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+      renderer.setClearColor(0x000000, 0.1);
+      rendererRef.current = renderer;
+    } catch (e) {
+      console.warn("EnhancedSolarFlareScene WebGL context creation failed. Fallback active.", e);
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        const w = canvasRef.current.width = canvasRef.current.clientWidth;
+        const h = canvasRef.current.height = canvasRef.current.clientHeight;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#ffa500';
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, 60, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const timer = setTimeout(() => {
+        onComplete?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
 
     // Create sun
     const sunGeometry = new THREE.SphereGeometry(1.5, 64, 64);

@@ -121,22 +121,22 @@ export default function MissionStatusBar() {
               <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">True Skill (TSS)</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.648</div>
-                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">&plusmn;0.061</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.365</div>
+                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">LOMO CV (v8)</div>
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">Heidke Score (HSS)</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.582</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.284</div>
                   <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">vs QUIET CORONA</div>
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
-                  <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">Area Under ROC</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #00d9ff;">0.844</div>
-                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">LOMO Cross-Val</div>
+                  <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">Model Sensitivity</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #00d9ff;">36.6%</div>
+                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">LOMO TPR</div>
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">False Alarm (FAR)</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #ef4444;">13.6%</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #ef4444;">0.10%</div>
                   <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">Solar Quiet Rate</div>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function MissionStatusBar() {
             <div style="margin-bottom: 20px;">
               <h2 style="font-size: 13px; color: #7c3aed; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">1. Physics-Informed Feature Engineering</h2>
               <p style="color: #d1d5db; font-size: 10px; text-align: justify; margin: 0 0 8px 0; line-height: 1.5;">
-                To achieve high predictive performance, the model extracts <strong style="color: #ffffff;">74 physics-informed features</strong> directly from raw X-ray, solar plume, and light curve telemetry streams. These features capture the thermodynamics and magneto-hydrodynamics of the solar atmosphere:
+                To achieve high predictive performance, the model extracts <strong style="color: #ffffff;">physics-informed features (74 scientifically derived, pruned to 17 operational features for sub-50ms live execution)</strong> directly from raw X-ray, solar plume, and light curve telemetry streams. These features capture the thermodynamics and magneto-hydrodynamics of the solar atmosphere:
               </p>
               <ul style="color: #9ca3af; font-size: 10px; padding-left: 20px; margin: 0 0 12px 0;">
                 <li style="margin-bottom: 4px;"><span style="color: #ffffff; font-weight: bold;">Peak Prominence:</span> Isolates micro-burst amplitudes above local coronal background flux.</li>
@@ -229,11 +229,11 @@ export default function MissionStatusBar() {
                 Top predictors mapped by XGBoost Gain attributions (share of total model gain) across the 17 core operational parameters:
               </p>
               <div style="font-size: 9px; line-height: 1.8; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
-                <div>1. Peak Density Ratio (peak_ratio) [██████████░░░░░░░░░░░░░░░░░░░░] 11.0%</div>
-                <div>2. Signal-to-Noise Ratio (snr) [██████████░░░░░░░░░░░░░░░░░░░░] 10.1%</div>
-                <div>3. Maximum Peak Flux (max) [███████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.8%</div>
-                <div>4. Peak Count (peak_count) [███████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.6%</div>
-                <div>5. Coronal Energy Flux (energy) [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 7.1%</div>
+                <div>1. Coronal Complexity (prominence_multiple) [███████████████████░░░░░░░░░░░] 19.4%</div>
+                <div>2. Interquartile Range (iqr) [█████████████░░░░░░░░░░░░░░░░░] 13.1%</div>
+                <div>3. Rate Deviation (std) [██████████░░░░░░░░░░░░░░░░░░░░] 9.6%</div>
+                <div>4. Signal-to-Noise Ratio (snr) [████████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.7%</div>
+                <div>5. Peak Raw Intensity (max) [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 5.5%</div>
               </div>
             </div>
 

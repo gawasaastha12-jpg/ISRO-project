@@ -41,14 +41,39 @@ export default function EnhancedAsteroidBelt({ onComplete }: EnhancedAsteroidBel
     );
     camera.position.z = 0;
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 1);
-    rendererRef.current = renderer;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+      renderer.setClearColor(0x000000, 1);
+      rendererRef.current = renderer;
+    } catch (e) {
+      console.warn("EnhancedAsteroidBelt WebGL context creation failed. Fallback active.", e);
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        const w = canvasRef.current.width = canvasRef.current.clientWidth;
+        const h = canvasRef.current.height = canvasRef.current.clientHeight;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < 40; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const size = 1 + Math.random() * 3;
+          ctx.fillStyle = '#6b7280';
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      const timer = setTimeout(() => {
+        onComplete?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
 
     // Create asteroids with physics
     const asteroids: Array<{

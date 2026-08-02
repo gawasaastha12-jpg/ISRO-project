@@ -74,7 +74,7 @@ export function BackendHealth() {
         </div>
         <div className="flex flex-col items-end text-right mt-1">
           <span className="text-[8px] text-muted-foreground uppercase">Feature Set</span>
-          <span className="text-supernova-gold font-bold">74 physics-derived</span>
+          <span className="text-supernova-gold font-bold">17 operational features</span>
         </div>
       </div>
     </div>

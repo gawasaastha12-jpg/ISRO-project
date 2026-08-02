@@ -40,14 +40,96 @@ export default function BigBangPrologue({ onComplete }: BigBangPrologueProps) {
     );
     camera.position.z = 50;
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 1);
-    rendererRef.current = renderer;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+      renderer.setClearColor(0x000000, 1);
+      rendererRef.current = renderer;
+    } catch (e) {
+      console.warn("BigBangPrologue WebGL context creation failed. Fallback active.", e);
+      const ctx = canvasRef.current.getContext('2d');
+      let fallbackAnimationId: number;
+      let time = 0;
+      const particles: Array<{x: number, y: number, vx: number, vy: number, size: number, color: string}> = [];
+      
+      if (ctx) {
+        const w = canvasRef.current.width = canvasRef.current.clientWidth;
+        const h = canvasRef.current.height = canvasRef.current.clientHeight;
+        const cx = w / 2;
+        const cy = h / 2;
+        
+        for (let i = 0; i < 400; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 0.5 + Math.random() * 4.0;
+          const colors = ['#00d9ff', '#7c3aed', '#ffffff', '#ffaa00', '#ff0055'];
+          particles.push({
+            x: cx,
+            y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 1.0 + Math.random() * 3.0,
+            color: colors[Math.floor(Math.random() * colors.length)]
+          });
+        }
+
+        const runFallback = () => {
+          fallbackAnimationId = requestAnimationFrame(runFallback);
+          time += 0.016;
+          
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, w, h);
+          
+          particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            
+            let opacity = 0.8;
+            if (time > 6) {
+              opacity = Math.max(0.0, 0.8 - (time - 6) * 0.2);
+            }
+            
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = opacity;
+            ctx.fill();
+          });
+          ctx.globalAlpha = 1.0;
+        };
+        runFallback();
+      }
+
+      // Narration timeline fallback
+      const tl = gsap.timeline();
+      if (containerRef.current) {
+        tl.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 1.5 }, 0);
+      }
+      tl.call(() => {
+        audioEngine.playRumble();
+      }, [], 0.5);
+      if (narrationRef.current) {
+        tl.fromTo(narrationRef.current, { opacity: 0 }, { opacity: 1, duration: 1.5 }, 1.5);
+        tl.call(() => {
+          audioEngine.speak("From the birth of the universe, intelligence emerges…");
+        }, [], 1.5);
+      }
+      if (containerRef.current) {
+        tl.to(containerRef.current, { opacity: 0, duration: 1.5 }, '+=6');
+      }
+      tl.eventCallback('onComplete', () => {
+        onComplete?.();
+      });
+
+      return () => {
+        cancelAnimationFrame(fallbackAnimationId);
+        tl.kill();
+      };
+    }
 
     // Create particle system for Big Bang explosion
     const particleCount = 5000;
@@ -244,6 +326,14 @@ export default function BigBangPrologue({ onComplete }: BigBangPrologueProps) {
       cancelAnimationFrame(animationId);
       tl.kill();
       renderer.dispose();
+      // @ts-ignore
+      if (renderer.forceContextLoss) {
+        try {
+          renderer.forceContextLoss();
+        } catch (e) {
+          console.warn("BigBangPrologue failed to force WebGL context loss:", e);
+        }
+      }
     };
   }, [onComplete]);
 

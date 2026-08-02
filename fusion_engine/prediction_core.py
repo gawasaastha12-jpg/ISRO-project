@@ -1,5 +1,7 @@
+import os
 import time
 import uuid
+import pandas as pd
 from datetime import datetime, UTC
 from enum import Enum
 from typing import Dict, Any, List
@@ -8,6 +10,90 @@ import traceback
 import logging
 
 logger = logging.getLogger(__name__)
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+class FITSTelemetrySim:
+    _instance = None
+    
+    def __init__(self, root_dir: str):
+        self.root_dir = root_dir
+        self.lc_files = []
+        self.current_file_idx = 0
+        self.current_counts = None
+        self.current_times = None
+        
+        # Recursively find all .lc.gz files inside the SOLEXS data folder
+        lc_dir = os.path.join(root_dir, "SOLEXS_downloads", "data", "lc_files")
+        if os.path.exists(lc_dir):
+            for r, _, files in os.walk(lc_dir):
+                for f in files:
+                    if f.endswith(".lc.gz"):
+                        self.lc_files.append(os.path.join(r, f))
+            self.lc_files.sort()
+            
+        if self.lc_files:
+            logger.info(f"FITS Simulator found {len(self.lc_files)} light curve files.")
+            self._load_file(self.lc_files[0])
+        else:
+            logger.error("FITS Simulator: No .lc.gz files found in SOLEXS_downloads/data/lc_files.")
+            
+    def _load_file(self, path: str):
+        logger.info(f"FITS Simulator loading FITS: {path}")
+        # Use a local temporary file in the data folder to decompress FITS cleanly on Windows
+        temp_lc = os.path.join(self.root_dir, "SOLEXS_downloads", "data", "temp_telemetry.lc")
+        try:
+            import gzip
+            from astropy.io import fits
+            with gzip.open(path, "rb") as fin:
+                with open(temp_lc, "wb") as fout:
+                    fout.write(fin.read())
+                    
+            with fits.open(temp_lc, memmap=False) as hdul:
+                data = hdul[1].data
+                self.current_times = np.array(data["TIME"]).copy()
+                self.current_counts = np.nan_to_num(np.array(data["COUNTS"]), nan=0.0).copy()
+                
+            if os.path.exists(temp_lc):
+                try:
+                    os.remove(temp_lc)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error(f"FITS Simulator failed to parse FITS: {e}")
+            # Fallback to a synthetic solar count series if astropy/gz fails
+            self.current_counts = np.random.randn(86400) * 10 + 20
+            self.current_times = np.arange(86400)
+            
+    @classmethod
+    def get_instance(cls, root_dir: str):
+        if cls._instance is None:
+            cls._instance = cls(root_dir)
+        return cls._instance
+        
+    def get_window(self) -> np.ndarray:
+        if self.current_counts is None or len(self.current_counts) < 600:
+            return np.zeros(600)
+            
+        # Map time to simulated index playhead (cycling through the 86400 samples of the day)
+        n_points = len(self.current_counts)
+        # Playhead speedup factor: simulates 30 seconds of telemetry per wall-clock second
+        # This yields a dynamic 150-sample stride every 5 seconds, showing active changes.
+        speedup = 30
+        playhead = 600 + (int(time.time() * speedup) % (n_points - 600))
+        
+        # Periodically swap file (e.g. cycle to next FITS day every loop)
+        cycle_idx = (int(time.time() / (n_points)) % len(self.lc_files)) if self.lc_files else 0
+        if cycle_idx != self.current_file_idx and self.lc_files:
+            self.current_file_idx = cycle_idx
+            self._load_file(self.lc_files[self.current_file_idx])
+            
+        return self.current_counts[playhead - 600 : playhead]
+        
+    def get_current_filename(self) -> str:
+        if self.lc_files and self.current_file_idx < len(self.lc_files):
+            return os.path.basename(self.lc_files[self.current_file_idx])
+        return "SOLEXS_L1_FITS_Stream"
+
 
 class FlareClass(Enum):
     QUIET = "Quiet"
@@ -54,20 +140,69 @@ def predict_horizon(model_bundle: Any, df: Any, horizon: str, cache_metadata: Di
             "detection_threshold", "prominence_multiple", "largest_width", "trend"
         ]
     
-    missing = [c for c in feature_cols if c not in df.columns]
-    if missing:
-        raise ValueError(f"Missing columns:\n{missing}")
+    # Load raw FITS telemetry stream and extract features in real time
+    latest = None
+    try:
+        import sys
+        scripts_path = os.path.join(ROOT_DIR, "SOLEXS_downloads", "scripts")
+        if scripts_path not in sys.path:
+            sys.path.append(scripts_path)
+        from features_v2 import extract_features
         
-    # Dynamic telemetry playback simulation (flight simulator)
-    # Advances the sliding window frame index forward every 10 seconds.
-    # We loop over the last 500 rows of the dataset to showcase a continuous active/quiet solar time-series.
-    if len(df) == 0:
-        raise ValueError("DataFrame is empty")
-    playback_length = min(500, len(df))
-    start_offset = len(df) - playback_length
-    frame_idx = start_offset + (int(time.time() / 10) % playback_length)
-    latest = df.iloc[frame_idx]
-    
+        # Get simulated FITS counts window
+        sim = FITSTelemetrySim.get_instance(ROOT_DIR)
+        window = sim.get_window()
+        
+        # Extract 74 features
+        feats = extract_features(window)
+        if feats is not None:
+            # Map into expected Pandas Series
+            if len(feature_cols) == 17:
+                noise_std = feats.get("std", 0.0)
+                det_thresh = max(3 * noise_std, 11)
+                prom_mult = feats.get("max_prominence", 0.0) / det_thresh if det_thresh > 0 else 0.0
+                
+                latest = pd.Series({
+                    "mean": feats.get("mean", 0.0),
+                    "median": feats.get("median", 0.0),
+                    "std": feats.get("std", 0.0),
+                    "iqr": feats.get("iqr", 0.0),
+                    "skew": feats.get("skew", 0.0),
+                    "kurtosis": feats.get("kurtosis", 0.0),
+                    "energy": feats.get("energy", 0.0),
+                    "snr": feats.get("snr", 0.0),
+                    "max": feats.get("max", 0.0),
+                    "min": feats.get("min", 0.0),
+                    "peak_count": feats.get("peak_count", 0.0),
+                    "peak_ratio": feats.get("peak_ratio", 0.0),
+                    "max_prominence": feats.get("max_prominence", 0.0),
+                    "detection_threshold": det_thresh,
+                    "prominence_multiple": prom_mult,
+                    "largest_width": feats.get("largest_width", 0.0),
+                    "trend": feats.get("trend", 0.0),
+                    "source_file": sim.get_current_filename()
+                })
+            else:
+                latest_dict = {col: feats.get(col, 0.0) for col in feature_cols}
+                latest_dict["source_file"] = sim.get_current_filename()
+                latest = pd.Series(latest_dict)
+    except Exception as e:
+        logger.warning(f"FITS telemetry parsing failed, falling back to CSV lookup: {e}")
+
+    if latest is None:
+        # Fallback to CSV indexing if FITS parsing fails
+        if len(df) == 0:
+            raise ValueError("DataFrame is empty")
+        playback_length = min(500, len(df))
+        start_offset = len(df) - playback_length
+        frame_idx = start_offset + (int(time.time() / 10) % playback_length)
+        latest = df.iloc[frame_idx]
+
+    # Validate feature columns are in the retrieved series
+    missing = [c for c in feature_cols if c not in latest.index]
+    if missing:
+        raise ValueError(f"Missing columns in features:\n{missing}")
+        
     X = latest[feature_cols].values.reshape(1, -1)
     
     if isinstance(model_bundle, dict):
