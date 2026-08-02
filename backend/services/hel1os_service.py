@@ -32,7 +32,10 @@ def get_hel1os_activity(cache: ModelCache) -> Dict[str, Any]:
         else:
             df_computed = df
 
-        latest = df_computed.iloc[-1]
+        # Dynamically cycle through the timeseries rows using a 30x playhead speedup
+        # (30 rows/seconds of telemetry per wall-clock second) to simulate a live stream
+        frame_idx = (int(time.time() * 30) % len(df_computed))
+        latest = df_computed.iloc[frame_idx]
         
         return {
             "status": "ONLINE",

@@ -30,7 +30,10 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
         }
         
     try:
-        latest_row = df.iloc[-1]
+        # Dynamically cycle through the dataset using a 30x playhead speedup
+        # to simulate a live streaming telemetry feed
+        frame_idx = (int(time.time() * 30) % len(df))
+        latest_row = df.iloc[frame_idx]
         features = [
             "Brightness_Index",
             "Texture_Index",
