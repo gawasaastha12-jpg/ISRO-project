@@ -90,6 +90,7 @@ class DashboardResponse(BaseModel):
     alerts: AlertSchema
     performance: Optional[Dict[str, float]] = None
     engine_versions: Optional[Dict[str, str]] = None
+    history: Optional[List[Dict[str, Any]]] = None
 
 # ----------------- Health Schema -----------------
 

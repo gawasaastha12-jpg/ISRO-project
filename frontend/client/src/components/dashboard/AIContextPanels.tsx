@@ -123,7 +123,7 @@ export function HeliosActivityPanel() {
 
         {/* Scientific Line Plot with Grid and Tick Labels */}
         <div className="h-20 w-full mt-4 font-mono text-[8px] relative">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={80}>
             <LineChart data={hel1osHistory} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis 

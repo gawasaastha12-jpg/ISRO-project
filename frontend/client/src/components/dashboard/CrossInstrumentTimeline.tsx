@@ -13,57 +13,127 @@ const TIMELINE_TRACKS = [
 
 export function CrossInstrumentTimeline() {
   const { data, loading } = useDashboard();
+  const [timeRange, setTimeRange] = React.useState<'1h' | '6h' | '24h'>('1h');
   
   // Get active alert level and correlation details
   const alertLevel = data?.alerts?.current_alert || 'NORMAL';
   const correlationScore = data?.analytics?.correlation?.overall_score || 0.85;
 
-  // Deterministic events to avoid jumping on re-renders, and to demonstrate correlation alignment
-  const getDeterministicEvents = (trackId: string) => {
-    switch (trackId) {
-      case 'solexs':
-        return [
-          { id: 1, position: 20, time: 'T-45m', details: 'B-class sub-flare' },
-          { id: 2, position: 45, time: 'T-25m', details: 'Quiet coronal fluctuation' },
-          { id: 3, position: 65, time: 'T-15m', details: 'C-class eruptive flare (Correlated)', active: true },
-          { id: 4, position: 82, time: 'T-2m', details: 'B-class expected activity' },
-        ];
-      case 'hel1os':
-        return [
-          { id: 1, position: 15, time: 'T-50m', details: 'Background flux spike' },
-          { id: 2, position: 48, time: 'T-22m', details: 'Soft X-ray variation' },
-          { id: 3, position: 65, time: 'T-15m', details: 'Hard X-ray burst (Correlated)', active: true },
-          { id: 4, position: 80, time: 'T-4m', details: 'Minor burst activity' },
-        ];
-      case 'velc':
-        return [
-          // VELC has 0.0 correlation in the backend, so we do NOT place an event at 65%
-          { id: 1, position: 30, time: 'T-38m', details: 'Nominal coronal index' },
-          { id: 2, position: 55, time: 'T-18m', details: 'Brightness index fluctuation' },
-          { id: 3, position: 75, time: 'T-8m', details: 'Spatial morphology shift' },
-        ];
-      case 'goes':
-        return [
-          { id: 1, position: 20, time: 'T-45m', details: 'Reference B-class verification' },
-          { id: 2, position: 68, time: 'T-12m', details: 'C1.2 solar flare onset' },
-          { id: 3, position: 82, time: 'T-2m', details: 'Verification scan' },
-        ];
-      case 'fusion':
-        return [
-          { id: 1, position: 20, time: 'T-45m', details: 'Nominal multi-horizon forecast' },
-          { id: 2, position: 45, time: 'T-25m', details: 'Bayesian belief update' },
-          { id: 3, position: 65, time: 'T-15m', details: 'Physics-guided event alignment (94% confidence)', active: true },
-          { id: 4, position: 82, time: 'T-2m', details: 'Forecast evolution nominal' },
-        ];
-      case 'alerts':
-        return [
-          // Alerts only trigger on significant correlated events
-          { id: 1, position: 65, time: 'T-15m', details: `Alert level upgraded: ${alertLevel}`, active: alertLevel !== 'NORMAL' },
-        ];
-      default:
-        return [];
-    }
+  // Dynamically build events from history
+  const getDynamicEvents = (trackId: string) => {
+    if (!data?.history || data.history.length === 0) return [];
+    
+    // Determine history slice size
+    const limit = timeRange === '1h' ? 12 : (timeRange === '6h' ? 72 : 100);
+    const historySlice = data.history.slice(-limit);
+    const N = historySlice.length;
+    if (N < 2) return [];
+
+    const events: any[] = [];
+    const nowTime = new Date().getTime();
+
+    historySlice.forEach((h: any, idx: number) => {
+      // Position maps from 0 to 85% (NOW line is at 85%)
+      const position = (idx / (N - 1)) * 85;
+      
+      // Calculate age of this observation
+      const obsTime = new Date(h.timestamp).getTime();
+      const ageMinutes = Math.max(0, Math.round((nowTime - obsTime) / 60000));
+      const timeStr = ageMinutes === 0 ? 'NOW' : `T-${ageMinutes}m`;
+
+      if (trackId === 'solexs') {
+        const conf = h.solexs_confidence ?? 0;
+        if (conf > 0.35) {
+          events.push({
+            id: `sol-${idx}`,
+            position,
+            time: timeStr,
+            details: `SOLEXS Flare Alert (Prob: ${(conf * 100).toFixed(1)}%)`,
+            active: conf > 0.7
+          });
+        }
+      } else if (trackId === 'hel1os') {
+        const score = h.hel1os_activity_score ?? 0;
+        if (score > 55) {
+          events.push({
+            id: `hel-${idx}`,
+            position,
+            time: timeStr,
+            details: `HEL1OS Hard X-Ray Burst (Score: ${score.toFixed(1)})`,
+            active: score > 80
+          });
+        }
+      } else if (trackId === 'velc') {
+        const score = h.velc_novelty_score ?? 0;
+        if (score > 0.5) {
+          events.push({
+            id: `velc-${idx}`,
+            position,
+            time: timeStr,
+            details: `VELC Morphological Shift (Novelty: ${score.toFixed(3)})`,
+            active: score > 0.7
+          });
+        }
+      } else if (trackId === 'goes') {
+        const conf = h.fusion_confidence ?? 0;
+        if (conf > 0.5) {
+          events.push({
+            id: `goes-${idx}`,
+            position,
+            time: timeStr,
+            details: `GOES Flare Class Verified (Class Match Confirmed)`,
+            active: false
+          });
+        }
+      } else if (trackId === 'fusion') {
+        const conf = h.fusion_confidence ?? 0;
+        if (conf > 0.35) {
+          events.push({
+            id: `fus-${idx}`,
+            position,
+            time: timeStr,
+            details: `Multi-Sensor Coincidence (Confidence: ${(conf * 100).toFixed(1)}%)`,
+            active: conf > 0.7
+          });
+        }
+      } else if (trackId === 'alerts') {
+        const conf = h.fusion_confidence ?? 0;
+        if (conf > 0.5) {
+          events.push({
+            id: `al-${idx}`,
+            position,
+            time: timeStr,
+            details: `Space Weather Warning Level Upgraded`,
+            active: true
+          });
+        }
+      }
+    });
+
+    return events;
   };
+
+  // Find the index in history with the highest fusion confidence to mark the peak coincidence window
+  let coincidencePos = 65; // fallback default
+  if (data?.history && data.history.length > 0) {
+    const limit = timeRange === '1h' ? 12 : (timeRange === '6h' ? 72 : 100);
+    const historySlice = data.history.slice(-limit);
+    const N = historySlice.length;
+    if (N >= 2) {
+      let maxConf = -1;
+      let maxIdx = -1;
+      historySlice.forEach((h: any, idx: number) => {
+        const conf = h.fusion_confidence ?? 0;
+        if (conf > maxConf) {
+          maxConf = conf;
+          maxIdx = idx;
+        }
+      });
+      if (maxIdx !== -1 && maxConf > 0.35) {
+        coincidencePos = (maxIdx / (N - 1)) * 85;
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col p-4 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg w-full transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)]">
@@ -78,8 +148,12 @@ export function CrossInstrumentTimeline() {
             <span>Pearson r = {correlationScore.toFixed(2)} (SOLEXS ↔ HEL1OS)</span>
           </div>
           <div className="flex space-x-1.5">
-            {['1h', '6h', '24h'].map(t => (
-              <button key={t} className={`px-2 py-0.5 text-[10px] font-bold rounded border uppercase ${t === '1h' ? 'border-electric-blue bg-electric-blue/20 text-electric-blue' : 'border-border text-muted-foreground'}`}>
+            {(['1h', '6h', '24h'] as const).map(t => (
+              <button 
+                key={t} 
+                onClick={() => setTimeRange(t)}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded border uppercase transition-all duration-200 ${timeRange === t ? 'border-electric-blue bg-electric-blue/20 text-electric-blue font-black' : 'border-border text-muted-foreground hover:text-white'}`}
+              >
                 {t}
               </button>
             ))}
@@ -106,15 +180,22 @@ export function CrossInstrumentTimeline() {
           </div>
           
           {/* Vertical correlation highlight rectangle */}
-          <div className="absolute left-[65%] top-0 bottom-0 w-12 bg-red-500/10 border-x border-dashed border-red-500/30 z-10 -translate-x-1/2 rounded" title="High-Coincidence Correlation Window" />
-          <div className="absolute left-[65%] -top-4 px-1.5 py-0.5 bg-[#0b1022] border border-red-500/30 rounded text-[8px] text-red-400 font-bold font-mono -translate-x-1/2 z-20">
+          <div 
+            className="absolute top-0 bottom-0 w-12 bg-red-500/10 border-x border-dashed border-red-500/30 z-10 -translate-x-1/2 rounded transition-all duration-300" 
+            style={{ left: `${coincidencePos}%` }}
+            title="High-Coincidence Correlation Window" 
+          />
+          <div 
+            className="absolute -top-4 px-1.5 py-0.5 bg-[#0b1022] border border-red-500/30 rounded text-[8px] text-red-400 font-bold font-mono -translate-x-1/2 z-20 transition-all duration-300"
+            style={{ left: `${coincidencePos}%` }}
+          >
             COINCIDENCE
           </div>
-
+ 
           {/* Track Lines & Events */}
           <div className="space-y-0 flex flex-col justify-between h-full">
             {TIMELINE_TRACKS.map((track) => {
-              const events = getDeterministicEvents(track.id);
+              const events = getDynamicEvents(track.id);
               return (
                 <div key={track.id} className="relative h-8 flex items-center group transition-colors hover:bg-white/[0.02] rounded px-1">
                   {/* Track Line */}
@@ -124,7 +205,7 @@ export function CrossInstrumentTimeline() {
                       <div key={event.id} className="absolute" style={{ left: `${event.position}%` }}>
                         {/* Interactive event node */}
                         <div
-                          className={`w-3.5 h-3.5 rounded-full -mt-1.75 -ml-1.75 cursor-pointer hover:scale-150 transition-all duration-200 z-20 border-2 border-[#0b1022] ${track.color} ${event.active ? 'animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]' : ''}`}
+                          className={`w-3.5 h-3.5 rounded-full -mt-1.75 -ml-1.75 cursor-pointer hover:scale-150 transition-all duration-200 z-20 border-2 border-[#0b1022] ${track.color} ${event.active ? 'animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)] bg-red-500' : ''}`}
                         />
                         
                         {/* Tooltip on hover */}

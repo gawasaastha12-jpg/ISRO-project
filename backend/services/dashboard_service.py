@@ -24,10 +24,10 @@ for i in range(50):
     ts = (datetime.now(UTC) - pd.Timedelta(minutes=50-i)).isoformat().replace("+00:00", "Z")
     dashboard_history.append({
         "timestamp": ts,
-        "solexs_confidence": round(0.40 + random.random() * 0.30, 4),
-        "hel1os_activity_score": round(30.0 + random.random() * 40.0, 2),
-        "velc_novelty_score": round(0.30 + random.random() * 0.40, 4),
-        "fusion_confidence": round(0.50 + random.random() * 0.30, 4)
+        "solexs_confidence": round(0.10 + random.random() * 0.15, 4),
+        "hel1os_activity_score": round(15.0 + random.random() * 20.0, 2),
+        "velc_novelty_score": round(0.15 + random.random() * 0.20, 4),
+        "fusion_confidence": round(0.12 + random.random() * 0.18, 4)
     })
 
 def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
@@ -51,17 +51,14 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     # Introduce small variations to mimic live telemetry fluctuations
     import random
     if solexs_data.get("status") == "ONLINE":
-        raw_conf = float(solexs_data.get("forecast_confidence") or solexs_data.get("confidence") or 0.5)
-        solexs_data["forecast_confidence"] = max(0.3, min(0.99, raw_conf + random.uniform(-0.04, 0.04)))
+        solexs_data["forecast_confidence"] = float(solexs_data.get("forecast_confidence") or solexs_data.get("confidence") or 0.0)
         solexs_data["confidence"] = solexs_data["forecast_confidence"]
         
     if hel1os_data.get("status") == "ONLINE":
-        raw_act = float(hel1os_data.get("activity_score") or 40.0)
-        hel1os_data["activity_score"] = max(10.0, min(120.0, raw_act + random.uniform(-2.5, 2.5)))
+        hel1os_data["activity_score"] = float(hel1os_data.get("activity_score") or 0.0)
         
     if velc_data.get("status") == "ONLINE":
-        raw_nov = float(velc_data.get("novelty_score") or 0.35)
-        velc_data["novelty_score"] = max(0.1, min(0.95, raw_nov + random.uniform(-0.03, 0.03)))
+        velc_data["novelty_score"] = float(velc_data.get("novelty_score") or 0.0)
     
     # 6. Fusion & Alerts (relies on solexs_data and hel1os_data)
     fusion_alert = get_fusion_and_alert(cache, solexs_data, hel1os_data)
@@ -69,8 +66,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     alert_data = fusion_alert.get("alert", {})
     
     if fusion_data.get("status") == "ONLINE":
-        raw_fconf = float(fusion_data.get("forecast_confidence") or fusion_data.get("confidence") or 0.5)
-        fusion_data["forecast_confidence"] = max(0.3, min(0.99, raw_fconf + random.uniform(-0.03, 0.03)))
+        fusion_data["forecast_confidence"] = float(fusion_data.get("forecast_confidence") or fusion_data.get("confidence") or 0.0)
         fusion_data["confidence"] = fusion_data["forecast_confidence"]
     
     api_ms = round((time.time() - api_start_time) * 1000, 2)
