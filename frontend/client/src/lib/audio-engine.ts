@@ -86,6 +86,10 @@ export class AudioEngine {
     this.currentGains.push(gain);
   }
 
+  playRumble(duration: number = 3) {
+    this.playDeepBassRumble(duration);
+  }
+
   /**
    * Cosmic explosion sound
    * Boosted white noise burst with 0.9 gain.
