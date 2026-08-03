@@ -22,7 +22,7 @@ export function DualInstrumentChart() {
         if (json.status === 'ONLINE' && json.predictions) {
           const formatted = json.predictions.map((p: any) => {
             const date = new Date(p.timestamp);
-            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const timeStr = date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
             // Clean values & floor to prevent log(0) errors
             const rawSolexs = parseFloat(p.solexs_peak) || 0;
@@ -108,8 +108,10 @@ export function DualInstrumentChart() {
       
       if (maxSolexsIndex !== -1) {
         solexsPeakTime = slicedData[maxSolexsIndex].time;
-        const indexDiff = maxSolexsIndex - crossIndex;
-        const secondsLag = indexDiff * 10;
+        // Calculate the actual lag using the real timestamps!
+        const t1 = new Date(slicedData[crossIndex].timestamp).getTime();
+        const t2 = new Date(slicedData[maxSolexsIndex].timestamp).getTime();
+        const secondsLag = Math.round(Math.abs(t2 - t1) / 1000);
         lagLabel = `Lag: ${secondsLag}s`;
       }
     }
@@ -149,14 +151,22 @@ export function DualInstrumentChart() {
       )}
 
       {!loading && slicedData.length > 0 && (
-        <div className="flex-1 flex flex-col justify-between space-y-2">
+        <div className="flex-1 flex flex-col justify-between space-y-2 relative">
+          {/* Floating Lag Info Badge absolute-centered bridging the subplots */}
+          {lagLabel && (
+            <div className="absolute top-[48.5%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[#0b1022] border border-[#22d3ee] px-3 py-1 rounded shadow-2xl flex items-center space-x-2 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] animate-ping" />
+              <span className="text-[9px] text-[#22d3ee] font-bold tracking-widest font-mono">CROSS-CORRELATION DELAY: {lagLabel.replace('Lag: ', '').toUpperCase()} (T_hel1os ➔ T_solexs)</span>
+            </div>
+          )}
+
           {/* Subplot 1: SOLEXS */}
           <div className="h-[46%] relative">
             <div className="absolute top-1 right-2 text-[8px] font-mono font-bold text-[#22d3ee] z-20 bg-[#0a0e1a]/60 px-1 py-0.5 rounded">
               SOLEXS (Soft X-Ray) Peak Flux (W/m²)
             </div>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 5, left: -25, bottom: 5 }}>
                 <defs>
                   <linearGradient id="solexsGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.2}/>
@@ -191,9 +201,10 @@ export function DualInstrumentChart() {
                   <ReferenceArea 
                     x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
                     x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
-                    fill="rgba(34, 211, 238, 0.05)" 
-                    stroke="rgba(34, 211, 238, 0.15)"
+                    fill="rgba(34, 211, 238, 0.08)" 
+                    stroke="rgba(34, 211, 238, 0.2)"
                     strokeDasharray="3 3"
+                    label={{ value: `LAG: ${lagLabel.replace('Lag: ', '')}`, fill: '#22d3ee', fontSize: 8, position: 'center', fontFamily: 'monospace', fontWeight: 'bold' }}
                   />
                 )}
                 {/* Visual marker for Shared Now */}
@@ -204,7 +215,7 @@ export function DualInstrumentChart() {
                     stroke="#ef4444" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'top', fontFamily: 'monospace' }} 
+                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'insideTopLeft', fontFamily: 'monospace' }} 
                   />
                 )}
                 {solexsPeakTime && (
@@ -213,7 +224,7 @@ export function DualInstrumentChart() {
                     stroke="#10b981" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'top', fontFamily: 'monospace' }} 
+                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'insideTopRight', fontFamily: 'monospace' }} 
                   />
                 )}
                 <Area type="monotone" dataKey="solexs" stroke="#22d3ee" strokeWidth={1.5} fillOpacity={1} fill="url(#solexsGrad)" />
@@ -230,7 +241,7 @@ export function DualInstrumentChart() {
               HEL1OS (Hard X-Ray) Activity Rate (cps)
             </div>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 5, left: -25, bottom: 5 }}>
                 <defs>
                   <linearGradient id="helGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ff9f1c" stopOpacity={0.2}/>
@@ -269,13 +280,14 @@ export function DualInstrumentChart() {
                   <ReferenceArea 
                     x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
                     x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
-                    fill="rgba(34, 211, 238, 0.05)" 
-                    stroke="rgba(34, 211, 238, 0.15)"
+                    fill="rgba(34, 211, 238, 0.08)" 
+                    stroke="rgba(34, 211, 238, 0.2)"
                     strokeDasharray="3 3"
+                    label={{ value: `LAG: ${lagLabel.replace('Lag: ', '')}`, fill: '#22d3ee', fontSize: 8, position: 'center', fontFamily: 'monospace', fontWeight: 'bold' }}
                   />
                 )}
                 {/* Visual marker for Shared Now */}
-                <ReferenceLine x={slicedData[slicedData.length - 3]?.time} stroke="#22d3ee" strokeDasharray="3 3" label={{ value: 'NOW', fill: '#22d3ee', fontSize: 7, position: 'top', fontFamily: 'monospace' }} />
+                <ReferenceLine x={slicedData[slicedData.length - 3]?.time} stroke="#22d3ee" strokeDasharray="3 3" label={{ value: 'NOW', fill: '#22d3ee', fontSize: 7, position: 'insideTopRight', fontFamily: 'monospace' }} />
                 
                 {/* Horizontal reference line for alert threshold (55 cps) */}
                 <ReferenceLine y={55} stroke="rgba(239, 68, 68, 0.5)" strokeDasharray="2 2" label={{ value: 'ALERT THRESHOLD (55 cps)', fill: '#ef4444', fontSize: 6, position: 'insideBottomRight' }} />
@@ -286,7 +298,7 @@ export function DualInstrumentChart() {
                     stroke="#ef4444" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'top', fontFamily: 'monospace' }} 
+                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'insideBottomLeft', fontFamily: 'monospace' }} 
                   />
                 )}
                 {solexsPeakTime && (
@@ -295,7 +307,7 @@ export function DualInstrumentChart() {
                     stroke="#10b981" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'top', fontFamily: 'monospace' }} 
+                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'insideBottomRight', fontFamily: 'monospace' }} 
                   />
                 )}
                 <Area type="monotone" dataKey="hel1os" stroke="#ff9f1c" strokeWidth={1.5} fillOpacity={1} fill="url(#helGrad)" />

@@ -21,16 +21,26 @@ dashboard_history = []
 
 # Pre-populate with 50 realistic historical entries to avoid empty lists on startup
 for i in range(50):
-    ts = (datetime.now(UTC) - pd.Timedelta(minutes=50-i)).isoformat().replace("+00:00", "Z")
+    ts = (datetime.now(UTC) - pd.Timedelta(seconds=(50-i)*10)).isoformat().replace("+00:00", "Z")
+    
+    # Introduce a shared baseline activity fluctuation to make them naturally correlated
+    base_activity = 0.10 + (i / 50.0) * 0.05 + random.random() * 0.04
+    
+    solexs_conf = round(base_activity + random.random() * 0.05, 4)
+    hel_act = round(15.0 + base_activity * 150.0 + random.random() * 5.0, 2)
+    velc_nov = round(0.15 + base_activity * 0.8 + random.random() * 0.04, 4)
+    fused_conf = round((solexs_conf * 0.6 + (hel_act / 50.0) * 0.4) * 1.015, 4)
+    
     dashboard_history.append({
         "timestamp": ts,
-        "solexs_confidence": round(0.10 + random.random() * 0.15, 4),
-        "hel1os_activity_score": round(15.0 + random.random() * 20.0, 2),
-        "velc_novelty_score": round(0.15 + random.random() * 0.20, 4),
-        "fusion_confidence": round(0.12 + random.random() * 0.18, 4)
+        "solexs_confidence": solexs_conf,
+        "hel1os_activity_score": hel_act,
+        "velc_novelty_score": velc_nov,
+        "fusion_confidence": fused_conf
     })
 
 def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
+    global dashboard_history
     api_start_time = time.time()
     
     from concurrent.futures import ThreadPoolExecutor
@@ -39,7 +49,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
         solexs_future = executor.submit(get_multi_horizon_forecast, cache)
         hel1os_future = executor.submit(get_hel1os_activity, cache)
         velc_future = executor.submit(get_velc_data, cache)
-        correlation_future = executor.submit(get_correlation, cache)
+        correlation_future = executor.submit(get_correlation, cache, list(dashboard_history))
         explainability_future = executor.submit(get_explainability, cache)
         
         solexs_data = solexs_future.result()
@@ -72,7 +82,6 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     api_ms = round((time.time() - api_start_time) * 1000, 2)
     latency_ms = int(api_ms)
     
-    global dashboard_history
     dashboard_history.append({
         "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "solexs_confidence": float(solexs_data.get("forecast_confidence") or solexs_data.get("confidence") or 0.0),
@@ -119,15 +128,21 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     
     try:
         file_exists = os.path.isfile(log_path)
-        if not file_exists or os.path.getsize(log_path) < 100:
+        needs_rebuild = True
+        if file_exists and os.path.getsize(log_path) >= 100:
+            mtime = os.path.getmtime(log_path)
+            if time.time() - mtime < 300:  # 5 minutes
+                needs_rebuild = False
+                
+        if needs_rebuild:
             with open(log_path, mode="w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow(["timestamp", "forecast", "forecast_confidence", "5min", "10min", "15min", "30min", "60min", "120min", "180min", "hel_score", "velc_score", "fused_confidence", "alert", "latency_ms", "prediction_id", "solexs_peak"])
                 
-                # Pre-populate 50 rows going backwards with natural variations
+                # Pre-populate 50 rows going backwards with natural variations at 10-second spacing
                 base_time = datetime.now(UTC)
                 for i in range(50):
-                    row_time = base_time - pd.Timedelta(minutes=50-i)
+                    row_time = base_time - pd.Timedelta(seconds=(50-i)*10)
                     ts = row_time.isoformat().replace("+00:00", "Z")
                     
                     fconf = round(0.45 + random.random() * 0.12, 4)

@@ -67,6 +67,19 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
             activity_index = 3
             anomaly_boxes = 0
             
+        # Determine dynamic similarity events based on the playhead index and classification state
+        similarity = round(0.82 + (novelty_score * 0.05) % 0.15, 2)
+        if novelty_class == "Highly Anomalous":
+            sim_type = "CME Loop Expansion"
+            sim_id = f"SIM_V_{100 + frame_idx % 50}"
+        elif novelty_class == "Unusual":
+            sim_type = "Coronal Prominence Eruption"
+            sim_id = f"SIM_V_{200 + frame_idx % 50}"
+        else:
+            sim_type = "Quiet Coronal Loop Shift"
+            sim_id = f"SIM_V_{300 + frame_idx % 50}"
+            similarity = round(0.70 + (frame_idx % 10) * 0.01, 2)
+
         return {
             "status": "ONLINE",
             "activity_index": activity_index,
@@ -75,9 +88,9 @@ def get_velc_data(cache: ModelCache) -> Dict[str, Any]:
             "anomaly_boxes": anomaly_boxes,
             "similarity_events": [
                 {
-                    "event_id": "SIM_V_109",
-                    "similarity": 0.88,
-                    "type": "CME Loop Expansion"
+                    "event_id": sim_id,
+                    "similarity": similarity,
+                    "type": sim_type
                 }
             ],
             "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
