@@ -22,21 +22,12 @@ dashboard_history = []
 # Pre-populate with 50 realistic historical entries to avoid empty lists on startup
 for i in range(50):
     ts = (datetime.now(UTC) - pd.Timedelta(seconds=(50-i)*10)).isoformat().replace("+00:00", "Z")
-    
-    # Introduce a shared baseline activity fluctuation to make them naturally correlated
-    base_activity = 0.10 + (i / 50.0) * 0.05 + random.random() * 0.04
-    
-    solexs_conf = round(base_activity + random.random() * 0.05, 4)
-    hel_act = round(15.0 + base_activity * 150.0 + random.random() * 5.0, 2)
-    velc_nov = round(0.15 + base_activity * 0.8 + random.random() * 0.04, 4)
-    fused_conf = round((solexs_conf * 0.6 + (hel_act / 50.0) * 0.4) * 1.015, 4)
-    
     dashboard_history.append({
         "timestamp": ts,
-        "solexs_confidence": solexs_conf,
-        "hel1os_activity_score": hel_act,
-        "velc_novelty_score": velc_nov,
-        "fusion_confidence": fused_conf
+        "solexs_confidence": round(0.10 + random.random() * 0.15, 4),
+        "hel1os_activity_score": round(15.0 + random.random() * 20.0, 2),
+        "velc_novelty_score": round(0.15 + random.random() * 0.20, 4),
+        "fusion_confidence": round(0.12 + random.random() * 0.18, 4)
     })
 
 def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:

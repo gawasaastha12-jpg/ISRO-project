@@ -33,11 +33,6 @@ def get_correlation(cache: ModelCache, history: list = None) -> Dict[str, Any]:
                 if den_sh_x > 0 and den_sh_y > 0:
                     r_sh = num_sh / (den_sh_x * den_sh_y) ** 0.5
                     score = round(r_sh, 3)
-                    # Safe mapping to keep it within realistic active monitoring boundaries
-                    if score < 0:
-                        score = round(0.12 + abs(score) * 0.1, 2)
-                    elif score < 0.3:
-                        score = round(0.32 + score * 0.2, 2)
                 
                 # SOLEXS ↔ VELC Pearson r
                 mean_v = sum(V) / n
@@ -47,8 +42,6 @@ def get_correlation(cache: ModelCache, history: list = None) -> Dict[str, Any]:
                 if den_sv_x > 0 and den_sv_v > 0:
                     r_sv = num_sv / (den_sv_x * den_sv_v) ** 0.5
                     solexs_velc_corr = round(r_sv, 2)
-                    if solexs_velc_corr < 0:
-                        solexs_velc_corr = round(0.18 + abs(solexs_velc_corr) * 0.1, 2)
                         
                 # HEL1OS ↔ VELC Pearson r
                 num_hv = sum((y - mean_y) * (v - mean_v) for y, v in zip(Y, V))
@@ -57,8 +50,6 @@ def get_correlation(cache: ModelCache, history: list = None) -> Dict[str, Any]:
                 if den_hv_y > 0 and den_hv_v > 0:
                     r_hv = num_hv / (den_hv_y * den_hv_v) ** 0.5
                     hel1os_velc_corr = round(r_hv, 2)
-                    if hel1os_velc_corr < 0:
-                        hel1os_velc_corr = round(0.15 + abs(hel1os_velc_corr) * 0.1, 2)
             except Exception as e:
                 logger.error(f"Error computing live correlation: {e}")
                 
