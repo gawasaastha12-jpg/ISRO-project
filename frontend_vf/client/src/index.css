@@ -1,0 +1,319 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Cosmic color palette */
+  --color-cosmic-black: #0a0e27;
+  --color-cosmic-navy: #1a1f3a;
+  --color-electric-blue: #00d9ff;
+  --color-deep-purple: #7c3aed;
+  --color-supernova-gold: #fbbf24;
+  --color-nebula-violet: #a78bfa;
+  --color-starlight-white: #f0f4ff;
+}
+
+:root {
+  /* Cosmic dark theme - primary */
+  --primary: #00d9ff;
+  --primary-foreground: #0a0e27;
+  --sidebar-primary: #00d9ff;
+  --sidebar-primary-foreground: #0a0e27;
+  
+  /* Chart colors - cosmic palette */
+  --chart-1: #00d9ff;
+  --chart-2: #7c3aed;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #06b6d4;
+  
+  /* Radius - subtle curves */
+  --radius: 0.5rem;
+  
+  /* Background - deep space */
+  --background: #0a0e27;
+  --foreground: #f0f4ff;
+  
+  /* Cards - cosmic navy */
+  --card: #1a1f3a;
+  --card-foreground: #f0f4ff;
+  
+  /* Popover - cosmic navy with glow */
+  --popover: #1a1f3a;
+  --popover-foreground: #f0f4ff;
+  
+  /* Secondary - deep purple */
+  --secondary: #7c3aed;
+  --secondary-foreground: #f0f4ff;
+  
+  /* Muted - subtle cosmic navy */
+  --muted: #2a2f4a;
+  --muted-foreground: #a8adc5;
+  
+  /* Accent - electric blue */
+  --accent: #00d9ff;
+  --accent-foreground: #0a0e27;
+  
+  /* Destructive - red for warnings */
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  
+  /* Border - subtle cosmic navy */
+  --border: #2a2f4a;
+  --input: #1a1f3a;
+  --ring: #00d9ff;
+  
+  /* Sidebar - cosmic navy */
+  --sidebar: #1a1f3a;
+  --sidebar-foreground: #f0f4ff;
+  --sidebar-accent: #00d9ff;
+  --sidebar-accent-foreground: #0a0e27;
+  --sidebar-border: #2a2f4a;
+  --sidebar-ring: #00d9ff;
+}
+
+.dark {
+  /* Already dark by default, but explicit for clarity */
+  --primary: #00d9ff;
+  --primary-foreground: #0a0e27;
+  --sidebar-primary: #00d9ff;
+  --sidebar-primary-foreground: #0a0e27;
+  --background: #0a0e27;
+  --foreground: #f0f4ff;
+  --card: #1a1f3a;
+  --card-foreground: #f0f4ff;
+  --popover: #1a1f3a;
+  --popover-foreground: #f0f4ff;
+  --secondary: #7c3aed;
+  --secondary-foreground: #f0f4ff;
+  --muted: #2a2f4a;
+  --muted-foreground: #a8adc5;
+  --accent: #00d9ff;
+  --accent-foreground: #0a0e27;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #2a2f4a;
+  --input: #1a1f3a;
+  --ring: #00d9ff;
+  --chart-1: #00d9ff;
+  --chart-2: #7c3aed;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #06b6d4;
+  --sidebar: #1a1f3a;
+  --sidebar-foreground: #f0f4ff;
+  --sidebar-accent: #00d9ff;
+  --sidebar-accent-foreground: #0a0e27;
+  --sidebar-border: #2a2f4a;
+  --sidebar-ring: #00d9ff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Typography system */
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    @apply font-black text-4xl leading-tight;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    font-family: 'JetBrains Mono', monospace;
+    @apply font-bold text-2xl leading-snug;
+    letter-spacing: 0.01em;
+  }
+  
+  h3 {
+    font-family: 'JetBrains Mono', monospace;
+    @apply font-bold text-lg leading-snug;
+    letter-spacing: 0.01em;
+  }
+  
+  p {
+    font-family: 'Inter', sans-serif;
+    @apply font-normal text-base leading-relaxed;
+  }
+  
+  code, pre {
+    font-family: 'IBM Plex Mono', monospace;
+    @apply font-medium text-sm;
+  }
+  
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+  
+  /* Cosmic glow effect */
+  .cosmic-glow {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3),
+                0 0 40px rgba(124, 58, 237, 0.1);
+  }
+  
+  .cosmic-glow-strong {
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.5),
+                0 0 60px rgba(124, 58, 237, 0.2);
+  }
+  
+  /* Text glow */
+  .glow-text {
+    text-shadow: 0 0 10px rgba(0, 217, 255, 0.5),
+                 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+  
+  /* Starfield background */
+  .starfield {
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 60px 70px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 50px 50px, #ddd, rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 130px 80px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 90px 10px, #eee, rgba(0, 0, 0, 0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    background-color: #0a0e27;
+  }
+  
+  /* Smooth transitions */
+  .transition-cosmic {
+    transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  /* Glowing button */
+  .btn-cosmic {
+    @apply px-4 py-2 rounded-md font-semibold text-sm;
+    font-family: 'Space Mono', monospace;
+    @apply bg-electric-blue text-cosmic-black active:scale-95;
+    transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3), 0 0 40px rgba(124, 58, 237, 0.1);
+  }
+  
+  .btn-cosmic:hover {
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.5), 0 0 60px rgba(124, 58, 237, 0.2);
+  }
+}
+
+
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom scrollbar styling matching cosmic navy & electric blue theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 14, 39, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 217, 255, 0.3);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 217, 255, 0.85);
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+}
+
+/* Firefox support */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 217, 255, 0.3) rgba(10, 14, 39, 0.5);
+}

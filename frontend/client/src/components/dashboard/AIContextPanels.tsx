@@ -391,15 +391,25 @@ export function ExplainableAIPanel() {
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-0.5">
                   <span className="text-muted-foreground">True Positive Rate (TPR)</span>
-                  <span className="text-green-400 font-bold">95.5%</span>
+                  <span className="text-green-400 font-bold">
+                    {data?.instruments?.solexs?.tpr !== undefined 
+                      ? `${(data.instruments.solexs.tpr * 100).toFixed(1)}%` 
+                      : "36.6%"}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-0.5">
                   <span className="text-muted-foreground">False Alarm Rate (FAR)</span>
-                  <span className="text-[#ef4444] font-bold">0.11%</span>
+                  <span className="text-[#ef4444] font-bold">
+                    {data?.instruments?.solexs?.far !== undefined 
+                      ? `${(data.instruments.solexs.far * 100).toFixed(2)}%` 
+                      : "0.10%"}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-0.5">
                   <span className="text-muted-foreground">Model Version</span>
-                  <span className="text-starlight-white">v1.3</span>
+                  <span className="text-starlight-white">
+                    {data?.instruments?.solexs?.engine_versions?.solexs || "v3.2"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last Updated</span>

@@ -104,9 +104,12 @@ def generate_solexs_data(cache: ModelCache) -> dict:
         "margin": nowcast["margin"],
         "prediction_id": nowcast["prediction_id"],
         "multi_horizon": results,
-        "solexs_peak": nowcast.get("solexs_peak", 4.2e-6),
+        "solexs_peak": nowcast.get("solexs_peak") if nowcast.get("solexs_peak") is not None else (logger.warning("WARNING: solexs_peak is missing from nowcast, falling back to 0.0") or 0.0),
         "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "processing_ms": round((time.time() - start_time) * 1000, 2),
+        "tpr": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("tpr", 0.366),
+        "far": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("far", 0.001),
+        "tss": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("tss", 0.365),
         "engine_versions": {"solexs": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("version", "v3.0")}
     }
 

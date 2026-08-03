@@ -3,11 +3,16 @@ from typing import Dict, List, Optional, Any
 
 # ----------------- Subsystem Schemas -----------------
 
+class BufferStatusSchema(BaseModel):
+    current: int
+    max: int
+
 class MissionStatusSchema(BaseModel):
     utc: str
     system: str
     api_latency_ms: int
     last_updated: str
+    buffer_status: Optional[BufferStatusSchema] = None
 
 class BaseInstrumentSchema(BaseModel):
     status: str
@@ -33,6 +38,9 @@ class SolexsSchema(BaseInstrumentSchema):
     probability_vector: Optional[List[float]] = None
     model_sha: Optional[str] = None
     multi_horizon: Optional[List[Dict[str, Any]]] = None
+    tpr: Optional[float] = None
+    far: Optional[float] = None
+    tss: Optional[float] = None
 
 class HeliosSchema(BaseInstrumentSchema):
     activity_score: Optional[float] = None

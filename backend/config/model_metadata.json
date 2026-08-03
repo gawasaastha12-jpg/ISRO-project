@@ -6,7 +6,10 @@
       "dataset": "forecast_5min.csv",
       "accuracy": 0.94,
       "f1": 0.91,
-      "auc": 0.97
+      "auc": 0.97,
+      "tpr": 0.366,
+      "far": 0.0010,
+      "tss": 0.365
     },
     "forecast_10min": {
       "version": "v3.2",

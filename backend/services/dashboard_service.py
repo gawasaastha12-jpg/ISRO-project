@@ -171,7 +171,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                 alert_data.get("current_alert", ""),
                 latency_ms,
                 prediction_id,
-                solexs_data.get("solexs_peak", 4.2e-6)
+                solexs_data.get("solexs_peak") if solexs_data.get("solexs_peak") is not None else (logger.warning("WARNING: solexs_peak is missing from solexs_data in dashboard_service, falling back to 0.0") or 0.0)
             ])
     except Exception as e:
         logger.error(f"Failed to log prediction: {e}")
@@ -183,7 +183,11 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
             "utc": datetime.now(UTC).strftime("%H:%M:%S UTC"),
             "system": "Nominal",
             "api_latency_ms": latency_ms,
-            "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z")
+            "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            "buffer_status": {
+                "current": len(dashboard_history),
+                "max": 100
+            }
         },
         "instruments": {
             "solexs": solexs_data,
