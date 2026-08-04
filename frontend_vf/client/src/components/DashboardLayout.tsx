@@ -77,7 +77,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-5 z-10 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-5 relative custom-scrollbar">
         <div className="max-w-[1920px] mx-auto min-h-full flex flex-col justify-between">
           
           {activeTab === 'operations' && (

@@ -260,7 +260,7 @@ export function ExplainableAIPanel() {
   };
 
   return (
-    <div className="flex flex-col p-5 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] overflow-hidden">
+    <div className="flex flex-col p-5 bg-[#0b1022] border border-[#00d9ff]/20 rounded-lg h-full relative transition-all duration-300 hover:shadow-[0_10px_30px_-10px_rgba(0,217,255,0.2)] overflow-visible">
       
       {/* Header & Terminology */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 pb-2 border-b border-white/5 gap-2">
@@ -275,7 +275,7 @@ export function ExplainableAIPanel() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 flex-1 overflow-visible">
         {/* Left Part: Timeline horizon features list */}
         <div className="flex-1 flex flex-col justify-between overflow-y-auto custom-scrollbar pr-1">
           <div>
@@ -285,7 +285,7 @@ export function ExplainableAIPanel() {
                 <button className="text-[9px] text-[#6b7590] hover:text-[#00d9ff] font-mono flex items-center space-x-1 border border-[#1e2740] px-1.5 py-0.5 rounded transition-all">
                   <span>ⓘ Feature Column Legend</span>
                 </button>
-                <div className="absolute right-0 bottom-full mb-1.5 z-50 hidden group-hover:block bg-[#0b1022] border border-[#1e2740] p-3 rounded-lg shadow-2xl w-[260px] text-[9.5px] font-mono text-[#6b7590] leading-normal space-y-1.5 pointer-events-none">
+                <div className="absolute right-0 top-full mt-1.5 z-50 hidden group-hover:block bg-[#0b1022] border border-[#1e2740] p-3 rounded-lg shadow-2xl w-[260px] text-[9.5px] font-mono text-[#6b7590] leading-normal space-y-1.5 pointer-events-none">
                   <div className="font-bold text-[#e8ecf5] border-b border-white/5 pb-1 mb-1.5 uppercase tracking-wider">Telemetry Feature Mapping</div>
                   <div className="flex justify-between"><span className="text-[#00ff88]">Coronal Complexity</span> <span>➔ prominence_multiple</span></div>
                   <div className="flex justify-between"><span className="text-[#00ff88]">Rate Deviation (std)</span> <span>➔ std</span></div>

@@ -147,7 +147,7 @@ export function AlertLogsPanel() {
 
       {/* EXPLAINABILITY MODAL */}
       {explainAlert && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#0b1022] border border-[#22d3ee]/40 rounded-xl max-w-xl w-full p-6 shadow-[0_0_50px_rgba(0,217,255,0.2)] flex flex-col space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar relative">
             
             {/* Modal Header */}
