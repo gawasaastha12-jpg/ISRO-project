@@ -41,16 +41,19 @@ Solar flares are highly sparse events ($<2\%$ active states). To prevent quiet-s
 * **Weighted Splits:** Utilizes specialized class weighting in XGBoost split calculations to balance sensitivity and false-alarm rates.
 
 ### 3. Isotonic Probability Calibration
-Raw classifiers yield decision boundary logits rather than physical probabilities. We apply a post-processing **Isotonic Regression** function to map raw model confidence outputs to true, calibrated empirical onset probabilities:
-$$\text{Peak Density Ratio (11.0\%)} + \text{Signal-to-Noise Ratio (10.1\%)} + \text{Maximum Peak Flux (7.8\%)} + \text{Peak Count (7.6\%)} + \text{Coronal Energy Flux (7.1\%)} + \text{Others (56.4\%)} = 100.0\%$$
+Raw classifiers yield decision boundary logits rather than physical probabilities. We apply a post-processing **Isotonic Regression** function to map raw model outputs to true, calibrated empirical onset probabilities. This ensures that a predicted probability of 40% maps to a true historical recurrence likelihood of 40%.
+
+### 4. XGBoost Feature Importance (5-Minute Nowcast Model)
+The share of total model gain attributed to the top 5 operational features:
+$$\text{Peak Height Ratio (11.0\%)} + \text{Signal-to-Noise Ratio (10.1\%)} + \text{Maximum Peak Flux (7.8\%)} + \text{Peak Count (7.6\%)} + \text{Coronal Energy Flux (7.1\%)} + \text{Others (56.4\%)} = 100.0\%$$
 
 ---
 
 ## 🛠️ System Architecture & Setup
 
 ### Requirements
-* **Backend:** Python 3.10+, FastAPI, Uvicorn, XGBoost, Scikit-learn
-* **Frontend:** Node.js 18+, React, Vite, Tailwind CSS, Lucide icons
+* **Backend:** Python 3.10+, FastAPI, Uvicorn, LightGBM/XGBoost, Scikit-learn
+* **Frontend:** Node.js 18+, React, Vite, CSS, Lucide icons
 
 ### Execution Commands
 
@@ -60,10 +63,10 @@ $$\text{Peak Density Ratio (11.0\%)} + \text{Signal-to-Noise Ratio (10.1\%)} + \
 python -m uvicorn backend.api.main:app --reload --port 8000
 ```
 
-#### 2. Launch Client UI App
+#### 2. Launch Client UI App (Verified Operations Version)
 ```bash
-# Navigate to frontend folder
-cd frontend
+# Navigate to frontend_vf folder
+cd frontend_vf
 npm run dev
 ```
-The platform is accessible locally at `http://localhost:3000/`.
+The platform is accessible locally at `http://localhost:3001/`.

@@ -229,11 +229,11 @@ export default function MissionStatusBar() {
                 Top predictors mapped by XGBoost Gain attributions (share of total model gain) across the 17 core operational parameters:
               </p>
               <div style="font-size: 9px; line-height: 1.8; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
-                <div>1. Coronal Complexity (prominence_multiple) [███████████████████░░░░░░░░░░░] 19.4%</div>
-                <div>2. Interquartile Range (iqr) [█████████████░░░░░░░░░░░░░░░░░] 13.1%</div>
-                <div>3. Rate Deviation (std) [██████████░░░░░░░░░░░░░░░░░░░░] 9.6%</div>
-                <div>4. Signal-to-Noise Ratio (snr) [████████░░░░░░░░░░░░░░░░░░░░░░░░░] 7.7%</div>
-                <div>5. Peak Raw Intensity (max) [██████░░░░░░░░░░░░░░░░░░░░░░░░░░] 5.5%</div>
+                <div>1. Peak Height Ratio (peak_ratio) [███████████░░░░░░░░░░░░░░░░░░░] 11.0%</div>
+                <div>2. Signal-to-Noise Ratio (snr) [██████████░░░░░░░░░░░░░░░░░░░░] 10.1%</div>
+                <div>3. Peak Raw Intensity (max) [████████░░░░░░░░░░░░░░░░░░░░░░░] 7.8%</div>
+                <div>4. Peak Count Ratio (peak_count) [████████░░░░░░░░░░░░░░░░░░░░░░░] 7.6%</div>
+                <div>5. SOLEXS Energy Flux (energy) [███████░░░░░░░░░░░░░░░░░░░░░░░░] 7.1%</div>
               </div>
             </div>
 
