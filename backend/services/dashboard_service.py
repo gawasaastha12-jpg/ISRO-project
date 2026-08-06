@@ -215,7 +215,7 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                         round(1.5e-7 + random.random() * 8.5e-7, 9)
                     ])
         
-        # Append latest row
+        # Append latest row to predictions.csv
         with open(log_path, mode="a", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow([
@@ -237,6 +237,33 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                 prediction_id,
                 solexs_data.get("solexs_peak") if solexs_data.get("solexs_peak") is not None else (logger.warning("WARNING: solexs_peak is missing from solexs_data in dashboard_service, falling back to 0.0") or 0.0)
             ])
+            
+        # Also ensure team_predictions.csv gets real-time updates directly from backend
+        team_log_path = os.path.join(root_dir, "logs", "team_predictions.csv")
+        now_utc = datetime.now(UTC)
+        now_sec = now_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        
+        # Check if latest entry is already logged for this second
+        already_logged = False
+        if os.path.exists(team_log_path):
+            with open(team_log_path, mode="r", encoding="utf-8") as tf:
+                t_rows = list(csv.DictReader(tf))
+                if t_rows and t_rows[-1].get("timestamp", "").startswith(now_sec):
+                    already_logged = True
+                    
+        if not already_logged:
+            probs = solexs_data.get("probabilities", {})
+            p_C = float(probs.get("C-like", probs.get("C", 0.0)))
+            p_M = float(probs.get("M-like", probs.get("M", 0.0)))
+            p_X = float(probs.get("X-like", probs.get("X", 0.0)))
+            ph  = solexs_data.get("nowcast_phase", "Background")
+            
+            tf_exists = os.path.isfile(team_log_path)
+            with open(team_log_path, mode="a", newline="", encoding="utf-8") as tf:
+                tw = csv.writer(tf)
+                if not tf_exists:
+                    tw.writerow(["timestamp", "nowcast_phase", "forecast_prob_C", "forecast_prob_M", "forecast_prob_X"])
+                tw.writerow([now_sec, ph, f"{p_C:.4f}", f"{p_M:.4f}", f"{p_X:.4f}"])
     except Exception as e:
         logger.error(f"Failed to log prediction: {e}")
         

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { Activity, RefreshCw, AlertTriangle } from "lucide-react";
+import { API_BASE_URL } from "../../services/api";
 
 interface PredRow {
   timestamp: string;
@@ -54,7 +55,7 @@ export function TrajectorySummaryPanel() {
 
   const load = useCallback(async () => {
     try {
-      const resp = await fetch("/api/v1/predictions/history?n=60");
+      const resp = await fetch(`${API_BASE_URL}/predictions/history?n=60`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       if (json.error) { setError(json.error); setRows([]); return; }
@@ -157,7 +158,7 @@ export function TrajectorySummaryPanel() {
       </div>
 
       {/* Chart area */}
-      <div className="flex-1 min-h-[280px] relative">
+      <div className="w-full h-[340px] relative">
         {loading && rows.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center space-y-3 text-[#6b7590]">
             <div className="w-8 h-8 border-2 border-[#00d9ff]/30 border-t-[#00d9ff] rounded-full animate-spin" />
