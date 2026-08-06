@@ -71,7 +71,10 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                         "B-like": prob_B,
                         "C-like": prob_C,
                         "M-like": prob_M,
-                        "X-like": prob_X
+                        "X-like": prob_X,
+                        "C": prob_C,
+                        "M": prob_M,
+                        "X": prob_X
                     }
                     pred_class = max(probs, key=probs.get)
                     

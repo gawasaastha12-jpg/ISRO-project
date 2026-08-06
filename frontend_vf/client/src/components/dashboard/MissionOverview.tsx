@@ -12,11 +12,15 @@ export function LiveFlareGauge() {
   const fusionRaw = data?.analytics?.fusion?.forecast_confidence ?? data?.analytics?.fusion?.confidence ?? data?.analytics?.fusion?.probability ?? 0;
   const fusionProb = fusionRaw <= 1.0 ? fusionRaw * 100 : fusionRaw;
 
-  // Individual class probabilities from team_predictions.csv
+  // Individual class probabilities from team_predictions.csv / solexs_data
   const probs = data?.instruments?.solexs?.probabilities ?? {};
-  const probC = ((probs['C-like'] ?? 0) <= 1.0 ? (probs['C-like'] ?? 0) * 100 : (probs['C-like'] ?? 0));
-  const probM = ((probs['M-like'] ?? 0) <= 1.0 ? (probs['M-like'] ?? 0) * 100 : (probs['M-like'] ?? 0));
-  const probX = ((probs['X-like'] ?? 0) <= 1.0 ? (probs['X-like'] ?? 0) * 100 : (probs['X-like'] ?? 0));
+  const getProbVal = (k1: string, k2: string) => {
+    const v = probs[k1] ?? probs[k2] ?? 0;
+    return v <= 1.0 ? v * 100 : v;
+  };
+  const probC = getProbVal('C-like', 'C');
+  const probM = getProbVal('M-like', 'M');
+  const probX = getProbVal('X-like', 'X');
 
   // Nowcast phase — read directly from API (set by determine_phase in write_predictions.py)
   // Falls back to deriving it from trajectory only if nowcast_phase is not present
@@ -188,7 +192,7 @@ export function LiveFlareGauge() {
 
       {/* C / M / X Class Probability Bars */}
       <div className="mt-3 pt-3 border-t border-white/5 space-y-2 font-mono">
-        <span className="text-[8px] text-muted-foreground uppercase tracking-widest block">Nowcast Class Probabilities (5 min)</span>
+        <span className="text-[8px] text-muted-foreground uppercase tracking-widest block">Nowcast Class Probabilities</span>
         {/* C-Class */}
         <div className="flex items-center space-x-2">
           <span className="text-[9px] w-14 text-orange-400 font-bold">C-Class</span>

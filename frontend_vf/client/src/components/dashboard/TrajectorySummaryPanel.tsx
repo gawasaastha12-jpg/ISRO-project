@@ -24,10 +24,16 @@ interface PredRow {
 const POLL_MS = 10_000; // poll every 10 s — matches write_predictions.py cadence
 
 function fmtTime(ts: string) {
-  // ISO → HH:MM:SS UTC display
+  // Convert ISO string (UTC) to local IST time display (HH:MM:SS IST)
   try {
-    const d = new Date(ts + "Z"); // treat as UTC
-    return d.toISOString().slice(11, 19);
+    const d = new Date(ts.endsWith("Z") ? ts : ts + "Z");
+    return d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Kolkata"
+    }) + " IST";
   } catch {
     return ts.slice(11, 19) || ts;
   }
@@ -37,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-[#0b1022] border border-[#00d9ff]/30 rounded p-2 text-[10px] font-mono">
-      <p className="text-[#6b7590] mb-1">{label} UTC</p>
+      <p className="text-[#6b7590] mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.color }} className="font-bold">
           {p.name}: {Number(p.value).toFixed(2)}%
@@ -178,7 +184,7 @@ export function TrajectorySummaryPanel() {
 
         {rows.length > 0 && (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 12, right: 25, left: 10, bottom: 5 }}>
               <defs>
                 <linearGradient id="gradC" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#ff9f1c" stopOpacity={0.3} />
@@ -205,22 +211,23 @@ export function TrajectorySummaryPanel() {
               />
               <YAxis
                 domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
                 tickFormatter={(v) => `${v}%`}
                 tick={{ fill: "#6b7590", fontSize: 9, fontFamily: "monospace" }}
                 axisLine={false}
                 tickLine={false}
-                width={38}
+                width={45}
               />
 
               <Tooltip content={<CustomTooltip />} />
 
               {/* Threshold reference lines */}
               <ReferenceLine y={10} stroke="#ff9f1c" strokeDasharray="4 2" strokeOpacity={0.4}
-                label={{ value: "C Watch", position: "insideTopLeft", fill: "#ff9f1c", fontSize: 8 }} />
+                label={{ value: "C Watch (10%)", position: "insideTopRight", fill: "#ff9f1c", fontSize: 8 }} />
               <ReferenceLine y={5} stroke="#ff3b5c" strokeDasharray="4 2" strokeOpacity={0.4}
-                label={{ value: "M Warn", position: "insideTopLeft", fill: "#ff3b5c", fontSize: 8 }} />
+                label={{ value: "M Warn (5%)", position: "insideTopRight", fill: "#ff3b5c", fontSize: 8 }} />
               <ReferenceLine y={2} stroke="#7c3aed" strokeDasharray="4 2" strokeOpacity={0.4}
-                label={{ value: "X Alert", position: "insideTopLeft", fill: "#7c3aed", fontSize: 8 }} />
+                label={{ value: "X Alert (2%)", position: "insideTopRight", fill: "#7c3aed", fontSize: 8 }} />
 
               <Area type="monotone" dataKey="C-class" stroke="#ff9f1c" strokeWidth={2}
                 fill="url(#gradC)" dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
