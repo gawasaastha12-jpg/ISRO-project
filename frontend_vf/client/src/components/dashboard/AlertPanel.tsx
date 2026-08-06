@@ -54,16 +54,28 @@ export function AlertPanel() {
     }
   };
 
-  const threat = getThreatDetails(currentAlertLevel);
-
-  // Retrieve current nowcast class probabilities
+  // Retrieve current nowcast class probabilities — no hardcoded fallback
   const solexs = data?.instruments?.solexs;
-  const probs = solexs?.probabilities || { 'Quiet': 0.941, 'B-like': 0.055, 'C-like': 0.003, 'M-like': 0.0008, 'X-like': 0.0002 };
+  const probs = solexs?.probabilities ?? {};
   
-  // Normalization logic if probabilities are sum-scaled differently
-  const cProb = ((probs['C-like'] ?? probs['C'] ?? 0.0) * 100);
-  const mProb = ((probs['M-like'] ?? probs['M'] ?? 0.0) * 100);
-  const xProb = ((probs['X-like'] ?? probs['X'] ?? 0.0) * 100);
+  // Always treat as [0–1] fractions; multiply by 100 for display
+  const rawC = probs['C-like'] ?? probs['C'] ?? 0.0;
+  const rawM = probs['M-like'] ?? probs['M'] ?? 0.0;
+  const rawX = probs['X-like'] ?? probs['X'] ?? 0.0;
+  const cProb = (rawC <= 1.0 ? rawC : rawC / 100) * 100;
+  const mProb = (rawM <= 1.0 ? rawM : rawM / 100) * 100;
+  const xProb = (rawX <= 1.0 ? rawX : rawX / 100) * 100;
+
+  // Dynamically elevate threat status based on live probabilities when backend says NORMAL
+  const effectiveAlertLevel = (() => {
+    if (currentAlertLevel !== 'NORMAL' && currentAlertLevel !== 'ALL CLEAR') return currentAlertLevel;
+    if (xProb >= 2)  return 'ALERT';
+    if (mProb >= 5)  return 'WARNING';
+    if (cProb >= 10) return 'WATCH';
+    return currentAlertLevel;
+  })();
+
+  const threat = getThreatDetails(effectiveAlertLevel);
 
   // Forecast horizons TSS performance metadata
   const horizonsList = [

@@ -78,12 +78,21 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
                     # The nowcast probability of flare onset (non-quiet/non-B)
                     nowcast_prob = prob_C + prob_M + prob_X
                     
+                    # Derive trajectory: Escalating=Impulsive, Decaying=Decay, else Stable
+                    if phase == "Impulsive":
+                        trajectory_label = "Escalating"
+                    elif phase == "Decay":
+                        trajectory_label = "Decaying"
+                    else:
+                        trajectory_label = "Stable"
+                    
                     # Update solexs_data dynamically
                     solexs_data["forecast"] = pred_class
                     solexs_data["confidence"] = nowcast_prob
                     solexs_data["forecast_confidence"] = nowcast_prob
                     solexs_data["probabilities"] = probs
-                    solexs_data["trajectory"] = "Escalating" if phase == "Impulsive" else ("Decaying" if phase == "Decay" else "Stable")
+                    solexs_data["nowcast_phase"] = phase          # <-- expose raw phase name
+                    solexs_data["trajectory"] = trajectory_label
                     solexs_data["forecast_severity_index"] = 0.2 + prob_B*0.5 + prob_C*1.5 + prob_M*2.5 + prob_X*3.5
                     
                     # Update hel1os_data to stay in sync

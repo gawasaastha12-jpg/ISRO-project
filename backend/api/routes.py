@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any
 import os
 import csv
@@ -171,3 +171,27 @@ async def get_system(cache = Depends(get_model_cache)):
         "cpu": f"{psutil.cpu_percent()}%",
         "version": "v1.4.0"
     }
+
+@router.get("/predictions/history")
+async def get_predictions_history(n: int = 60):
+    """Return the last N rows of team_predictions.csv as JSON for live charting."""
+    csv_path = os.path.join(ROOT_DIR, "logs", "team_predictions.csv")
+    if not os.path.exists(csv_path):
+        return {"rows": [], "error": "team_predictions.csv not found. Run logs/write_predictions.py."}
+    try:
+        rows = []
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            all_rows = list(reader)
+        last_rows = all_rows[-n:] if len(all_rows) >= n else all_rows
+        for r in last_rows:
+            rows.append({
+                "timestamp": r.get("timestamp", ""),
+                "phase": r.get("nowcast_phase", ""),
+                "prob_C": round(float(r.get("forecast_prob_C", 0)) * 100, 2),
+                "prob_M": round(float(r.get("forecast_prob_M", 0)) * 100, 2),
+                "prob_X": round(float(r.get("forecast_prob_X", 0)) * 100, 2),
+            })
+        return {"rows": rows, "count": len(rows)}
+    except Exception as e:
+        return {"rows": [], "error": str(e)}

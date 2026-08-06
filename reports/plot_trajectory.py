@@ -54,7 +54,7 @@ def determine_phase(window_scaled, current_cps):
     - Background : Quiet flux (< 50 cps)
     - Impulsive  : Rising sharply (trend > 0.2 cps/s & current_cps > 40)
     - Peak       : High flux (> 120 cps) near local peak
-    - Decay      : Falling from peak (trend < -0.2 cps/s & current_cps > 40)
+    - Decay      : Falling from peak (trend < -0.2 cps/s & current_cps > 35)
     """
     max_w = np.max(window_scaled)
     if max_w < 50 or current_cps < 35:
@@ -172,7 +172,6 @@ def main():
         if feats is None:
             continue
             
-        # Dynamically compute derived thresholds if required by feature map
         det_thresh = max(3 * feats.get('std', 0.0), 11)
         prom_mult  = feats.get('max_prominence', 0.0) / det_thresh if det_thresh > 0 else 0.0
         feat_map   = {k: v for k, v in feats.items()}
@@ -214,10 +213,13 @@ def main():
     print("-" * 85)
     print(f"  {'Time (UTC)':<8} | {'cps':>6} | {'Phase':<11} | {'Prob C':>7} | {'Prob M':>7} | {'Prob X':>7}")
     print(f"  {'-'*8}-+-{'-'*6}-+-{'-'*11}-+-{'-'*7}-+-{'-'*7}-+-{'-'*7}")
+    
+    # Print hourly rows PLUS the exact flare peak timestamp (05:34 UTC)!
     for i, (dt, cps, ph, pC, pM, pX) in enumerate(
             zip(dates_binned, counts_binned, phase_arr, prob_C_arr, prob_M_arr, prob_X_arr)):
-        if i % 60 == 0:
-            print(f"  {dt.strftime('%H:%M'):<8} | {cps:>6.1f} | {ph:<11} | {pC*100:>6.1f}% | {pM*100:>6.1f}% | {pX*100:>6.1f}%")
+        if i % 60 == 0 or i == peak_idx:
+            is_peak_tag = " <-- FLARE PEAK" if i == peak_idx else ""
+            print(f"  {dt.strftime('%H:%M'):<8} | {cps:>6.1f} | {ph:<11} | {pC*100:>6.1f}% | {pM*100:>6.1f}% | {pX*100:>6.1f}%{is_peak_tag}")
     print("=" * 85)
     print()
 

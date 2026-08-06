@@ -18,11 +18,13 @@ export function LiveFlareGauge() {
   const probM = ((probs['M-like'] ?? 0) <= 1.0 ? (probs['M-like'] ?? 0) * 100 : (probs['M-like'] ?? 0));
   const probX = ((probs['X-like'] ?? 0) <= 1.0 ? (probs['X-like'] ?? 0) * 100 : (probs['X-like'] ?? 0));
 
-  // Nowcast phase from latest prediction row
-  const nowcastPhase: string = data?.instruments?.solexs?.trajectory === 'Escalating' ? 'Impulsive'
-    : data?.instruments?.solexs?.trajectory === 'Decaying' ? 'Decay'
-    : data?.instruments?.solexs?.forecast === 'Quiet' || data?.instruments?.solexs?.forecast === 'B-like' ? 'Background'
-    : 'Rising';
+  // Nowcast phase — read directly from API (set by determine_phase in write_predictions.py)
+  // Falls back to deriving it from trajectory only if nowcast_phase is not present
+  const nowcastPhase: string = data?.instruments?.solexs?.nowcast_phase
+    ?? (data?.instruments?.solexs?.trajectory === 'Escalating' ? 'Impulsive'
+      : data?.instruments?.solexs?.trajectory === 'Decaying' ? 'Decay'
+      : (data?.instruments?.solexs?.forecast === 'Quiet' || data?.instruments?.solexs?.forecast === 'B-like') ? 'Background'
+      : 'Background');
 
   const phaseColor: Record<string, string> = {
     'Background': 'bg-slate-700/40 text-slate-300 border-slate-500/30',

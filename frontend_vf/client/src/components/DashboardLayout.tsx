@@ -10,6 +10,7 @@ import { PredictionHistoryPanel } from './dashboard/PredictionHistoryPanel';
 import { DualInstrumentChart } from './dashboard/DualInstrumentChart';
 import { HealthStrip } from './dashboard/HealthStrip';
 import { AlertLogsPanel } from './dashboard/AlertLogsPanel';
+import { TrajectorySummaryPanel } from './dashboard/TrajectorySummaryPanel';
 import gsap from 'gsap';
 
 interface DashboardLayoutProps {
@@ -90,6 +91,11 @@ export default function DashboardLayout({ children, alertState = 'NORMAL' }: Das
                 <div className="lg:col-span-1 gsap-delay-250 h-full">
                   <AlertPanel />
                 </div>
+              </div>
+
+              {/* Bottom Row 2: XGBoost Full-Day Trajectory Chart */}
+              <div className="gsap-delay-250 w-full" style={{ minHeight: '480px' }}>
+                <TrajectorySummaryPanel />
               </div>
 
               {/* Bottom Row: Condensed Health Strip */}
