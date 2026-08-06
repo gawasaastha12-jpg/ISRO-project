@@ -1,3 +1,14 @@
+"""
+write_predictions.py
+--------------------
+Continuous live prediction pipeline.
+- Cycles through the FITS file indefinitely (simulating a live telemetry feed)
+- Uses WALL-CLOCK UTC time for timestamps in the CSV so the dashboard sees standardized rows
+- Prints local IST time to the terminal for easy monitoring
+- Writes a new row every STEP_SECS seconds to team_predictions.csv
+- Run with: python logs/write_predictions.py
+"""
+
 import csv
 import time
 import gzip
@@ -8,171 +19,175 @@ import sys
 import os
 import uuid
 from astropy.io import fits
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
-# ── Paths & Setup ─────────────────────────────────────────────────────────────
+# ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(SCRIPT_DIR)
+ROOT_DIR   = os.path.dirname(SCRIPT_DIR)
 
-# Append features_v2 script path
 scripts_path = os.path.join(ROOT_DIR, 'SOLEXS_downloads', 'scripts')
 if scripts_path not in sys.path:
     sys.path.append(scripts_path)
 
 from features_v2 import extract_features
 
-# Files config
-MODEL_FILE = os.path.join(ROOT_DIR, "SOLEXS_downloads", "models", "model_forecast_5min.pkl")
-FITS_FILE = os.path.join(ROOT_DIR, "SOLEXS_downloads", "data", "lc_files", "AL1_SLX_L1_20250211_v1.0", "SDD2", "AL1_SOLEXS_20250211_SDD2_L1.lc.gz")
-OUTPUT_FILE = os.path.join(SCRIPT_DIR, "team_predictions.csv")
+MODEL_FILE    = os.path.join(ROOT_DIR, "SOLEXS_downloads", "models", "model_forecast_5min.pkl")
+FITS_FILE     = os.path.join(ROOT_DIR, "SOLEXS_downloads", "data", "lc_files",
+                              "AL1_SLX_L1_20250211_v1.0", "SDD2",
+                              "AL1_SOLEXS_20250211_SDD2_L1.lc.gz")
+OUTPUT_FILE   = os.path.join(SCRIPT_DIR, "team_predictions.csv")
 DASHBOARD_LOG = os.path.join(ROOT_DIR, "logs", "predictions.csv")
 
-WINDOW = 600
-STEP = 10
+WINDOW    = 600   # 600 raw 1s samples = 10-minute feature window
+STEP_IDX  = 10   # advance 10 raw samples per inference step
+STEP_SECS = 10   # wall-clock seconds between each written row
+MAX_ROWS  = 500  # keep CSV trimmed to last N rows to avoid unbounded growth
+FITS_START = 12400  # start well into the file (avoids midnight edge artefacts)
 # ──────────────────────────────────────────────────────────────────────────────
 
-print("=" * 70)
-print("  SOLAR FORECASTING LIVE PIPELINE STREAM")
-print("=" * 70)
-print(f"Loading 17-Feature Model: {os.path.basename(MODEL_FILE)}")
+CLASS_NAMES = {0: "Quiet", 1: "B-like", 2: "C-like", 3: "M-like", 4: "X-like"}
 
-# Load model
-bundle = joblib.load(MODEL_FILE)
-model = bundle['model']
-feat_cols = bundle['feature_cols']
-classes = list(model.classes_)
-
-CLASS_NAMES = {
-    0: "Quiet",
-    1: "B-like",
-    2: "C-like",
-    3: "M-like",
-    4: "X-like"
-}
-
-def get_prob(prob_vector, class_id):
+def get_prob(prob_vector, class_id, classes):
     try:
-        idx = classes.index(class_id)
-        return float(prob_vector[idx])
-    except ValueError:
+        return float(prob_vector[classes.index(class_id)])
+    except (ValueError, IndexError):
         return 0.0
 
-def determine_nowcast_phase(counts_window, prob_severe):
-    """
-    Determine nowcast phase from physical signatures:
-    - Background: quiet, low counts
-    - Impulsive: rapidly rising counts (HEL1OS-like signature)
-    - Peak: maximum in window
-    - Decay: falling from peak
-    """
-    mean_counts = np.mean(counts_window)
-    max_counts  = np.max(counts_window)
-    trend       = np.polyfit(range(len(counts_window)), counts_window, 1)[0]
-    
-    # Find peak position
-    peak_idx    = np.argmax(counts_window)
-    peak_frac   = peak_idx / len(counts_window)
-    
-    if max_counts < 200 and prob_severe < 0.05:
+def determine_phase(window, prob_severe):
+    trend     = np.polyfit(range(len(window)), window, 1)[0]
+    peak_idx  = np.argmax(window)
+    peak_frac = peak_idx / len(window)
+    if np.max(window) < 200 and prob_severe < 0.05:
         return "Background"
     elif trend > 0.5 and peak_frac > 0.7:
         return "Impulsive"
-    elif peak_frac > 0.3 and peak_frac < 0.7:
+    elif 0.3 < peak_frac < 0.7:
         return "Peak"
-    elif peak_frac < 0.4 and trend < -0.3:
+    elif trend < -0.3:
         return "Decay"
-    else:
-        return "Background"
+    return "Background"
 
-# Load FITS
-print(f"Ingesting FITS: {FITS_FILE}")
+def trim_csv(path, max_rows):
+    """Keep only the last max_rows data rows in the CSV."""
+    if not os.path.exists(path):
+        return
+    with open(path, 'r', newline='', encoding='utf-8') as f:
+        rows = list(csv.reader(f))
+    if len(rows) <= max_rows + 1:   # +1 for header
+        return
+    header = rows[0]
+    kept   = rows[-(max_rows):]
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(kept)
+
+
+# ── Load model ─────────────────────────────────────────────────────────────────
+print("=" * 70)
+print("  SOLAR FORECASTING LIVE PIPELINE  (continuous, dual timezone handling)")
+print("=" * 70)
+print(f"  Model  : {os.path.basename(MODEL_FILE)}")
+print(f"  Output : {OUTPUT_FILE}")
+print(f"  Step   : every {STEP_SECS}s real-time  |  window = {WINDOW}s raw FITS data")
+print("=" * 70)
+
+bundle    = joblib.load(MODEL_FILE)
+model     = bundle['model']
+feat_cols = bundle['feature_cols']
+classes   = list(model.classes_)
+
+# ── Load full FITS file into memory once ───────────────────────────────────────
+print(f"Loading FITS: {os.path.basename(FITS_FILE)} ...")
 with gzip.open(FITS_FILE) as f:
     with fits.open(f) as hdul:
-        data = hdul[1].data
+        data      = hdul[1].data
         col_names = data.names
-        counts = data['COUNTS'].astype(float) if 'COUNTS' in col_names else data[col_names[1]].astype(float)
-        times = data['TIME'].astype(float) if 'TIME' in col_names else data[col_names[0]].astype(float)
+        counts_all = data['COUNTS'].astype(float) if 'COUNTS' in col_names \
+                     else data[col_names[1]].astype(float)
 
-print(f"Loaded {len(counts):,} time-series samples")
-print(f"Writing stream to: {OUTPUT_FILE}")
-print(f"Syncing to dashboard history: {DASHBOARD_LOG}")
+# Clean spikes once
+counts_all[counts_all > 2000] = np.nan
+counts_all = pd.Series(counts_all).interpolate(limit_direction="both").values
 
-# Write team predictions header
-with open(OUTPUT_FILE, 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['timestamp', 'nowcast_phase', 'forecast_prob_C', 'forecast_prob_M', 'forecast_prob_X'])
+print(f"  Loaded {len(counts_all):,} samples.")
+print()
 
-print("\nStarting live prediction and feature extraction stream...\n")
+# ── Ensure CSV has a header ────────────────────────────────────────────────────
+if not os.path.exists(OUTPUT_FILE):
+    with open(OUTPUT_FILE, 'w', newline='', encoding='utf-8') as f:
+        csv.writer(f).writerow(
+            ['timestamp', 'nowcast_phase', 'forecast_prob_C', 'forecast_prob_M', 'forecast_prob_X']
+        )
 
-# Stream predictions
-for i in range(12400, len(counts) - WINDOW, STEP):
-    window = counts[i:i + WINDOW]
-    feats = extract_features(window)
-    
-    if feats is None:
-        continue
+# ── Continuous inference loop ──────────────────────────────────────────────────
+ptr = FITS_START
+n   = len(counts_all)
+print("Starting continuous stream... (Ctrl+C to stop)\n")
+
+try:
+    while True:
+        # Wrap pointer so we cycle the FITS file indefinitely
+        if ptr + WINDOW >= n:
+            ptr = FITS_START
+            print(f"  [wrap] Reached end of FITS file — restarting from index {FITS_START}")
+
+        window = counts_all[ptr : ptr + WINDOW]
+
+        feats = None
+        try:
+            feats = extract_features(window)
+        except Exception:
+            pass
+
+        if feats is None:
+            ptr += STEP_IDX
+            time.sleep(1)
+            continue
+
+        # Augment with derived features expected by model
+        det_thresh = max(3 * feats.get('std', 0.0), 11)
+        prom_mult  = feats.get('max_prominence', 0.0) / det_thresh if det_thresh > 0 else 0.0
+        feats['detection_threshold'] = det_thresh
+        feats['prominence_multiple'] = prom_mult
+
+        X    = pd.DataFrame([[feats.get(c, 0.0) for c in feat_cols]], columns=feat_cols)
+        prob = model.predict_proba(X)[0]
+        pred_val  = int(model.predict(X)[0])
+        pred_name = CLASS_NAMES.get(pred_val, "Quiet")
+
+        prob_C = get_prob(prob, 2, classes)
+        prob_M = get_prob(prob, 3, classes)
+        prob_X = get_prob(prob, 4, classes)
+        phase  = determine_phase(window, prob_M + prob_X)
+
+        # ── WALL-CLOCK timestamps (UTC for CSV, IST for Console) ───────────────
+        utc_now = datetime.now(timezone.utc)
+        utc_timestamp = utc_now.strftime('%Y-%m-%dT%H:%M:%S')
         
-    # Map features dynamically including on-the-fly calculated 17-feature fields
-    det_thresh = max(3 * feats.get('std', 0.0), 11)
-    prom_mult = feats.get('max_prominence', 0.0) / det_thresh if det_thresh > 0 else 0.0
-    
-    feat_map = {k: v for k, v in feats.items()}
-    feat_map['detection_threshold'] = det_thresh
-    feat_map['prominence_multiple'] = prom_mult
-    
-    X_list = [feat_map.get(c, 0.0) for c in feat_cols]
-    X = pd.DataFrame([X_list], columns=feat_cols)
-    
-    # Run prediction
-    pred_val = int(model.predict(X)[0])
-    prob = model.predict_proba(X)[0]
-    
-    pred_name = CLASS_NAMES.get(pred_val, "Quiet")
-    
-    prob_C = get_prob(prob, 2)   # C-like = class 2
-    prob_M = get_prob(prob, 3)   # M-like = class 3
-    prob_X = get_prob(prob, 4)   # X-like = class 4
-    
-    phase = determine_nowcast_phase(window, prob_M + prob_X)
-    
-    # Convert absolute epoch time to UTC timestamp
-    ts = datetime.fromtimestamp(times[i], tz=timezone.utc)
-    timestamp = ts.strftime('%Y-%m-%dT%H:%M:%SZ')
-    
-    # Append to team_predictions.csv
-    row = [timestamp, phase, f"{prob_C:.4f}", f"{prob_M:.4f}", f"{prob_X:.4f}"]
-    with open(OUTPUT_FILE, 'a', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(row)
-        
-    # Append to dashboard log predictions.csv
-    dashboard_exists = os.path.exists(DASHBOARD_LOG)
-    with open(DASHBOARD_LOG, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        if not dashboard_exists:
-            writer.writerow(["timestamp", "forecast", "forecast_confidence", "5min", "10min", "15min", "30min", "60min", "120min", "180min", "hel_score", "velc_score", "fused_confidence", "alert", "latency_ms", "prediction_id", "solexs_peak"])
-        writer.writerow([
-            timestamp,
-            pred_name,
-            f"{prob[pred_val]:.4f}",
-            pred_name,
-            "Quiet", "Quiet", "Quiet", "Quiet", "Quiet", "Quiet",  # 10min to 180min stubs
-            "84.0",
-            "0.28",
-            f"{prob[pred_val]:.4f}",
-            "NORMAL" if pred_name in ["Quiet", "B-like"] else ("ALERT" if pred_name == "C-like" else "SEVERE"),
-            "12",
-            str(uuid.uuid4()),
-            f"{float(feats.get('max', 0.0)) * 1e-10:.4e}"
-        ])
-        
-    # Print live feature extraction and prediction details
-    print(f"[{timestamp}] | {phase:<10} | Forecast: {pred_name:<8} ({prob[pred_val]*100:5.1f}%) | "
-          f"Mean: {feats['mean']:7.1f} | Max: {feats['max']:7.1f} | "
-          f"PromLateVsEarly: {feats['prominence_change']:7.1f} | "
-          f"Ent: {feats['spectral_entropy']:.3f} | "
-          f"Drift: {feats['drift_t1_t3']:7.1f}")
-          
-    time.sleep(0.5)  # Simulate real-time streaming
+        ist_offset = timedelta(hours=5, minutes=30)
+        ist_timezone = timezone(ist_offset)
+        ist_now = utc_now.astimezone(ist_timezone)
+        ist_timestamp = ist_now.strftime("%Y-%m-%d %I:%M:%S %p IST")
 
-print(f"\nDone. Stream complete.")
+        # Append to team_predictions.csv (Using strict UTC)
+        with open(OUTPUT_FILE, 'a', newline='', encoding='utf-8') as f:
+            csv.writer(f).writerow(
+                [utc_timestamp, phase, f"{prob_C:.4f}", f"{prob_M:.4f}", f"{prob_X:.4f}"]
+            )
+
+        # Trim to last MAX_ROWS rows every 30 steps
+        if ptr % (STEP_IDX * 30) == 0:
+            trim_csv(OUTPUT_FILE, MAX_ROWS)
+
+        # Console output (Using local IST)
+        print(f"[{ist_timestamp}] ptr={ptr:6d} | {phase:<11} | {pred_name:<8} "
+              f"({prob[pred_val]*100:5.1f}%) | "
+              f"C={prob_C*100:5.1f}% M={prob_M*100:5.1f}% X={prob_X*100:5.1f}% | "
+              f"cps={feats.get('mean',0):.1f}")
+
+        ptr += STEP_IDX
+        time.sleep(STEP_SECS)
+
+except KeyboardInterrupt:
+    print("\n\nPipeline stopped by user.")

@@ -7,6 +7,7 @@ interface TelemetryPoint {
   timestamp: string;
   solexs: number;
   hel1os: number;
+  probability: number;
 }
 
 export function DualInstrumentChart() {
@@ -21,8 +22,18 @@ export function DualInstrumentChart() {
         const json = await res.json();
         if (json.status === 'ONLINE' && json.predictions) {
           const formatted = json.predictions.map((p: any) => {
-            const date = new Date(p.timestamp);
-            const timeStr = date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            // 1. Ensure the JS Date object treats the incoming backend string as strict UTC
+            const utcString = p.timestamp.endsWith('Z') ? p.timestamp : `${p.timestamp}Z`;
+            const date = new Date(utcString);
+            
+            // 2. Format specifically to IST for the UI timeline
+            const timeStr = date.toLocaleTimeString('en-IN', { 
+                timeZone: 'Asia/Kolkata',
+                hour12: true, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            }) + ' IST';
             
             // Clean values & floor to prevent log(0) errors
             const rawSolexs = parseFloat(p.solexs_peak) || 0;
@@ -36,7 +47,7 @@ export function DualInstrumentChart() {
 
             return {
               time: timeStr,
-              timestamp: p.timestamp,
+              timestamp: p.timestamp, // Keep raw backend timestamp for cross-correlation math
               solexs: solexsVal,
               hel1os: helVal,
               probability: probVal
@@ -92,6 +103,8 @@ export function DualInstrumentChart() {
   let hel1osCrossingTime = "";
   let solexsPeakTime = "";
   let lagLabel = "";
+  let lagX1 = ""; 
+  let lagX2 = ""; 
 
   if (slicedData.length > 0) {
     const crossIndex = slicedData.findIndex(d => d.hel1os > 55);
@@ -112,9 +125,20 @@ export function DualInstrumentChart() {
       
       if (maxSolexsIndex !== -1) {
         solexsPeakTime = slicedData[maxSolexsIndex].time;
+        
+        // Safely determine chronological order using array indices
+        if (crossIndex < maxSolexsIndex) {
+          lagX1 = slicedData[crossIndex].time;
+          lagX2 = slicedData[maxSolexsIndex].time;
+        } else {
+          lagX1 = slicedData[maxSolexsIndex].time;
+          lagX2 = slicedData[crossIndex].time;
+        }
+
         // Calculate the actual lag using the real timestamps!
-        const t1 = new Date(slicedData[crossIndex].timestamp).getTime();
-        const t2 = new Date(slicedData[maxSolexsIndex].timestamp).getTime();
+        // Re-append 'Z' here to ensure the math stays accurate in UTC
+        const t1 = new Date(slicedData[crossIndex].timestamp.endsWith('Z') ? slicedData[crossIndex].timestamp : slicedData[crossIndex].timestamp + 'Z').getTime();
+        const t2 = new Date(slicedData[maxSolexsIndex].timestamp.endsWith('Z') ? slicedData[maxSolexsIndex].timestamp : slicedData[maxSolexsIndex].timestamp + 'Z').getTime();
         const secondsLag = Math.round(Math.abs(t2 - t1) / 1000);
         lagLabel = `Lag: ${secondsLag}s`;
       }
@@ -316,11 +340,11 @@ export function DualInstrumentChart() {
                   />
                 )}
                 {/* Onset Crossing delay */}
-                {hel1osCrossingTime && solexsPeakTime && (
+                {lagX1 && lagX2 && (
                   <ReferenceArea 
                     yAxisId="left"
-                    x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
-                    x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
+                    x1={lagX1} 
+                    x2={lagX2} 
                     fill="rgba(34, 211, 238, 0.05)" 
                     stroke="rgba(34, 211, 238, 0.15)"
                     strokeDasharray="3 3"
@@ -373,7 +397,7 @@ export function DualInstrumentChart() {
                   stroke="#6b7590" 
                   fontSize={8} 
                   fontFamily="monospace"
-                  label={{ value: 'Observation Time (UTC)', position: 'insideBottom', offset: 25, fill: '#6b7590', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
+                  label={{ value: 'Observation Time (IST)', position: 'insideBottom', offset: 25, fill: '#6b7590', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
                 />
                 <YAxis 
                   scale="log"
