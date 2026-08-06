@@ -19,6 +19,7 @@ class ModelCache:
         for h in horizons:
             # Check for model_forecast_{h}.pkl
             path = os.path.join(root_dir, "SOLEXS_downloads", "models", f"model_forecast_{h}.pkl")
+            
             if os.path.exists(path):
                 try:
                     import hashlib
@@ -34,19 +35,23 @@ class ModelCache:
                         self.models[f"solexs_{h}"] = {
                             "model": bundle.get("model"),
                             "label_encoder": bundle.get("label_encoder"),
+                            "feature_cols": bundle.get("feature_cols"),
                             "model_sha": model_sha
                         }
+                        if "optimal_threshold" in bundle:
+                            self.models[f"solexs_{h}"]["optimal_threshold"] = bundle["optimal_threshold"]
                     else:
                         self.models[f"solexs_{h}"] = {
                             "model": bundle,
                             "label_encoder": None,
+                            "feature_cols": None,
                             "model_sha": model_sha
                         }
                     # Load threshold if exists, or calibration
                     if isinstance(bundle, dict) and "optimal_threshold" in bundle:
                         self.models[f"solexs_{h}_threshold"] = bundle["optimal_threshold"]
-                    print(f"Loaded SOLEXS {h} model.")
-                    logger.info(f"Loaded SOLEXS {h} model.")
+                    print(f"Loaded SOLEXS {h} model from {os.path.basename(path)}.")
+                    logger.info(f"Loaded SOLEXS {h} model from {os.path.basename(path)}.")
                 except Exception as e:
                     print(f"Failed to load SOLEXS {h} model: {e}")
                     logger.error(f"Failed to load SOLEXS {h} model: {e}")
@@ -66,6 +71,7 @@ class ModelCache:
                         self.models[f"solexs_{h}"] = {
                             "model": model,
                             "label_encoder": None,
+                            "feature_cols": None,
                             "model_sha": model_sha
                         }
                         print(f"Loaded SOLEXS {h} model.")
@@ -80,7 +86,7 @@ class ModelCache:
             # Load corresponding datasets for quick inference (latest rows)
             # Check if this model is trained on the 74-feature set to determine folder path
             is_74_model = False
-            model_bundle = self.models.get(f"forecast_{h}")
+            model_bundle = self.models.get(f"solexs_{h}")
             if isinstance(model_bundle, dict) and model_bundle.get("feature_cols") is not None:
                 if len(model_bundle["feature_cols"]) > 20:
                     is_74_model = True

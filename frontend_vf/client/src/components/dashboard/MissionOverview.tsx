@@ -12,6 +12,27 @@ export function LiveFlareGauge() {
   const fusionRaw = data?.analytics?.fusion?.forecast_confidence ?? data?.analytics?.fusion?.confidence ?? data?.analytics?.fusion?.probability ?? 0;
   const fusionProb = fusionRaw <= 1.0 ? fusionRaw * 100 : fusionRaw;
 
+  // Individual class probabilities from team_predictions.csv
+  const probs = data?.instruments?.solexs?.probabilities ?? {};
+  const probC = ((probs['C-like'] ?? 0) <= 1.0 ? (probs['C-like'] ?? 0) * 100 : (probs['C-like'] ?? 0));
+  const probM = ((probs['M-like'] ?? 0) <= 1.0 ? (probs['M-like'] ?? 0) * 100 : (probs['M-like'] ?? 0));
+  const probX = ((probs['X-like'] ?? 0) <= 1.0 ? (probs['X-like'] ?? 0) * 100 : (probs['X-like'] ?? 0));
+
+  // Nowcast phase from latest prediction row
+  const nowcastPhase: string = data?.instruments?.solexs?.trajectory === 'Escalating' ? 'Impulsive'
+    : data?.instruments?.solexs?.trajectory === 'Decaying' ? 'Decay'
+    : data?.instruments?.solexs?.forecast === 'Quiet' || data?.instruments?.solexs?.forecast === 'B-like' ? 'Background'
+    : 'Rising';
+
+  const phaseColor: Record<string, string> = {
+    'Background': 'bg-slate-700/40 text-slate-300 border-slate-500/30',
+    'Impulsive':  'bg-red-500/20 text-red-300 border-red-500/40',
+    'Rising':     'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    'Peak':       'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    'Decay':      'bg-green-500/20 text-green-300 border-green-500/40',
+  };
+  const phaseStyle = phaseColor[nowcastPhase] ?? phaseColor['Background'];
+
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
   const arcLength = circumference * 0.75;
@@ -145,8 +166,58 @@ export function LiveFlareGauge() {
         </div>
       </div>
       
-      {/* Prediction Horizon details */}
-      <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
+      {/* Nowcast Phase Banner */}
+      <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center">
+        <div className="flex flex-col">
+          <span className="text-[8px] text-muted-foreground uppercase tracking-widest font-mono">Nowcast Phase</span>
+          <span className={`text-xs font-black mt-0.5 px-2 py-0.5 rounded border inline-block ${phaseStyle}`}
+            style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            {nowcastPhase.toUpperCase()}
+          </span>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[8px] text-muted-foreground uppercase tracking-widest font-mono">Current Probability</span>
+          <span className="text-sm font-black text-[#00d9ff] mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+            {probability.toFixed(1)}%
+          </span>
+          <span className="text-[7px] text-[#6b7590] uppercase">Flare Onset (C+M+X)</span>
+        </div>
+      </div>
+
+      {/* C / M / X Class Probability Bars */}
+      <div className="mt-3 pt-3 border-t border-white/5 space-y-2 font-mono">
+        <span className="text-[8px] text-muted-foreground uppercase tracking-widest block">Nowcast Class Probabilities (5 min)</span>
+        {/* C-Class */}
+        <div className="flex items-center space-x-2">
+          <span className="text-[9px] w-14 text-orange-400 font-bold">C-Class</span>
+          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-orange-500 to-orange-300 rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(probC, 100)}%` }} />
+          </div>
+          <span className="text-[9px] text-orange-300 font-bold w-10 text-right">{probC.toFixed(1)}%</span>
+        </div>
+        {/* M-Class */}
+        <div className="flex items-center space-x-2">
+          <span className="text-[9px] w-14 text-red-400 font-bold">M-Class</span>
+          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(probM, 100)}%` }} />
+          </div>
+          <span className="text-[9px] text-red-300 font-bold w-10 text-right">{probM.toFixed(1)}%</span>
+        </div>
+        {/* X-Class */}
+        <div className="flex items-center space-x-2">
+          <span className="text-[9px] w-14 text-purple-400 font-bold">X-Class</span>
+          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-purple-600 to-pink-400 rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(probX, 100)}%` }} />
+          </div>
+          <span className="text-[9px] text-purple-300 font-bold w-10 text-right">{probX.toFixed(1)}%</span>
+        </div>
+      </div>
+
+      {/* Prediction Horizon footer */}
+      <div className="mt-2 pt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
         <span className="text-muted-foreground font-semibold">Current Forecast:</span>
         <span className="text-[#00d9ff] font-bold">5-minute horizon</span>
       </div>

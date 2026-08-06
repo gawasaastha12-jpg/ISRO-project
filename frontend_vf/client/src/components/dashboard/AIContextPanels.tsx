@@ -122,21 +122,23 @@ export function HeliosActivityPanel() {
         </div>
 
         {/* Scientific Line Plot with Grid and Tick Labels */}
-        <div className="h-20 w-full mt-4 font-mono text-[8px] relative">
-          <ResponsiveContainer width="100%" height={80}>
-            <LineChart data={hel1osHistory} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+        <div className="h-28 w-full mt-4 font-mono text-[8px] relative">
+          <ResponsiveContainer width="100%" height={100}>
+            <LineChart data={hel1osHistory} margin={{ top: 5, right: 10, left: 30, bottom: 25 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis 
                 dataKey="time" 
                 stroke="rgba(255,255,255,0.3)" 
                 tickLine={false} 
                 axisLine={false}
+                label={{ value: 'Time (UTC)', position: 'insideBottom', offset: 20, fill: 'rgba(255,255,255,0.4)', fontSize: 7, fontFamily: 'monospace', fontWeight: 'bold' }}
               />
               <YAxis 
                 stroke="rgba(255,255,255,0.3)" 
                 tickLine={false} 
                 axisLine={false}
                 domain={['auto', 'auto']}
+                label={{ value: 'Activity (cps)', angle: -90, position: 'insideLeft', offset: -15, fill: '#ff9f1c', fontSize: 7, fontFamily: 'monospace', fontWeight: 'bold' }}
               />
               <Tooltip
                 contentStyle={{ backgroundColor: '#0b1022', borderColor: '#ff9f1c', color: '#fff', fontSize: '9px' }}

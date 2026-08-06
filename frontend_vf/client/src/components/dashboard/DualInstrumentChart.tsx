@@ -31,11 +31,15 @@ export function DualInstrumentChart() {
             const rawHel = parseFloat(p.hel_score) || 0;
             const helVal = Math.max(rawHel, 0.1);
 
+            const rawProb = parseFloat(p.forecast_confidence) || 0;
+            const probVal = Math.max(0, Math.min(rawProb, 1.0));
+
             return {
               time: timeStr,
               timestamp: p.timestamp,
               solexs: solexsVal,
-              hel1os: helVal
+              hel1os: helVal,
+              probability: probVal
             };
           });
           setDataPoints(formatted);
@@ -117,6 +121,58 @@ export function DualInstrumentChart() {
     }
   }
 
+  // Dynamic Trajectory Phases Boundary Detection
+  let peakIdx = -1;
+  let maxSolexs = -1;
+  let minSolexs = 9e9;
+  let riseIdx = 0;
+  let start_time = "";
+  let end_time = "";
+  let rise_time = "";
+  let peak_time = "";
+  let hel_peak_time = "";
+
+  if (slicedData.length >= 3) {
+    for (let i = 0; i < slicedData.length; i++) {
+      if (slicedData[i].solexs > maxSolexs) {
+        maxSolexs = slicedData[i].solexs;
+        peakIdx = i;
+      }
+      if (slicedData[i].solexs < minSolexs) {
+        minSolexs = slicedData[i].solexs;
+      }
+    }
+
+    if (peakIdx !== -1) {
+      for (let i = peakIdx; i >= 0; i--) {
+        if (slicedData[i].solexs < minSolexs * 1.5) {
+          riseIdx = i;
+          break;
+        }
+      }
+      if (riseIdx === 0 || peakIdx - riseIdx < 2) {
+        riseIdx = Math.max(0, peakIdx - Math.round(slicedData.length * 0.15));
+      }
+    }
+
+    let helPeakIdx = -1;
+    let maxHel = -1;
+    for (let i = 0; i < slicedData.length; i++) {
+      if (slicedData[i].hel1os > maxHel) {
+        maxHel = slicedData[i].hel1os;
+        helPeakIdx = i;
+      }
+    }
+    if (helPeakIdx !== -1) {
+      hel_peak_time = slicedData[helPeakIdx].time;
+    }
+
+    start_time = slicedData[0].time;
+    end_time = slicedData[slicedData.length - 1].time;
+    rise_time = slicedData[riseIdx].time;
+    peak_time = slicedData[peakIdx].time;
+  }
+
   return (
     <div className="flex flex-col p-5 bg-[#131a2e] border border-[#1e2740] rounded-lg h-full relative transition-all duration-300">
       <div className="flex justify-between items-center mb-4">
@@ -126,7 +182,7 @@ export function DualInstrumentChart() {
             Raw Telemetry Series — SOLEXS + HEL1OS
           </h3>
           <p className="text-[9px] text-[#6b7590] mt-0.5 font-mono">
-            Synchronized scientific counts on logarithmic scale. Highlights show coincidence onset crossings.
+            Synchronized scientific telemetry. SoLEXS activity is measured in raw detector counts per second (cps) — the direct output of the SDD2 X-ray detector aboard Aditya-L1.
           </p>
         </div>
         
@@ -163,76 +219,139 @@ export function DualInstrumentChart() {
           {/* Subplot 1: SOLEXS */}
           <div className="h-[46%] relative">
             <div className="absolute top-1 right-2 text-[8px] font-mono font-bold text-[#22d3ee] z-20 bg-[#0a0e1a]/60 px-1 py-0.5 rounded">
-              SOLEXS (Soft X-Ray) Peak Flux (W/m²)
+              SOLEXS (Soft X-Ray) Count Rate (cps)
             </div>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 5, left: -25, bottom: 5 }}>
+              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 40, left: 40, bottom: 5 }}>
                 <defs>
                   <linearGradient id="solexsGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
                   </linearGradient>
+                  <linearGradient id="probGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ff9f1c" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#ff9f1c" stopOpacity={0}/>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(30, 39, 64, 0.4)" />
                 <XAxis dataKey="time" hide />
                 <YAxis 
+                  yAxisId="left"
                   scale="log" 
                   domain={['auto', 'auto']} 
-                  stroke="#6b7590" 
+                  stroke="#22d3ee" 
                   fontSize={8} 
                   fontFamily="monospace"
-                  tickFormatter={(val) => val.toExponential(0)}
+                  tickFormatter={(val) => `${Number(val).toFixed(0)}`}
+                  label={{ value: 'SoLEXS Count Rate (cps)', angle: -90, position: 'insideLeft', offset: -25, fill: '#22d3ee', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[0, 1]}
+                  stroke="#ff9f1c"
+                  fontSize={8}
+                  fontFamily="monospace"
+                  tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
+                  label={{ value: 'Nowcast Probability', angle: 90, position: 'insideRight', offset: -5, fill: '#ff9f1c', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#131a2e', borderColor: '#1e2740', fontSize: '9px', fontFamily: 'monospace' }}
                   labelStyle={{ color: '#e8ecf5', fontWeight: 'bold' }}
+                  formatter={(value: any, name: any) => {
+                    if (name === "SoLEXS Counts") {
+                      return [`${Number(value).toFixed(1)} cps`, "SoLEXS Count Rate"];
+                    }
+                    if (name === "Nowcast Prob") {
+                      return [`${(value * 100).toFixed(0)}%`, "Nowcast Probability"];
+                    }
+                    return [value, name];
+                  }}
                 />
-                {thresholdAreas.map((area, index) => (
+                {/* Phase 1: Pre-Flare Background — label at TOP */}
+                {start_time && rise_time && (
                   <ReferenceArea 
-                    key={index} 
-                    x1={area.start} 
-                    x2={area.end} 
-                    fill="rgba(239, 108, 108, 0.08)" 
-                    stroke="rgba(239, 108, 108, 0.15)"
+                    yAxisId="left"
+                    x1={start_time} 
+                    x2={rise_time} 
+                    fill="rgba(71, 85, 105, 0.12)" 
+                    stroke="rgba(100, 116, 139, 0.30)"
                     strokeDasharray="2 2"
-                  />
-                ))}
-                {hel1osCrossingTime && solexsPeakTime && (
-                  <ReferenceArea 
-                    x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
-                    x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
-                    fill="rgba(34, 211, 238, 0.08)" 
-                    stroke="rgba(34, 211, 238, 0.2)"
-                    strokeDasharray="3 3"
-                    label={{ value: `LAG: ${lagLabel.replace('Lag: ', '')}`, fill: '#22d3ee', fontSize: 8, position: 'center', fontFamily: 'monospace', fontWeight: 'bold' }}
+                    label={{ value: 'PRE-FLARE BG', fill: '#94a3b8', fontSize: 9, fontWeight: 'bold', position: 'insideTopLeft', offset: 6, fontFamily: 'monospace' }}
                   />
                 )}
-                {/* Visual marker for Shared Now */}
-                <ReferenceLine x={slicedData[slicedData.length - 3]?.time} stroke="#22d3ee" strokeDasharray="3 3" />
+                {/* Phase 2: Rising — label at BOTTOM to avoid peak overlap */}
+                {rise_time && peak_time && (
+                  <ReferenceArea 
+                    yAxisId="left"
+                    x1={rise_time} 
+                    x2={peak_time} 
+                    fill="rgba(239, 68, 68, 0.12)" 
+                    stroke="rgba(239, 68, 68, 0.30)"
+                    strokeDasharray="2 2"
+                    label={{ value: '▲ RISING', fill: '#f87171', fontSize: 9, fontWeight: 'bold', position: 'insideBottomLeft', offset: 6, fontFamily: 'monospace' }}
+                  />
+                )}
+                {/* Phase 3: Decay — label at BOTTOM-LEFT of decay region */}
+                {peak_time && end_time && (
+                  <ReferenceArea 
+                    yAxisId="left"
+                    x1={peak_time} 
+                    x2={end_time} 
+                    fill="rgba(16, 185, 129, 0.08)" 
+                    stroke="rgba(16, 185, 129, 0.25)"
+                    strokeDasharray="2 2"
+                    label={{ value: '▼ DECAY', fill: '#34d399', fontSize: 9, fontWeight: 'bold', position: 'insideBottomLeft', offset: 6, fontFamily: 'monospace' }}
+                  />
+                )}
+                {/* Flare Peak line — label at BOTTOM-RIGHT to stay clear of phase labels */}
+                {peak_time && (
+                  <ReferenceLine 
+                    yAxisId="left"
+                    x={peak_time} 
+                    stroke="#22d3ee" 
+                    strokeWidth={2} 
+                    strokeDasharray="4 2" 
+                    label={{ value: `★ PEAK: ${Number(maxSolexs).toFixed(0)} cps`, fill: '#22d3ee', fontSize: 9, fontWeight: 'bold', position: 'insideBottomRight', offset: 6, fontFamily: 'monospace' }} 
+                  />
+                )}
+                {/* Onset Crossing delay */}
+                {hel1osCrossingTime && solexsPeakTime && (
+                  <ReferenceArea 
+                    yAxisId="left"
+                    x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
+                    x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
+                    fill="rgba(34, 211, 238, 0.05)" 
+                    stroke="rgba(34, 211, 238, 0.15)"
+                    strokeDasharray="3 3"
+                  />
+                )}
                 {hel1osCrossingTime && (
                   <ReferenceLine 
+                    yAxisId="left"
                     x={hel1osCrossingTime} 
                     stroke="#ef4444" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'insideTopLeft', fontFamily: 'monospace' }} 
+                    label={{ value: `ONSET: ${lagLabel}`, fill: '#ef4444', fontSize: 6, position: 'insideTopLeft', offset: 5, fontFamily: 'monospace' }} 
                   />
                 )}
-                {solexsPeakTime && (
-                  <ReferenceLine 
-                    x={solexsPeakTime} 
-                    stroke="#10b981" 
-                    strokeWidth={1} 
-                    strokeDasharray="4 4" 
-                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'insideTopRight', fontFamily: 'monospace' }} 
-                  />
-                )}
-                <Area type="monotone" dataKey="solexs" stroke="#22d3ee" strokeWidth={1.5} fillOpacity={1} fill="url(#solexsGrad)" />
+                <Area yAxisId="left" type="monotone" dataKey="solexs" name="SoLEXS Counts" stroke="#22d3ee" strokeWidth={1.5} fillOpacity={1} fill="url(#solexsGrad)" />
+                <Area yAxisId="right" type="monotone" dataKey="probability" name="Nowcast Prob" stroke="#ff9f1c" strokeWidth={1.5} strokeDasharray="3 3" fillOpacity={1} fill="url(#probGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Divider */}
+          {/* Phase Legend Strip */}
+          <div className="flex items-center justify-center space-x-4 py-1 border-t border-[#1e2740] text-[8px] font-mono">
+            <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-sm bg-slate-500/60 inline-block"/><span className="text-slate-400 font-bold uppercase">Pre-Flare Background</span></span>
+            <span className="text-[#1e2740]">|</span>
+            <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-sm bg-red-500/60 inline-block"/><span className="text-red-400 font-bold uppercase">Rising (Impulsive)</span></span>
+            <span className="text-[#1e2740]">|</span>
+            <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-sm bg-cyan-500/60 inline-block"/><span className="text-cyan-400 font-bold uppercase">★ Peak</span></span>
+            <span className="text-[#1e2740]">|</span>
+            <span className="flex items-center space-x-1"><span className="w-2 h-2 rounded-sm bg-green-500/60 inline-block"/><span className="text-green-400 font-bold uppercase">Decay (Cooling)</span></span>
+          </div>
           <div className="border-t border-dashed border-[#1e2740] w-full" />
 
           {/* Subplot 2: HEL1OS */}
@@ -241,7 +360,7 @@ export function DualInstrumentChart() {
               HEL1OS (Hard X-Ray) Activity Rate (cps)
             </div>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 5, left: -25, bottom: 5 }}>
+              <AreaChart data={slicedData} syncId="instrumentCharts" margin={{ top: 20, right: 40, left: 40, bottom: 35 }}>
                 <defs>
                   <linearGradient id="helGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ff9f1c" stopOpacity={0.2}/>
@@ -254,60 +373,74 @@ export function DualInstrumentChart() {
                   stroke="#6b7590" 
                   fontSize={8} 
                   fontFamily="monospace"
+                  label={{ value: 'Observation Time (UTC)', position: 'insideBottom', offset: 25, fill: '#6b7590', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
                 />
                 <YAxis 
                   scale="log"
                   domain={[1, 'auto']} 
-                  stroke="#6b7590" 
+                  stroke="#ff9f1c" 
                   fontSize={8} 
                   fontFamily="monospace"
+                  label={{ value: 'HEL1OS Count Rate (cps)', angle: -90, position: 'insideLeft', offset: -25, fill: '#ff9f1c', fontSize: 8, fontFamily: 'monospace', fontWeight: 'bold' }}
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#131a2e', borderColor: '#1e2740', fontSize: '9px', fontFamily: 'monospace' }}
                   labelStyle={{ color: '#e8ecf5', fontWeight: 'bold' }}
+                  formatter={(value: any, name: any) => {
+                    if (name === "hel1os") {
+                      return [`${parseFloat(value).toFixed(1)} cps`, "HEL1OS Count Rate"];
+                    }
+                    return [value, name];
+                  }}
                 />
-                {thresholdAreas.map((area, index) => (
+                {/* Physics-informed Solar Flare Trajectory Phases */}
+                {start_time && rise_time && (
                   <ReferenceArea 
-                    key={index} 
-                    x1={area.start} 
-                    x2={area.end} 
-                    fill="rgba(239, 108, 108, 0.08)" 
-                    stroke="rgba(239, 108, 108, 0.15)"
+                    x1={start_time} 
+                    x2={rise_time} 
+                    fill="rgba(71, 85, 105, 0.08)" 
+                    stroke="rgba(71, 85, 105, 0.15)"
                     strokeDasharray="2 2"
                   />
-                ))}
-                {hel1osCrossingTime && solexsPeakTime && (
+                )}
+                {rise_time && peak_time && (
                   <ReferenceArea 
-                    x1={hel1osCrossingTime < solexsPeakTime ? hel1osCrossingTime : solexsPeakTime} 
-                    x2={hel1osCrossingTime < solexsPeakTime ? solexsPeakTime : hel1osCrossingTime} 
-                    fill="rgba(34, 211, 238, 0.08)" 
-                    stroke="rgba(34, 211, 238, 0.2)"
-                    strokeDasharray="3 3"
-                    label={{ value: `LAG: ${lagLabel.replace('Lag: ', '')}`, fill: '#22d3ee', fontSize: 8, position: 'center', fontFamily: 'monospace', fontWeight: 'bold' }}
+                    x1={rise_time} 
+                    x2={peak_time} 
+                    fill="rgba(239, 68, 68, 0.08)" 
+                    stroke="rgba(239, 68, 68, 0.15)"
+                    strokeDasharray="2 2"
                   />
                 )}
-                {/* Visual marker for Shared Now */}
-                <ReferenceLine x={slicedData[slicedData.length - 3]?.time} stroke="#22d3ee" strokeDasharray="3 3" label={{ value: 'NOW', fill: '#22d3ee', fontSize: 7, position: 'insideTopRight', fontFamily: 'monospace' }} />
-                
+                {peak_time && end_time && (
+                  <ReferenceArea 
+                    x1={peak_time} 
+                    x2={end_time} 
+                    fill="rgba(16, 185, 129, 0.06)" 
+                    stroke="rgba(16, 185, 129, 0.12)"
+                    strokeDasharray="2 2"
+                  />
+                )}
                 {/* Horizontal reference line for alert threshold (55 cps) */}
                 <ReferenceLine y={55} stroke="rgba(239, 68, 68, 0.5)" strokeDasharray="2 2" label={{ value: 'ALERT THRESHOLD (55 cps)', fill: '#ef4444', fontSize: 6, position: 'insideBottomRight' }} />
                 
+                {/* Hard X-ray Peak (Neupert Effect) */}
+                {hel_peak_time && (
+                  <ReferenceLine 
+                    x={hel_peak_time} 
+                    stroke="#ff9f1c" 
+                    strokeDasharray="4 4" 
+                    label={{ value: 'HXR PEAK (Neupert Effect)', fill: '#ff9f1c', fontSize: 7, position: 'insideTopRight', fontFamily: 'monospace', fontWeight: 'bold' }} 
+                  />
+                )}
+                {/* Onset lag indicator */}
                 {hel1osCrossingTime && (
                   <ReferenceLine 
                     x={hel1osCrossingTime} 
                     stroke="#ef4444" 
                     strokeWidth={1} 
                     strokeDasharray="4 4" 
-                    label={{ value: 'HEL1OS ONSET ALERT', fill: '#ef4444', fontSize: 7, position: 'insideBottomLeft', fontFamily: 'monospace' }} 
-                  />
-                )}
-                {solexsPeakTime && (
-                  <ReferenceLine 
-                    x={solexsPeakTime} 
-                    stroke="#10b981" 
-                    strokeWidth={1} 
-                    strokeDasharray="4 4" 
-                    label={{ value: `SOLEXS PEAK (${lagLabel})`, fill: '#10b981', fontSize: 7, position: 'insideBottomRight', fontFamily: 'monospace' }} 
+                    label={{ value: `HEL1OS ONSET ALERT`, fill: '#ef4444', fontSize: 6, position: 'insideBottomLeft', fontFamily: 'monospace' }} 
                   />
                 )}
                 <Area type="monotone" dataKey="hel1os" stroke="#ff9f1c" strokeWidth={1.5} fillOpacity={1} fill="url(#helGrad)" />

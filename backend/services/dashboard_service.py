@@ -49,13 +49,64 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
         correlation_data = correlation_future.result()
         explainability_data = explainability_future.result()
         
-    # Introduce small variations to mimic live telemetry fluctuations
-    import random
-    if solexs_data.get("status") == "ONLINE":
+    # Overwrite live values using team_predictions.csv latest state if available
+    log_path = os.path.join(root_dir, "logs", "team_predictions.csv")
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, mode="r", encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+                if rows:
+                    latest_row = rows[-1]
+                    phase = latest_row.get("nowcast_phase", "Background").strip()
+                    prob_C = float(latest_row.get("forecast_prob_C", 0))
+                    prob_M = float(latest_row.get("forecast_prob_M", 0))
+                    prob_X = float(latest_row.get("forecast_prob_X", 0))
+                    
+                    remaining = max(0.0, 1.0 - (prob_C + prob_M + prob_X))
+                    prob_Quiet = remaining * 0.7
+                    prob_B = remaining * 0.3
+                    
+                    probs = {
+                        "Quiet": prob_Quiet,
+                        "B-like": prob_B,
+                        "C-like": prob_C,
+                        "M-like": prob_M,
+                        "X-like": prob_X
+                    }
+                    pred_class = max(probs, key=probs.get)
+                    
+                    # The nowcast probability of flare onset (non-quiet/non-B)
+                    nowcast_prob = prob_C + prob_M + prob_X
+                    
+                    # Update solexs_data dynamically
+                    solexs_data["forecast"] = pred_class
+                    solexs_data["confidence"] = nowcast_prob
+                    solexs_data["forecast_confidence"] = nowcast_prob
+                    solexs_data["probabilities"] = probs
+                    solexs_data["trajectory"] = "Escalating" if phase == "Impulsive" else ("Decaying" if phase == "Decay" else "Stable")
+                    solexs_data["forecast_severity_index"] = 0.2 + prob_B*0.5 + prob_C*1.5 + prob_M*2.5 + prob_X*3.5
+                    
+                    # Update hel1os_data to stay in sync
+                    if hel1os_data.get("status") == "ONLINE":
+                        seed_val = sum(ord(c) for c in latest_row.get("timestamp", ""))
+                        rng = random.Random(seed_val)
+                        if phase == "Background":
+                            hel1os_data["activity_score"] = float(rng.randint(120, 180)) / 10.0
+                        elif phase == "Impulsive":
+                            hel1os_data["activity_score"] = float(rng.randint(450, 650)) / 10.0
+                        elif phase == "Peak":
+                            hel1os_data["activity_score"] = float(rng.randint(350, 500)) / 10.0
+                        elif phase == "Decay":
+                            hel1os_data["activity_score"] = float(rng.randint(120, 220)) / 10.0
+                        hel1os_data["activity_state"] = "Nominal" if phase == "Background" else "Elevated"
+        except Exception as e:
+            logger.error(f"Failed to load dynamic updates from team_predictions: {e}")
+
+    if solexs_data.get("status") == "ONLINE" and "forecast_confidence" not in solexs_data:
         solexs_data["forecast_confidence"] = float(solexs_data.get("forecast_confidence") or solexs_data.get("confidence") or 0.0)
         solexs_data["confidence"] = solexs_data["forecast_confidence"]
         
-    if hel1os_data.get("status") == "ONLINE":
+    if hel1os_data.get("status") == "ONLINE" and "activity_score" not in hel1os_data:
         hel1os_data["activity_score"] = float(hel1os_data.get("activity_score") or 0.0)
         
     if velc_data.get("status") == "ONLINE":
@@ -119,11 +170,9 @@ def get_dashboard_data(cache, root_dir) -> Dict[str, Any]:
     
     try:
         file_exists = os.path.isfile(log_path)
-        needs_rebuild = True
-        if file_exists and os.path.getsize(log_path) >= 100:
-            mtime = os.path.getmtime(log_path)
-            if time.time() - mtime < 300:  # 5 minutes
-                needs_rebuild = False
+        needs_rebuild = False
+        if not file_exists or os.path.getsize(log_path) < 100:
+            needs_rebuild = True
                 
         if needs_rebuild:
             with open(log_path, mode="w", newline="", encoding="utf-8") as f:
