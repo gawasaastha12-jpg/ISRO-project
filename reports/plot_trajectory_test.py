@@ -31,8 +31,8 @@ from features_v2 import extract_features
 
 MODEL_FILE = os.path.join(ROOT_DIR, "SOLEXS_downloads", "models", "model_forecast_5min.pkl")
 FITS_FILE  = os.path.join(ROOT_DIR, "SOLEXS_downloads", "data", "lc_files",
-                           "AL1_SLX_L1_20240211_v1.0", "SDD2",
-                           "AL1_SOLEXS_20240211_SDD2_L1.lc.gz")
+                           "AL1_SLX_L1_20240212_v1.0", "SDD2",
+                           "AL1_SOLEXS_20240212_SDD2_L1.lc.gz")
 
 PLOT_OUT       = os.path.join(ROOT_DIR, "reports", "log_lightcurve_trajectory.png")
 BRAIN_PLOT_OUT = r"C:\Users\Aastha\.gemini\antigravity-ide\brain\c4930618-7819-4859-8c02-e8dcfddf3371\log_lightcurve_trajectory.png"
@@ -217,11 +217,12 @@ def main():
     # Print hourly rows PLUS the exact flare peak timestamp (05:34 UTC)!
     for i, (dt, cps, ph, pC, pM, pX) in enumerate(
             zip(dates_binned, counts_binned, phase_arr, prob_C_arr, prob_M_arr, prob_X_arr)):
-        if i % 60 == 0 or i == peak_idx:
+        if i % 2 == 0 or i == peak_idx:
             is_peak_tag = " <-- FLARE PEAK" if i == peak_idx else ""
             print(f"  {dt.strftime('%H:%M'):<8} | {cps:>6.1f} | {ph:<11} | {pC*100:>6.1f}% | {pM*100:>6.1f}% | {pX*100:>6.1f}%{is_peak_tag}")
     print("=" * 85)
     print()
+    
 
     # ── HEL1OS (Neupert-derived derivative rate) ───────────────────────────────
     counts_smooth = pd.Series(counts_binned).rolling(window=3, min_periods=1, center=True).mean().values

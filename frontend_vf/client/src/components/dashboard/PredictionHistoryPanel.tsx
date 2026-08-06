@@ -31,6 +31,25 @@ const badgeColor = (goesClass: string) => {
   return "text-amber-400 border-amber-500/30 bg-amber-500/10";  // C class
 };
 
+// Convert any UTC timestamp string → IST display, locale-agnostic
+const toIST = (utcStr: string, includeDate = false): string => {
+  const d = new Date(utcStr);
+  if (isNaN(d.getTime())) return utcStr;
+  // IST = UTC + 5h 30m = 330 minutes
+  const ist = new Date(d.getTime() + 330 * 60 * 1000);
+  const hh = ist.getUTCHours();
+  const mm = String(ist.getUTCMinutes()).padStart(2, '0');
+  const ss = String(ist.getUTCSeconds()).padStart(2, '0');
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh % 12 || 12;
+  const timeStr = `${h12}:${mm}:${ss} ${ampm} IST`;
+  if (!includeDate) return timeStr;
+  const yyyy = ist.getUTCFullYear();
+  const mo = String(ist.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mo}-${dd} ${timeStr}`;
+};
+
 export function PredictionHistoryPanel() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +131,7 @@ export function PredictionHistoryPanel() {
         {!loading && history.length === 0 && <div className="text-xs text-muted-foreground">No history available yet.</div>}
         
         {!loading && (showAllPredictions ? history : history.slice(0, 10)).map((row, idx) => {
-          const time = new Date(row.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const time = toIST(row.timestamp);
           const forecastVal = row.forecast || row.prediction || 'Quiet';
           const cleanClass = forecastVal.replace(/-like/gi, '');
           const rawConf = row.forecast_confidence || row.confidence || 0.85;
@@ -234,8 +253,8 @@ export function PredictionHistoryPanel() {
                   const minStr = String(dateObj.getUTCMinutes()).padStart(2, '0');
                   const ss = String(dateObj.getUTCSeconds()).padStart(2, '0');
                   const evId = `AL1-${yyyy}${mm}${dd}-${hh}${minStr}${ss}`;
-                  const obsTime = dateObj.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-                  const detTimeStr = new Date(new Date(row.timestamp).getTime() + 800).toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+                  const obsTime = toIST(row.timestamp, true);
+                  const detTimeStr = toIST(new Date(dateObj.getTime() + 800).toISOString(), true);
                   
                   const forecastVal = row.forecast || row.prediction || 'Quiet';
                   const cleanClass = forecastVal.replace(/-like/gi, '');

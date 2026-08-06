@@ -14,7 +14,7 @@ from backend.services.velc_service import get_velc_data
 from backend.services.correlation_service import get_correlation
 from backend.services.fusion_service import get_fusion_and_alert
 from backend.services.explainability_service import get_explainability
-from backend.services.explainability_service import get_explainability
+from backend.services.archive_service import get_archive_telemetry
 
 START_TIME = time.time()
 
@@ -59,6 +59,15 @@ async def get_fusion(cache = Depends(get_model_cache)):
 @router.get("/explainability")
 async def get_expl(cache = Depends(get_model_cache)):
     return get_explainability(cache)
+
+@router.get("/archive")
+async def get_archive(timestamp: str = "2024-02-12T05:34:00Z", cache = Depends(get_model_cache)):
+    """
+    Historical Telemetry & Archive Analysis endpoint.
+    Queries SoLEXS & HEL1OS telemetry around requested UTC timestamp,
+    computes instant Nowcasting (T=0), and multi-horizon forecasts (5m, 10m, 15m, 30m, 60m).
+    """
+    return get_archive_telemetry(timestamp, cache)
 
 @router.get("/health", response_model=HealthResponse)
 async def get_health(cache = Depends(get_model_cache)):
