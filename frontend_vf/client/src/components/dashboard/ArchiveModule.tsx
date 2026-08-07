@@ -309,7 +309,7 @@ export function ArchiveModule() {
               <div className="text-2xl font-black font-mono text-cyan-300 tracking-tight">
                 {archiveData.nowcast.flux_cps.toLocaleString()} <span className="text-xs font-normal text-[#6b7590]">cps</span>
               </div>
-              <p className="text-[10px] text-[#6b7590] mt-1 font-mono">1.0 – 15.0 keV Energy Channel</p>
+              <p className="text-[10px] text-[#6b7590] mt-1 font-mono">2 – 22 keV Energy Channel</p>
             </div>
           </div>
 
@@ -401,7 +401,7 @@ export function ArchiveModule() {
                 <Line 
                   type="monotone" 
                   dataKey="solexs_cps" 
-                  name="SoLEXS Soft X-Ray (1-15 keV)" 
+                  name="SoLEXS Soft X-Ray (2-22 keV)" 
                   stroke="#06b6d4" 
                   strokeWidth={2} 
                   dot={false}
@@ -412,7 +412,7 @@ export function ArchiveModule() {
                 <Line 
                   type="monotone" 
                   dataKey="hel1os_cps" 
-                  name="HEL1OS Hard X-Ray (10-150 keV)" 
+                  name="HEL1OS Hard X-Ray (8-150 keV)" 
                   stroke="#a855f7" 
                   strokeWidth={2} 
                   dot={false}

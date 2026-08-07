@@ -182,7 +182,7 @@ async def get_system(cache = Depends(get_model_cache)):
     }
 
 @router.get("/predictions/history")
-async def get_predictions_history(n: int = 60):
+async def get_predictions_history(n: int = 200):
     """Return the last N rows of team_predictions.csv as JSON for live charting."""
     csv_path = os.path.join(ROOT_DIR, "logs", "team_predictions.csv")
     if not os.path.exists(csv_path):
@@ -204,3 +204,36 @@ async def get_predictions_history(n: int = 60):
         return {"rows": rows, "count": len(rows)}
     except Exception as e:
         return {"rows": [], "error": str(e)}
+
+@router.get("/team-predictions")
+async def get_team_predictions(limit: int = 500):
+    """Return full team_predictions.csv rows for Catalogue viewer tab."""
+    csv_path = os.path.join(ROOT_DIR, "logs", "team_predictions.csv")
+    if not os.path.exists(csv_path):
+        return {"rows": [], "total": 0, "file": "team_predictions.csv", "status": "not_found"}
+    try:
+        rows = []
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for idx, r in enumerate(reader):
+                p_c = float(r.get("forecast_prob_C", 0))
+                p_m = float(r.get("forecast_prob_M", 0))
+                p_x = float(r.get("forecast_prob_X", 0))
+                rows.append({
+                    "id": f"TP-{idx + 1:04d}",
+                    "timestamp": r.get("timestamp", ""),
+                    "phase": r.get("nowcast_phase", "Background"),
+                    "prob_C": round(p_c * 100, 2),
+                    "prob_M": round(p_m * 100, 2),
+                    "prob_X": round(p_x * 100, 2),
+                    "prob_severe": round((p_m + p_x) * 100, 2),
+                    "raw_C": p_c,
+                    "raw_M": p_m,
+                    "raw_X": p_x,
+                })
+        rows_sliced = rows[-limit:] if len(rows) > limit else rows
+        rows_sliced.reverse() # newest first
+        return {"rows": rows_sliced, "total": len(rows), "file": "logs/team_predictions.csv", "status": "ok"}
+    except Exception as e:
+        return {"rows": [], "total": 0, "error": str(e), "status": "error"}
+

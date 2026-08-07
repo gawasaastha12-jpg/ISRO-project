@@ -51,22 +51,68 @@ $$\text{Peak Height Ratio (11.0\%)} + \text{Signal-to-Noise Ratio (10.1\%)} + \t
 
 ## 🛠️ System Architecture & Setup
 
-### Requirements
-* **Backend:** Python 3.10+, FastAPI, Uvicorn, LightGBM/XGBoost, Scikit-learn
-* **Frontend:** Node.js 18+, React, Vite, CSS, Lucide icons
+### Python Backend Dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `fastapi` | ≥ 0.100 | REST API framework |
+| `uvicorn` | ≥ 0.20 | ASGI server |
+| `pydantic` / `pydantic-settings` | ≥ 2.0 | Schema validation & config |
+| `python-multipart` | ≥ 0.0.6 | File upload support |
+| `pandas` | ≥ 1.5 | Tabular data processing |
+| `numpy` | ≥ 1.20 | Numerical arrays |
+| `scipy` | ≥ 1.8 | Signal processing (FFT, peaks, stats) |
+| `scikit-learn` | ≥ 1.0 | Isotonic calibration, metrics |
+| `xgboost` | ≥ 1.6 | Deployed 5-min forecast model |
+| `lightgbm` | ≥ 3.3 | Multi-model comparison baseline |
+| `joblib` | ≥ 1.1 | Model serialisation (`.pkl`) |
+| `astropy` | ≥ 5.0 | FITS file ingestion (SoLEXS light-curves) |
+| `matplotlib` | ≥ 3.5 | Report plots & visualisations |
+| `opencv-python-headless` | ≥ 4.5 | Image processing utilities |
+| `umap-learn` | ≥ 0.5 | Feature-space dimensionality reduction |
+| `psutil` | ≥ 5.9 | System memory / CPU monitoring |
+
+### Node.js Frontend Dependencies (`frontend_vf`)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `react` / `react-dom` | ^19 | UI framework |
+| `vite` | ^7 | Dev server & bundler |
+| `typescript` | 5.6 | Type safety |
+| `tailwindcss` | ^4 | Utility-first CSS |
+| `framer-motion` | ^12 | Page & component animations |
+| `gsap` | ^3.15 | Storyboard / Three.js timeline animations |
+| `three` + `@types/three` | ^0.184 | 3D cinematic storyboard scenes |
+| `recharts` | ^2.15 | Dashboard time-series charts |
+| `axios` | ^1.12 | Backend API HTTP client |
+| `wouter` | ^3.3 | Client-side routing |
+| `@radix-ui/*` | ^1–2 | Accessible UI primitives |
+| `lucide-react` | ^0.453 | Icon set |
+| `sonner` | ^2 | Toast notifications |
+| `zod` | ^4 | Runtime schema validation |
+| `react-hook-form` | ^7 | Form state management |
+| `nanoid` | ^5 | Unique prediction IDs |
+| `embla-carousel-react` | ^8 | Carousel component |
+| `next-themes` | ^0.4 | Dark/light theme support |
 
 ### Execution Commands
 
-#### 1. Launch Python API Server
+#### 1. Install Python dependencies
 ```bash
-# Navigate to workspace root
+pip install -r requirements.txt
+```
+
+#### 2. Launch Python API Server
+```bash
 python -m uvicorn backend.api.main:app --reload --port 8000
 ```
 
-#### 2. Launch Client UI App (Verified Operations Version)
+#### 3. Launch Frontend (from `frontend_vf/`)
 ```bash
-# Navigate to frontend_vf folder
 cd frontend_vf
+npm install
 npm run dev
 ```
-The platform is accessible locally at `http://localhost:3001/`.
+
+The platform is accessible locally at `http://localhost:3000/`.
+

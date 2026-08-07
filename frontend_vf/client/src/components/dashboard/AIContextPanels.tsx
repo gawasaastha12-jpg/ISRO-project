@@ -103,58 +103,72 @@ export function HeliosActivityPanel() {
               <div className="text-gray-400 font-mono text-xs leading-normal">
                 92 light curves · 2.76M measurements · Feb 2024–Jun 2026
               </div>
-              <div className="flex justify-between items-center text-[10px] text-gray-500 border-t border-white/5 pt-1.5 mt-1.5">
-                <span>OBSERVATION TIME: {formattedObsTime}</span>
-                <span>STATE: {hel1os?.activity_state || 'Nominal'}</span>
+              <div className="flex justify-between items-center text-[10px] text-slate-300 border-t border-white/5 pt-1.5 mt-1.5 font-mono">
+                <span>OBSERVATION TIME: <strong className="text-cyan-300">{formattedObsTime}</strong></span>
+                <span>STATE: <strong className="text-emerald-400">{hel1os?.activity_state || 'Nominal'}</strong></span>
               </div>
             </div>
           )}
         </div>
 
         <div className="mt-4">
-          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+          <div className="flex justify-between text-[10px] text-slate-300 font-mono mb-1">
             <span>Recent Bursts</span>
-            <span className="text-starlight-white">{hel1os?.recent_bursts || 0} in 1hr</span>
+            <span className="text-starlight-white font-bold">{hel1os?.recent_bursts || 0} in 1hr</span>
           </div>
-          <div className="w-full h-1 bg-black rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/10">
             <div className="h-full bg-[#ff9f1c]" style={{ width: '75%' }} />
           </div>
         </div>
 
-        {/* Scientific Line Plot with Grid and Tick Labels */}
-        <div className="h-28 w-full mt-4 font-mono text-[8px] relative">
-          <ResponsiveContainer width="100%" height={100}>
-            <LineChart data={hel1osHistory} margin={{ top: 5, right: 10, left: 30, bottom: 25 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis 
-                dataKey="time" 
-                stroke="rgba(255,255,255,0.3)" 
-                tickLine={false} 
-                axisLine={false}
-                label={{ value: 'Time (UTC)', position: 'insideBottom', offset: 20, fill: 'rgba(255,255,255,0.4)', fontSize: 7, fontFamily: 'monospace', fontWeight: 'bold' }}
-              />
-              <YAxis 
-                stroke="rgba(255,255,255,0.3)" 
-                tickLine={false} 
-                axisLine={false}
-                domain={['auto', 'auto']}
-                label={{ value: 'Activity (cps)', angle: -90, position: 'insideLeft', offset: -15, fill: '#ff9f1c', fontSize: 7, fontFamily: 'monospace', fontWeight: 'bold' }}
-              />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#0b1022', borderColor: '#ff9f1c', color: '#fff', fontSize: '9px' }}
-                itemStyle={{ fontSize: '9px', color: '#ff9f1c' }}
-                labelStyle={{ fontSize: '9px', color: '#888' }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="activity" 
-                stroke="#ff9f1c" 
-                strokeWidth={2} 
-                dot={false} 
-                isAnimationActive={true} 
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        {/* Scientific Line Plot with Grid and Clean Un-clipped Labels */}
+        <div className="mt-4 font-mono text-[9px]">
+          <div className="flex justify-between items-center text-[10px] font-mono mb-2 px-1">
+            <span className="text-[#ff9f1c] font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#ff9f1c] animate-pulse" />
+              Activity (cps)
+            </span>
+            <span className="text-[#00d9ff] font-bold">
+              Time (UTC) ➔
+            </span>
+          </div>
+
+          <div className="h-32 w-full relative">
+            <ResponsiveContainer width="100%" height={100}>
+              <LineChart data={hel1osHistory} margin={{ top: 10, right: 15, left: 0, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="rgba(255,255,255,0.4)" 
+                  tick={{ fill: '#94a3b8', fontSize: 9, fontFamily: 'monospace' }}
+                  tickLine={false} 
+                  axisLine={false}
+                  minTickGap={25}
+                />
+                <YAxis 
+                  stroke="rgba(255,255,255,0.4)" 
+                  tick={{ fill: '#94a3b8', fontSize: 9, fontFamily: 'monospace' }}
+                  tickLine={false} 
+                  axisLine={false}
+                  domain={['auto', 'auto']}
+                  width={35}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#0a0e1a', borderColor: '#ff9f1c', color: '#fff', fontSize: '10px' }}
+                  itemStyle={{ fontSize: '10px', color: '#ff9f1c' }}
+                  labelStyle={{ fontSize: '10px', color: '#00d9ff' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="activity" 
+                  stroke="#ff9f1c" 
+                  strokeWidth={2} 
+                  dot={false} 
+                  isAnimationActive={true} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </div>

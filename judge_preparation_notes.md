@@ -11,8 +11,8 @@ Use this guide as a concise reference sheet to defend the technical, mathematica
 * **The Flare Hazard:** Flares are sudden magnetic reconnection energy releases in the corona. High-energy particles strike Earth in **8.3 minutes**, requiring sub-second ground automated alert systems to protect spacecraft and electrical grids.
 
 ### 2. Payload Telemetry Roles
-* **SOLEXS (Soft X-rays: 1–15 keV):** Captures thermal emissions from coronal plasma loops. Serves as the primary precursor profile (thermal pre-heating) for nowcasting.
-* **HEL1OS (Hard X-rays: 10–150 keV):** Captures non-thermal emissions from particle accelerations at flare peaks. Serves as an un-saturable **Confirmation Trigger** for high-energy events.
+* **SOLEXS (Soft X-rays: 2–22 keV):** Captures thermal emissions from coronal plasma loops. Serves as the primary precursor profile (thermal pre-heating) for nowcasting.
+* **HEL1OS (Hard X-rays: 8–150 keV):** Captures non-thermal emissions from particle accelerations at flare peaks. Serves as an un-saturable **Confirmation Trigger** for high-energy events.
 * **VELC (Visible Coronagraph):** Blocks out the solar disk to capture visible-light coronal mass ejections (CMEs) and magnetic shear shifts.
 
 ### 3. Understanding the Forecast Evolution Timeline (The 5 Lines)

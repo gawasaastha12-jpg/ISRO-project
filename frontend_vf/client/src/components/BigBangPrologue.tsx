@@ -1,373 +1,358 @@
-import React, { useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { audioEngine } from '@/lib/audio-engine';
 
-/**
- * Big Bang Prologue - The Birth of the Universe
- * 
- * Features:
- * - Cosmic explosion with particle burst shader
- * - Expanding galaxies in slow motion
- * - Shockwave ripple effect
- * - Deep bass rumble audio cue
- * - Narration: "From the birth of the universe, intelligence emerges..."
- */
-
-interface BigBangPrologueProps {
-  onComplete?: () => void;
+interface PrologueSceneProps {
+  onComplete: () => void;
 }
 
-export default function BigBangPrologue({ onComplete }: BigBangPrologueProps) {
+const BIG_BANG_VIDEO_MP4 = '/videos/big-bang.mp4';
+const BIG_BANG_VIDEO_WEBM = '/videos/big-bang.webm';
+const SUN_MODEL_PATH = '/models/sun.glb';
+
+const VIDEO_FALLBACK_HOLD_MS = 6000;
+const VIDEO_FADE_MS = 600;
+const CHAR_TYPE_MS = 20;
+const NARRATION_MS = 9500;
+
+const PROLOGUE_LINES = [
+  'From the birth of the universe, intelligence emerges.',
+  'Billions of galaxies and trillions of stars coalesced from cosmic dust, giving rise to one uniquely remarkable star:',
+  'The Sun.',
+];
+
+export default function PrologueScene({ onComplete }: PrologueSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const narrationRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [lineIndex, setLineIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [showSkip, setShowSkip] = useState(true);
+  const [videoFading, setVideoFading] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(true);
 
+  // Store active line index in ref for Three.js render loop access
+  const lineIndexRef = useRef(0);
   useEffect(() => {
-    if (!canvasRef.current) return;
+    lineIndexRef.current = lineIndex;
+  }, [lineIndex]);
 
-    // Setup Three.js scene
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  // Sequential Neon Typewriter Effect
+  useEffect(() => {
+    let charIndex = 0;
+    const currentLine = PROLOGUE_LINES[lineIndex];
+    setDisplayedText('');
+
+    const typeInterval = setInterval(() => {
+      charIndex++;
+      setDisplayedText(currentLine.slice(0, charIndex));
+
+      if (charIndex >= currentLine.length) {
+        clearInterval(typeInterval);
+
+        if (lineIndex < PROLOGUE_LINES.length - 1) {
+          setTimeout(() => {
+            setLineIndex((prev) => prev + 1);
+          }, 800);
+        }
+      }
+    }, CHAR_TYPE_MS);
+
+    return () => clearInterval(typeInterval);
+  }, [lineIndex]);
+
+  // Audio & Voice Narration
+  useEffect(() => {
+    audioEngine.playDeepBassRumble?.(4);
+    audioEngine.playAmbientHum?.(5);
+
+    const fullNarration = PROLOGUE_LINES.join(' ');
+    const speakTimer = setTimeout(() => {
+      audioEngine.speak?.(fullNarration);
+    }, 200);
+
+    const completeTimer = setTimeout(() => {
+      onCompleteRef.current();
+    }, NARRATION_MS);
+
+    return () => {
+      clearTimeout(speakTimer);
+      clearTimeout(completeTimer);
+    };
+  }, []);
+
+  // Video Autoplay & Crossfade
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let fallbackTimer: NodeJS.Timeout | null = null;
+    let fadeTimer: NodeJS.Timeout | null = null;
+
+    const startCrossfade = () => {
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      setVideoFading(true);
+      fadeTimer = setTimeout(() => {
+        setVideoVisible(false);
+        if (videoRef.current) {
+          videoRef.current.pause();
+        }
+      }, VIDEO_FADE_MS);
+    };
+
+    const handleEnded = () => startCrossfade();
+
+    const handleLoadedMetadata = () => {
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (isFinite(video.duration) && video.duration > 0) {
+        fallbackTimer = setTimeout(startCrossfade, video.duration * 1000 + 300);
+      }
+    };
+
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    video.play().catch(() => {
+      setVideoFading(true);
+      setVideoVisible(false);
+    });
+
+    fallbackTimer = setTimeout(startCrossfade, VIDEO_FALLBACK_HOLD_MS);
+
+    return () => {
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (fadeTimer) clearTimeout(fadeTimer);
+    };
+  }, []);
+
+  // Background Starfield & Sun GLB Loader
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+
     const scene = new THREE.Scene();
-    sceneRef.current = scene;
+    scene.background = new THREE.Color(0x030308);
 
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      canvasRef.current.clientWidth / canvasRef.current.clientHeight,
-      0.1,
-      10000
-    );
-    camera.position.z = 50;
+    const camera = new THREE.PerspectiveCamera(65, container.clientWidth / container.clientHeight, 0.1, 500);
+    camera.position.set(0, 0, 120); // Start far away for zoom transition
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffaa00, 4, 150);
+    pointLight.position.set(0, 0, 15);
+    scene.add(pointLight);
 
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        canvas: canvasRef.current,
-        antialias: true,
+        antialias: false,
         alpha: true,
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false
       });
-      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-      renderer.setClearColor(0x000000, 1);
-      rendererRef.current = renderer;
-    } catch (e) {
-      console.warn("BigBangPrologue WebGL context creation failed. Fallback active.", e);
-      const ctx = canvasRef.current.getContext('2d');
-      let fallbackAnimationId: number;
-      let time = 0;
-      const particles: Array<{x: number, y: number, vx: number, vy: number, size: number, color: string}> = [];
-      
-      if (ctx) {
-        const w = canvasRef.current.width = canvasRef.current.clientWidth;
-        const h = canvasRef.current.height = canvasRef.current.clientHeight;
-        const cx = w / 2;
-        const cy = h / 2;
-        
-        for (let i = 0; i < 400; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = 0.5 + Math.random() * 4.0;
-          const colors = ['#00d9ff', '#7c3aed', '#ffffff', '#ffaa00', '#ff0055'];
-          particles.push({
-            x: cx,
-            y: cy,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            size: 1.0 + Math.random() * 3.0,
-            color: colors[Math.floor(Math.random() * colors.length)]
+    } catch {
+      onCompleteRef.current();
+      return;
+    }
+
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+    container.appendChild(renderer.domElement);
+
+    // Background Starfield
+    const bgCount = 500;
+    const bgGeo = new THREE.BufferGeometry();
+    const bgPos = new Float32Array(bgCount * 3);
+    for (let i = 0; i < bgCount * 3; i += 3) {
+      bgPos[i] = (Math.random() - 0.5) * 300;
+      bgPos[i + 1] = (Math.random() - 0.5) * 300;
+      bgPos[i + 2] = (Math.random() - 0.5) * 300;
+    }
+    bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+    const bgMat = new THREE.PointsMaterial({ color: 0x00f3ff, size: 0.2, transparent: true, opacity: 0.5 });
+    const bgField = new THREE.Points(bgGeo, bgMat);
+    scene.add(bgField);
+
+    // Procedural Fallback Sun Sphere (ensures zero lag if GLB loading stalls)
+    const fallbackSunGeo = new THREE.SphereGeometry(1.5, 32, 32);
+    const fallbackSunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    const fallbackSun = new THREE.Mesh(fallbackSunGeo, fallbackSunMat);
+    fallbackSun.visible = false;
+    scene.add(fallbackSun);
+
+    // Load Sun GLB Model
+    let sunMesh: THREE.Object3D | null = null;
+    let mixer: THREE.AnimationMixer | null = null;
+    const loader = new GLTFLoader();
+
+    loader.load(
+      SUN_MODEL_PATH,
+      (gltf) => {
+        sunMesh = gltf.scene;
+        sunMesh.scale.set(0.001, 0.001, 0.001); // Initial scale setup
+        sunMesh.position.set(0, 0, 0);
+        sunMesh.visible = false; // Stay hidden until text trigger
+
+        if (gltf.animations && gltf.animations.length > 0) {
+          mixer = new THREE.AnimationMixer(sunMesh);
+          gltf.animations.forEach((clip) => {
+            mixer?.clipAction(clip).play();
           });
         }
 
-        const runFallback = () => {
-          fallbackAnimationId = requestAnimationFrame(runFallback);
-          time += 0.016;
-          
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(0, 0, w, h);
-          
-          particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            
-            let opacity = 0.8;
-            if (time > 6) {
-              opacity = Math.max(0.0, 0.8 - (time - 6) * 0.2);
-            }
-            
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = opacity;
-            ctx.fill();
-          });
-          ctx.globalAlpha = 1.0;
-        };
-        runFallback();
+        scene.remove(fallbackSun);
+        scene.add(sunMesh);
+      },
+      undefined,
+      (error) => {
+        console.warn('Error loading Sun GLB model, using procedural sun fallback:', error);
+        sunMesh = fallbackSun;
       }
+    );
 
-      // Narration timeline fallback
-      const tl = gsap.timeline();
-      if (containerRef.current) {
-        tl.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 1.5 }, 0);
-      }
-      tl.call(() => {
-        audioEngine.playRumble();
-      }, [], 0.5);
-      if (narrationRef.current) {
-        tl.fromTo(narrationRef.current, { opacity: 0 }, { opacity: 1, duration: 1.5 }, 1.5);
-        tl.call(() => {
-          audioEngine.speak("From the birth of the universe, intelligence emerges…");
-        }, [], 1.5);
-      }
-      if (containerRef.current) {
-        tl.to(containerRef.current, { opacity: 0, duration: 1.5 }, '+=6');
-      }
-      tl.eventCallback('onComplete', () => {
-        onComplete?.();
-      });
-
-      return () => {
-        cancelAnimationFrame(fallbackAnimationId);
-        tl.kill();
-      };
-    }
-
-    // Create particle system for Big Bang explosion
-    const particleCount = 5000;
-    const particleGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const velocities = new Float32Array(particleCount * 3);
-    const colors_attr = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
-
-    for (let i = 0; i < particleCount; i++) {
-      // Start at center
-      positions[i * 3] = 0;
-      positions[i * 3 + 1] = 0;
-      positions[i * 3 + 2] = 0;
-
-      // Random velocity outward
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI;
-      const speed = Math.random() * 2 + 0.5;
-
-      velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * speed;
-      velocities[i * 3 + 1] = Math.cos(phi) * speed;
-      velocities[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * speed;
-
-      // Color gradient: white → yellow → orange → red
-      const hue = Math.random() * 0.15;
-      const color = new THREE.Color().setHSL(hue, 1, 0.6);
-      colors_attr[i * 3] = color.r;
-      colors_attr[i * 3 + 1] = color.g;
-      colors_attr[i * 3 + 2] = color.b;
-
-      sizes[i] = Math.random() * 2 + 1;
-    }
-
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors_attr, 3));
-    particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-    const particleMaterial = new THREE.PointsMaterial({
-      size: 1,
-      sizeAttenuation: true,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-    });
-
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particles);
-
-    // Create galaxy clusters
-    const galaxies: THREE.Mesh[] = [];
-    const galaxyCount = 8;
-
-    for (let i = 0; i < galaxyCount; i++) {
-      const theta = (i / galaxyCount) * Math.PI * 2;
-      const radius = 100;
-
-      const galaxyGeometry = new THREE.SphereGeometry(5, 32, 32);
-      const galaxyMaterial = new THREE.MeshStandardMaterial({
-        color: new THREE.Color().setHSL(Math.random() * 0.3, 0.6, 0.5),
-        emissive: new THREE.Color().setHSL(Math.random() * 0.3, 0.6, 0.4),
-        emissiveIntensity: 1,
-        transparent: true,
-        opacity: 0.7,
-      });
-
-      const galaxy = new THREE.Mesh(galaxyGeometry, galaxyMaterial);
-      galaxy.position.x = Math.cos(theta) * radius;
-      galaxy.position.y = Math.sin(theta) * radius;
-      galaxy.position.z = (Math.random() - 0.5) * 50;
-      galaxy.userData = { basePosition: galaxy.position.clone() };
-
-      scene.add(galaxy);
-      galaxies.push(galaxy);
-    }
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    scene.add(ambientLight);
-
-    const pointLight = new THREE.PointLight(0xffa500, 2);
-    pointLight.position.set(0, 0, 50);
-    scene.add(pointLight);
-
-    // Animation loop
-    let animationId: number;
-    let time = 0;
+    let animId: number;
+    const clock = new THREE.Clock();
+    let zoomTime = 0;
+    let targetCameraZ = 120;
 
     const animate = () => {
-      animationId = requestAnimationFrame(animate);
-      time += 0.016;
+      animId = requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
 
-      // Expand particles
-      const positionAttribute = particleGeometry.getAttribute('position') as THREE.BufferAttribute;
-      const pos = positionAttribute.array as Float32Array;
+      if (mixer) mixer.update(delta);
 
-      for (let i = 0; i < particleCount; i++) {
-        pos[i * 3] += velocities[i * 3] * 0.5;
-        pos[i * 3 + 1] += velocities[i * 3 + 1] * 0.5;
-        pos[i * 3 + 2] += velocities[i * 3 + 2] * 0.5;
+      const activeSun = sunMesh || fallbackSun;
+
+      if (activeSun) {
+        activeSun.rotation.y += delta * 0.25;
+
+        // Trigger transition when line 3 ("The Sun.") appears
+        if (lineIndexRef.current === 2) {
+          activeSun.visible = true;
+          zoomTime += delta;
+
+          // Smooth scale up effect
+          activeSun.scale.lerp(new THREE.Vector3(8, 8, 8), 0.04);
+
+          // Camera zoom-in then smooth zoom-out sequence
+          if (zoomTime < 2.5) {
+            targetCameraZ = 22; // Rapid dramatic zoom-in
+          } else {
+            targetCameraZ = 35; // Gentle zoom-out back to holding frame
+          }
+        }
       }
 
-      positionAttribute.needsUpdate = true;
-
-      // Rotate and scale galaxies
-      galaxies.forEach((galaxy, i) => {
-        galaxy.rotation.x += 0.001;
-        galaxy.rotation.y += 0.002;
-
-        // Slow outward movement
-        const scale = 1 + time * 0.1;
-        galaxy.position.multiplyScalar(1 + 0.002);
-        galaxy.scale.set(scale, scale, scale);
-      });
-
-      // Fade out particles
-      if (time > 6) {
-        particleMaterial.opacity = Math.max(0, 0.8 - (time - 6) * 0.2);
-      }
+      // Camera Position Interpolation (Zoom transition effect)
+      camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCameraZ, 0.03);
+      camera.position.x = Math.sin(elapsed * 0.05) * 3;
+      camera.position.y = Math.cos(elapsed * 0.04) * 2;
+      camera.lookAt(0, 0, 0);
 
       renderer.render(scene, camera);
     };
-
     animate();
 
-    // Animation timeline
-    const tl = gsap.timeline();
-
-    // Start with silence and black screen
-    if (containerRef.current) {
-      tl.fromTo(
-        containerRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.5 }
-      );
-    }
-
-    // Audio: Silence at start
-    tl.call(() => {
-      audioEngine.playSilence(0.5);
-    }, [], 0);
-
-    // Audio and visual: Explosion at 0.5s
-    tl.call(() => {
-      audioEngine.resumeAudio(0.2);
-      audioEngine.playCosmicExplosion(2);
-      audioEngine.playDeepBassRumble(3);
-    }, [], 0.5);
-
-    // Explosion at 1 second
-    tl.to(
-      particles.scale,
-      { x: 1.5, y: 1.5, z: 1.5, duration: 0.3, ease: 'power2.out' },
-      0.5
-    );
-
-    // Narration appears
-    if (narrationRef.current) {
-      tl.fromTo(
-        narrationRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 1.5 },
-        1.5
-      );
-      tl.call(() => {
-        audioEngine.speak("From the birth of the universe, intelligence emerges…");
-      }, [], 1.5);
-    }
-
-    // Hold and fade out
-    if (containerRef.current) {
-      tl.to(containerRef.current, { opacity: 0, duration: 1.5 }, '+=6');
-    }
-
-    tl.eventCallback('onComplete', () => {
-      onComplete?.();
-    });
-
-    // Handle resize
     const handleResize = () => {
-      if (canvasRef.current) {
-        const width = canvasRef.current.clientWidth;
-        const height = canvasRef.current.clientHeight;
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
-      }
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
     };
-
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationId);
-      tl.kill();
+      bgGeo.dispose();
+      bgMat.dispose();
+      fallbackSunGeo.dispose();
+      fallbackSunMat.dispose();
       renderer.dispose();
-      // @ts-ignore
-      if (renderer.forceContextLoss) {
-        try {
-          renderer.forceContextLoss();
-        } catch (e) {
-          console.warn("BigBangPrologue failed to force WebGL context loss:", e);
-        }
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
       }
     };
-  }, [onComplete]);
+  }, []);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 bg-black overflow-hidden">
-      <canvas ref={canvasRef} className="w-full h-full" />
+    <div className="relative w-full h-full bg-black overflow-hidden font-mono">
+      <div ref={containerRef} className="w-full h-full absolute inset-0 z-0" />
 
-      {/* Narration */}
-      <div
-        ref={narrationRef}
-        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
-      >
-        <div className="text-center max-w-2xl px-8">
+      {videoVisible && (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-10"
+          style={{
+            opacity: videoFading ? 0 : 1,
+            transition: `opacity ${VIDEO_FADE_MS}ms ease-in-out`,
+          }}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+        >
+          <source src={BIG_BANG_VIDEO_WEBM} type="video/webm" />
+          <source src={BIG_BANG_VIDEO_MP4} type="video/mp4" />
+        </video>
+      )}
+
+      <div className="absolute inset-0 bg-black/40 pointer-events-none z-20" />
+
+      {/*
+        Note: the "SCENE N OF 5 / <name>" corner indicator that used to
+        live here (top-6 right-6, hardcoded to "SCENE 3 OF 5 /
+        SPACESHIP TAKEOFF") has been removed. It was a leftover/copy-paste
+        label — wrong scene number and wrong name for the Prologue — and
+        it rendered on top of the correct, dynamic scene indicator that
+        the parent StoryboardSequence already provides in that same
+        corner, which is what caused the overlapping "SCENE 3 OF 5" /
+        "SCENE 1 OF 5" text in the top right. Don't re-add a scene
+        indicator here; if this scene ever needs one, it should come from
+        the parent so there's a single source of truth for scene number
+        and name.
+      */}
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-8 z-30">
+        <div className="text-center max-w-4xl tracking-wide leading-relaxed min-h-[120px] flex items-center justify-center">
           <p
-            className="text-3xl leading-relaxed"
+            className={lineIndex === 2 ? 'text-4xl md:text-6xl font-black' : 'text-2xl md:text-4xl font-bold'}
             style={{
-              fontFamily: "'Space Mono', monospace",
-              color: '#00d9ff',
-              textShadow: '0 0 20px rgba(0, 217, 255, 0.6)',
+              color: lineIndex === 2 ? '#E8C468' : '#00F3FF',
+              textShadow:
+                lineIndex === 2
+                  ? '0 0 15px #E8C468, 0 0 30px #E8C468, 0 0 60px #FF9D00'
+                  : '0 0 10px #00F3FF, 0 0 20px #00F3FF, 0 0 40px #00A3FF, 0 0 80px #00A3FF',
+              fontFamily: lineIndex === 2 ? "'Fraunces', serif" : "'JetBrains Mono', 'Courier New', monospace",
+              letterSpacing: '0.05em',
+              transition: 'color 0.5s ease',
             }}
           >
-            From the birth of the universe, intelligence emerges…
+            {displayedText}
+            <span className="animate-pulse" style={{ color: lineIndex === 2 ? '#E8C468' : '#00F3FF' }}>
+              |
+            </span>
           </p>
         </div>
       </div>
 
-      {/* Scan lines */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)',
-          mixBlendMode: 'multiply',
-        }}
-      />
+      {showSkip && (
+        <button
+          onClick={onComplete}
+          className="absolute bottom-8 right-8 z-40 px-4 py-2 text-[11px] uppercase tracking-wider font-bold text-[#00F3FF] hover:text-white border border-[#00F3FF]/40 hover:border-[#00F3FF] rounded-lg transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)] hover:shadow-[0_0_20px_rgba(0,243,255,0.7)] cursor-pointer bg-black/50 backdrop-blur-sm"
+        >
+          Skip Prologue →
+        </button>
+      )}
     </div>
   );
 }

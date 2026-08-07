@@ -1,15 +1,30 @@
+# ── Core API ──────────────────────────────────────────────
 fastapi>=0.100.0
 uvicorn>=0.20.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+
+# ── Data Science ───────────────────────────────────────────
 pandas>=1.5.0
 numpy>=1.20.0
-scikit-learn>=1.0.0
-xgboost>=1.6.0
-python-multipart>=0.0.6
-joblib>=1.1.0
 scipy>=1.8.0
+scikit-learn>=1.0.0
+
+# ── ML Models ─────────────────────────────────────────────
+xgboost>=1.6.0
+lightgbm>=3.3.0
+joblib>=1.1.0
+
+# ── Astronomy / FITS ──────────────────────────────────────
 astropy>=5.0.0
-opencv-python-headless>=4.5.0
+
+# ── Visualisation ─────────────────────────────────────────
 matplotlib>=3.5.0
+opencv-python-headless>=4.5.0
+
+# ── Dimensionality Reduction ──────────────────────────────
 umap-learn>=0.5.0
+
+# ── System / Utilities ────────────────────────────────────
+psutil>=5.9.0
