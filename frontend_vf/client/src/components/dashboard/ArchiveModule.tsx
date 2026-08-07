@@ -5,7 +5,8 @@ import {
 } from 'recharts';
 import { 
   Clock, Zap, AlertTriangle, ShieldCheck, Activity, 
-  RefreshCw, Flame, Eye, Layers, Compass, Cpu 
+  RefreshCw, Flame, Eye, Layers, Compass, Cpu,
+  Download, Copy, Printer, FileText, Check, Table, Search, Code
 } from 'lucide-react';
 
 interface NowcastData {
@@ -71,6 +72,153 @@ export function ArchiveModule() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [archiveData, setArchiveData] = useState<ArchivePayload | null>(null);
+  const [csvViewMode, setCsvViewMode] = useState<'table' | 'raw'>('table');
+  const [csvFilter, setCsvFilter] = useState<string>('');
+  const [copiedCsv, setCopiedCsv] = useState<boolean>(false);
+  const [isAutoRefresh, setIsAutoRefresh] = useState<boolean>(true);
+
+  // Generate CSV text string from archive payload
+  const generateCsvContent = (data: ArchivePayload): string => {
+    if (!data || !data.lightcurves) return '';
+    const headers = [
+      'Timestamp_UTC',
+      'Time_Display',
+      'Offset_Min',
+      'SoLEXS_cps',
+      'HEL1OS_cps',
+      'Phase',
+      'Flare_Class',
+      'Prob_C_Pct',
+      'Prob_M_Pct',
+      'Prob_X_Pct',
+      'Is_Inference_Instant'
+    ];
+    const rows = data.lightcurves.map(pt => [
+      pt.timestamp,
+      pt.time_display,
+      pt.time_offset_min,
+      pt.solexs_cps,
+      pt.hel1os_cps,
+      pt.phase,
+      pt.flare_class,
+      ((pt as any).prob_C ?? 0).toFixed(1),
+      ((pt as any).prob_M ?? 0).toFixed(1),
+      ((pt as any).prob_X ?? 0).toFixed(1),
+      pt.is_inference_instant ? 'T=0' : ''
+    ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  };
+
+  // Download CSV file
+  const handleDownloadCsv = () => {
+    if (!archiveData || !archiveData.lightcurves) return;
+    const csvStr = generateCsvContent(archiveData);
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const cleanTs = (archiveData.query_timestamp || selectedUtcIso).replace(/[:.-]/g, '_');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `aditya_l1_telemetry_archive_${cleanTs}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Copy CSV to clipboard
+  const handleCopyCsv = () => {
+    if (!archiveData) return;
+    const csvStr = generateCsvContent(archiveData);
+    navigator.clipboard.writeText(csvStr);
+    setCopiedCsv(true);
+    setTimeout(() => setCopiedCsv(false), 2000);
+  };
+
+  // Print CSV Report
+  const handlePrintCsv = () => {
+    if (!archiveData || !archiveData.lightcurves) return;
+    const rows = archiveData.lightcurves;
+    const targetUtc = archiveData.query_timestamp_utc || selectedUtcIso;
+    
+    const printDiv = document.createElement("div");
+    printDiv.className = "print-archive-csv";
+    printDiv.style.cssText = "display: none;";
+    
+    printDiv.innerHTML = `
+      <div style="background-color: #0b1022; color: #ffffff; font-family: monospace; font-size: 10px; line-height: 1.5; min-height: 100vh; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div style="border: 2px solid #00d9ff; border-radius: 8px; padding: 20px; background: #0b1022; max-width: 900px; margin: 0 auto; box-shadow: 0 0 20px rgba(0, 217, 255, 0.15);">
+          
+          <div style="text-align: center; border-bottom: 2px solid #00d9ff; padding-bottom: 12px; margin-bottom: 15px;">
+            <h1 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase; color: #00d9ff; letter-spacing: 1px;">Aditya-L1 Solar Intelligence Platform</h1>
+            <h3 style="margin: 4px 0 0 0; font-size: 11px; color: #a1a1aa; text-transform: uppercase;">Historical Telemetry &amp; Forecast CSV Archive Report</h3>
+            <p style="margin: 4px 0 0 0; font-size: 10px; color: #00ff88;">Observation Instant: ${targetUtc}</p>
+          </div>
+
+          <div style="margin-bottom: 15px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border: 1px solid rgba(0,217,255,0.2);">
+            <div><span style="color: #9ca3af;">Nowcast Phase:</span> <b style="color: #00d9ff;">${archiveData.nowcast.phase}</b></div>
+            <div><span style="color: #9ca3af;">Flare Class:</span> <b style="color: #fbbf24;">${archiveData.nowcast.flare_class}</b></div>
+            <div><span style="color: #9ca3af;">SoLEXS Flux:</span> <b style="color: #00ff88;">${archiveData.nowcast.flux_cps} cps</b></div>
+            <div><span style="color: #9ca3af;">HEL1OS Score:</span> <b style="color: #a855f7;">${archiveData.nowcast.hel1os_activity_score} cps</b></div>
+          </div>
+
+          <h2 style="font-size: 12px; color: #00d9ff; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">
+            Telemetry &amp; Forecast Time-Series Data (120 Minutes [-60m to +60m UTC])
+          </h2>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 9px; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 1.5px solid #00d9ff; color: #00d9ff; background: rgba(0, 217, 255, 0.1);">
+                <th style="padding: 4px;">Timestamp (UTC)</th>
+                <th style="padding: 4px;">Offset</th>
+                <th style="padding: 4px;">SoLEXS (cps)</th>
+                <th style="padding: 4px;">HEL1OS (cps)</th>
+                <th style="padding: 4px;">Phase</th>
+                <th style="padding: 4px;">Class</th>
+                <th style="padding: 4px;">Prob C</th>
+                <th style="padding: 4px;">Prob M</th>
+                <th style="padding: 4px;">Prob X</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${r.is_inference_instant ? 'background: rgba(239, 68, 68, 0.25); font-weight: bold;' : ''}">
+                  <td style="padding: 3px 4px; ${r.is_inference_instant ? 'color: #ef4444;' : ''}">${r.timestamp} ${r.is_inference_instant ? '[T=0]' : ''}</td>
+                  <td style="padding: 3px 4px;">${r.time_offset_min > 0 ? '+' + r.time_offset_min : r.time_offset_min}m</td>
+                  <td style="padding: 3px 4px; color: #00d9ff;">${r.solexs_cps}</td>
+                  <td style="padding: 3px 4px; color: #a855f7;">${r.hel1os_cps}</td>
+                  <td style="padding: 3px 4px;">${r.phase}</td>
+                  <td style="padding: 3px 4px; color: #fbbf24;">${r.flare_class}</td>
+                  <td style="padding: 3px 4px;">${(r as any).prob_C ?? 0}%</td>
+                  <td style="padding: 3px 4px;">${(r as any).prob_M ?? 0}%</td>
+                  <td style="padding: 3px 4px;">${(r as any).prob_X ?? 0}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px; padding-top: 8px; text-align: center; font-size: 8px; color: #6b7280;">
+            Aditya-L1 Mission Control — Historical Telemetry CSV Export Report
+          </div>
+        </div>
+      </div>
+    `;
+
+    const printStyle = document.createElement("style");
+    printStyle.innerHTML = `
+      @page { size: A4 portrait; margin: 5mm; }
+      @media print {
+        body > *:not(.print-archive-csv) { display: none !important; }
+        body { background: #0b1022 !important; color: white !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .print-archive-csv { display: block !important; width: 100%; font-family: monospace; background: #0b1022 !important; color: white !important; }
+      }
+      @media screen { .print-archive-csv { display: none !important; } }
+    `;
+
+    document.body.appendChild(printDiv);
+    document.body.appendChild(printStyle);
+    window.print();
+    document.body.removeChild(printDiv);
+    document.body.removeChild(printStyle);
+  };
 
   // Fetch telemetry from backend
   const fetchArchiveData = async (utcIso: string) => {
@@ -93,7 +241,14 @@ export function ArchiveModule() {
 
   useEffect(() => {
     fetchArchiveData(selectedUtcIso);
-  }, [selectedUtcIso]);
+
+    if (isAutoRefresh) {
+      const interval = setInterval(() => {
+        fetchArchiveData(selectedUtcIso);
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedUtcIso, isAutoRefresh]);
 
   // Handle UTC datetime picker change
   const handleUtcPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,6 +366,19 @@ export function ArchiveModule() {
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Querying...' : 'Query Instant'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsAutoRefresh(!isAutoRefresh)}
+              className={`flex items-center space-x-1.5 px-3 py-2 text-xs font-mono font-bold rounded border transition-all ${
+                isAutoRefresh
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                  : 'bg-[#131a2e] text-slate-400 border-white/10 hover:border-slate-500'
+              }`}
+              title="Toggle Real-Time 10s Auto Refresh"
+            >
+              <span className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
+              <span>{isAutoRefresh ? 'LIVE AUTO-SYNC (10s)' : 'AUTO-SYNC OFF'}</span>
             </button>
           </div>
         </div>
@@ -360,7 +528,7 @@ export function ArchiveModule() {
 
           <div className="h-[380px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={archiveData.lightcurves} margin={{ top: 20, right: 30, left: 15, bottom: 25 }}>
+              <LineChart data={archiveData.lightcurves} margin={{ top: 20, right: 35, left: 15, bottom: 25 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2740" opacity={0.6} />
                 <XAxis 
                   dataKey="time_display" 
@@ -368,14 +536,29 @@ export function ArchiveModule() {
                   tick={{ fill: '#6b7590', fontSize: 10, fontFamily: 'monospace' }}
                   interval={10}
                 />
+                {/* Left Y-Axis for SoLEXS Soft X-Ray */}
                 <YAxis 
+                  yAxisId="left"
                   scale={useLogScale ? 'log' : 'auto'}
                   domain={useLogScale ? [1, 'auto'] : [0, 'auto']}
                   ticks={useLogScale ? [1, 10, 100, 1000] : undefined}
                   tickFormatter={(val) => useLogScale ? (val === 1 ? '1 cps' : val === 10 ? '10¹ cps' : val === 100 ? '10² cps' : val === 1000 ? '10³ cps' : `${val} cps`) : `${val} cps`}
                   allowDataOverflow
-                  stroke="#6b7590"
-                  tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
+                  stroke="#06b6d4"
+                  tick={{ fill: '#06b6d4', fontSize: 10, fontFamily: 'monospace' }}
+                  width={60}
+                />
+                {/* Right Y-Axis for HEL1OS Hard X-Ray */}
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  scale={useLogScale ? 'log' : 'auto'}
+                  domain={useLogScale ? [1, 'auto'] : [0, 'auto']}
+                  ticks={useLogScale ? [1, 10, 100, 1000] : undefined}
+                  tickFormatter={(val) => `${val} cps`}
+                  allowDataOverflow
+                  stroke="#a855f7"
+                  tick={{ fill: '#a855f7', fontSize: 10, fontFamily: 'monospace' }}
                   width={60}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -387,6 +570,7 @@ export function ArchiveModule() {
 
                 {/* Vertical Reference Line at Inference Instant T=0 UTC */}
                 <ReferenceLine 
+                  yAxisId="left"
                   x={archiveData.lightcurves[archiveData.inference_instant_index]?.time_display} 
                   stroke="#ef4444" 
                   strokeWidth={2.5} 
@@ -403,6 +587,7 @@ export function ArchiveModule() {
 
                 {/* SoLEXS Soft X-Ray Line */}
                 <Line 
+                  yAxisId="left"
                   type="monotone" 
                   dataKey="solexs_cps" 
                   name="SoLEXS Soft X-Ray (2-22 keV)" 
@@ -414,6 +599,7 @@ export function ArchiveModule() {
 
                 {/* HEL1OS Hard X-Ray Line */}
                 <Line 
+                  yAxisId="right"
                   type="monotone" 
                   dataKey="hel1os_cps" 
                   name="HEL1OS Hard X-Ray (8-150 keV)" 
@@ -438,9 +624,9 @@ export function ArchiveModule() {
               </span>
             </div>
 
-            <div className="h-[240px] w-full mt-2">
+            <div className="h-[250px] w-full mt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={archiveData.lightcurves} margin={{ top: 15, right: 30, left: 10, bottom: 25 }}>
+                <LineChart data={archiveData.lightcurves} margin={{ top: 15, right: 35, left: 10, bottom: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e2740" opacity={0.6} />
                   <XAxis 
                     dataKey="time_display" 
@@ -448,13 +634,26 @@ export function ArchiveModule() {
                     tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
                     interval={10}
                   />
+                  {/* Left Y-Axis for Probabilities (0-100%) */}
                   <YAxis 
+                    yAxisId="left"
                     domain={[0, 100]}
                     ticks={[0, 25, 50, 75, 100]}
                     tickFormatter={(v) => `${v}%`}
                     stroke="#6b7590"
                     tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
                     width={45}
+                  />
+                  {/* Right Y-Axis for HEL1OS Hard X-Ray (cps) */}
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 'auto']}
+                    tickFormatter={(v) => `${v} cps`}
+                    stroke="#a855f7"
+                    tick={{ fill: '#a855f7', fontSize: 10, fontFamily: 'monospace' }}
+                    width={55}
+                    label={{ value: 'HEL1OS Flux (cps)', angle: 90, position: 'insideRight', fill: '#a855f7', fontSize: 9, fontFamily: 'monospace' }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend 
@@ -463,14 +662,16 @@ export function ArchiveModule() {
                     wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingBottom: '10px' }}
                   />
                   <ReferenceLine 
+                    yAxisId="left"
                     x={archiveData.lightcurves[archiveData.inference_instant_index]?.time_display} 
                     stroke="#ef4444" 
                     strokeWidth={2} 
                     strokeDasharray="4 4"
                   />
-                  <Line type="monotone" dataKey="prob_C" name="C-class Forecast (%)" stroke="#ff9f1c" strokeWidth={2} strokeDasharray="3 3" dot={false} />
-                  <Line type="monotone" dataKey="prob_M" name="M-class Forecast (%)" stroke="#ff3b5c" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  <Line type="monotone" dataKey="prob_X" name="X-class Forecast (%)" stroke="#e040fb" strokeWidth={2.2} strokeDasharray="8 8" dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="prob_C" name="C-class Forecast (%)" stroke="#ff9f1c" strokeWidth={2} strokeDasharray="3 3" dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="prob_M" name="M-class Forecast (%)" stroke="#ff3b5c" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="prob_X" name="X-class Forecast (%)" stroke="#e040fb" strokeWidth={2.2} strokeDasharray="8 8" dot={false} />
+                  <Line yAxisId="right" type="monotone" dataKey="hel1os_cps" name="HEL1OS Hard X-Ray (cps)" stroke="#a855f7" strokeWidth={1.5} strokeDasharray="2 2" dot={false} activeDot={{ r: 4, fill: '#a855f7', stroke: '#fff' }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -581,6 +782,186 @@ export function ArchiveModule() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── RAW TELEMETRY & FORECAST DATA (CSV FORMAT & PRINT SUITE) ───────── */}
+      {archiveData && archiveData.lightcurves && (
+        <div className="bg-[#131a2e] border border-[#1e2740] rounded-xl p-6 shadow-2xl flex flex-col space-y-4">
+          
+          {/* Header & Controls */}
+          <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 pb-4 border-b border-white/10">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white font-mono flex items-center gap-2">
+                <FileText className="w-4 h-4 text-cyan-400" />
+                Raw Telemetry &amp; Forecast Dataset (CSV Format)
+              </h2>
+              <p className="text-[11px] text-[#6b7590]">
+                View, search, copy, download, or print the full 120-minute time-series telemetry slice in CSV format.
+              </p>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Search Bar */}
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 text-[#6b7590] absolute left-2.5" />
+                <input
+                  type="text"
+                  placeholder="Filter rows..."
+                  value={csvFilter}
+                  onChange={(e) => setCsvFilter(e.target.value)}
+                  className="bg-[#0a0e1a] border border-cyan-500/30 rounded-lg pl-8 pr-3 py-1.5 text-xs font-mono text-cyan-300 placeholder-[#6b7590] focus:outline-none focus:border-cyan-400 w-36 sm:w-44"
+                />
+              </div>
+
+              {/* View Toggle */}
+              <div className="flex rounded-lg bg-[#0a0e1a] p-1 border border-white/10 text-xs font-mono">
+                <button
+                  onClick={() => setCsvViewMode('table')}
+                  className={`flex items-center space-x-1 px-3 py-1 rounded transition-all ${
+                    csvViewMode === 'table'
+                      ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                      : 'text-[#6b7590] hover:text-white'
+                  }`}
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span>Table</span>
+                </button>
+                <button
+                  onClick={() => setCsvViewMode('raw')}
+                  className={`flex items-center space-x-1 px-3 py-1 rounded transition-all ${
+                    csvViewMode === 'raw'
+                      ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                      : 'text-[#6b7590] hover:text-white'
+                  }`}
+                >
+                  <Code className="w-3.5 h-3.5" />
+                  <span>Raw CSV</span>
+                </button>
+              </div>
+
+              {/* Copy CSV Button */}
+              <button
+                onClick={handleCopyCsv}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#0a0e1a] hover:bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 rounded-lg text-xs font-mono transition-all"
+                title="Copy CSV to Clipboard"
+              >
+                {copiedCsv ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
+                <span>{copiedCsv ? 'Copied!' : 'Copy'}</span>
+              </button>
+
+              {/* Download CSV Button */}
+              <button
+                onClick={handleDownloadCsv}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-400/50 text-cyan-300 rounded-lg text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                title="Download .csv File"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download CSV</span>
+              </button>
+
+              {/* Print CSV Button */}
+              <button
+                onClick={handlePrintCsv}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/40 hover:to-blue-600/40 border border-purple-400/50 text-purple-200 rounded-lg text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                title="Print Formatted CSV Telemetry Report"
+              >
+                <Printer className="w-3.5 h-3.5 text-purple-300" />
+                <span>Print CSV Report</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table / Raw Content Container */}
+          {csvViewMode === 'table' ? (
+            <div className="overflow-x-auto max-h-[420px] rounded-lg border border-white/10 bg-[#0a0e1a]/80 shadow-inner">
+              <table className="w-full text-left font-mono text-xs border-collapse">
+                <thead className="bg-[#131a2e] text-cyan-300 sticky top-0 border-b border-white/10 z-10">
+                  <tr>
+                    <th className="py-2.5 px-3">Timestamp (UTC)</th>
+                    <th className="py-2.5 px-3">Offset</th>
+                    <th className="py-2.5 px-3">SoLEXS (cps)</th>
+                    <th className="py-2.5 px-3">HEL1OS (cps)</th>
+                    <th className="py-2.5 px-3">Phase</th>
+                    <th className="py-2.5 px-3">Flare Class</th>
+                    <th className="py-2.5 px-3">Prob C</th>
+                    <th className="py-2.5 px-3">Prob M</th>
+                    <th className="py-2.5 px-3">Prob X</th>
+                    <th className="py-2.5 px-3 text-center">Instant</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-[#c1c9e0]">
+                  {archiveData.lightcurves
+                    .filter(pt => {
+                      if (!csvFilter) return true;
+                      const query = csvFilter.toLowerCase();
+                      return (
+                        pt.timestamp.toLowerCase().includes(query) ||
+                        pt.time_display.toLowerCase().includes(query) ||
+                        pt.phase.toLowerCase().includes(query) ||
+                        pt.flare_class.toLowerCase().includes(query)
+                      );
+                    })
+                    .map((pt, idx) => (
+                      <tr 
+                        key={idx}
+                        className={`hover:bg-cyan-500/5 transition-colors ${
+                          pt.is_inference_instant ? 'bg-red-500/15 border-y border-red-500/40 font-bold' : ''
+                        }`}
+                      >
+                        <td className={`py-2 px-3 ${pt.is_inference_instant ? 'text-red-400 font-bold' : 'text-slate-300'}`}>
+                          {pt.timestamp}
+                        </td>
+                        <td className="py-2 px-3 text-[#6b7590]">
+                          {pt.time_offset_min > 0 ? `+${pt.time_offset_min}` : pt.time_offset_min}m
+                        </td>
+                        <td className="py-2 px-3 text-cyan-300 font-bold">
+                          {pt.solexs_cps.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 text-purple-300 font-bold">
+                          {pt.hel1os_cps.toFixed(1)}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] border ${getPhaseBadgeStyle(pt.phase)}`}>
+                            {pt.phase}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] border ${getFlareClassStyle(pt.flare_class)}`}>
+                            {pt.flare_class}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-yellow-300">{(pt as any).prob_C ?? 0}%</td>
+                        <td className="py-2 px-3 text-amber-400 font-bold">{(pt as any).prob_M ?? 0}%</td>
+                        <td className="py-2 px-3 text-red-400 font-bold">{(pt as any).prob_X ?? 0}%</td>
+                        <td className="py-2 px-3 text-center">
+                          {pt.is_inference_instant ? (
+                            <span className="px-2 py-0.5 rounded bg-red-500/30 text-red-300 text-[9px] font-black border border-red-400 animate-pulse">
+                              T=0 UTC
+                            </span>
+                          ) : (
+                            <span className="text-[#6b7590] text-[10px]">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="relative">
+              <pre className="bg-[#0a0e1a] border border-cyan-500/30 rounded-lg p-4 font-mono text-xs text-cyan-300 max-h-[420px] overflow-auto whitespace-pre leading-relaxed select-all">
+                {generateCsvContent(archiveData)}
+              </pre>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[10px] font-mono text-[#6b7590]">
+            <span>Showing {archiveData.lightcurves.length} telemetry rows (-60m to +60m UTC)</span>
+            <span>CSV Format: ISO8601 UTC Timestamps | Standard Comma-Separated Values</span>
+          </div>
+
         </div>
       )}
 
