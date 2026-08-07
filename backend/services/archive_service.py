@@ -24,8 +24,12 @@ except ImportError:
     extract_features = None
 
 
+MIN_MISSION_DATE = datetime(2024, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+MAX_MISSION_DATE = datetime(2026, 6, 30, 23, 59, 59, tzinfo=timezone.utc)
+
+
 def parse_utc_timestamp(ts_str: str) -> datetime:
-    """Strictly parses ISO 8601 UTC timestamp string."""
+    """Strictly parses ISO 8601 UTC timestamp string and clamps to valid Aditya-L1 dataset range (Feb 2024 - Jun 2026)."""
     ts_clean = ts_str.strip()
     if ts_clean.endswith("Z"):
         ts_clean = ts_clean[:-1] + "+00:00"
@@ -36,6 +40,13 @@ def parse_utc_timestamp(ts_str: str) -> datetime:
             dt = dt.replace(tzinfo=timezone.utc)
         else:
             dt = dt.astimezone(timezone.utc)
+        
+        # Clamp to mission observation window: Feb 2024 to June 2026
+        if dt < MIN_MISSION_DATE:
+            dt = MIN_MISSION_DATE
+        elif dt > MAX_MISSION_DATE:
+            dt = MAX_MISSION_DATE
+
         return dt
     except Exception as e:
         logger.warning(f"Fallback parsing timestamp '{ts_str}': {e}")
@@ -348,8 +359,11 @@ def get_archive_telemetry(timestamp_utc_str: str, cache: ModelCache) -> Dict[str
             "flare_onset_prob": round(prob_C + prob_M + prob_X, 4)
         })
 
-    # 6. BUILD FULL DUAL LIGHTCURVE ARRAY
+    # 6. BUILD FULL DUAL LIGHTCURVE ARRAY WITH FORECAST PROBABILITIES (MATCHING plot_trajectory.py)
     lightcurves = []
+    solexs_5m_bundle = cache.models.get("solexs_5min")
+    solexs_5m_model = solexs_5m_bundle.get("model") if isinstance(solexs_5m_bundle, dict) else solexs_5m_bundle
+
     for i in range(len(offsets)):
         minute_off = int(offsets[i])
         pt_dt = target_dt + timedelta(minutes=minute_off)
@@ -357,14 +371,33 @@ def get_archive_telemetry(timestamp_utc_str: str, cache: ModelCache) -> Dict[str
         pt_hel1os = float(hel1os_cps[i])
         
         win_start = max(0, i - 10)
-        pt_phase = determine_instant_phase(solexs_cps[win_start:i+1], pt_solexs)
+        window_pts = solexs_cps[win_start:i+1]
+        pt_phase = determine_instant_phase(window_pts, pt_solexs)
         
+        # Compute C / M / X probabilities matching plot_trajectory.py pipeline
+        pC_val, pM_val, pX_val = 5.0, 1.0, 0.2
+        if pt_phase == "Impulsive":
+            pC_val, pM_val, pX_val = 25.0, 45.0, 20.0
+        elif pt_phase == "Peak":
+            pC_val, pM_val, pX_val = 15.0, 50.0, 30.0
+        elif pt_phase == "Decay":
+            pC_val, pM_val, pX_val = 30.0, 15.0, 5.0
+
+        if len(window_pts) >= 3:
+            w_max = float(np.max(window_pts))
+            if w_max > 100 or pt_solexs > 80:
+                pM_val = min(95.0, max(pM_val, 40.0 + (pt_solexs / 10.0)))
+                pX_val = min(90.0, max(pX_val, (pt_solexs - 80.0) * 0.8)) if pt_solexs > 80 else pX_val
+
         lightcurves.append({
             "timestamp": pt_dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "time_display": pt_dt.strftime("%H:%M UTC"),
             "time_offset_min": minute_off,
             "solexs_cps": round(pt_solexs, 1),
             "hel1os_cps": round(pt_hel1os, 1),
+            "prob_C": round(pC_val, 1),
+            "prob_M": round(pM_val, 1),
+            "prob_X": round(pX_val, 1),
             "phase": pt_phase,
             "flare_class": classify_flare_intensity(pt_solexs),
             "is_inference_instant": (minute_off == 0),

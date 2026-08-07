@@ -196,6 +196,8 @@ export function ArchiveModule() {
               </label>
               <input
                 type="datetime-local"
+                min="2024-02-01T00:00"
+                max="2026-06-30T23:59"
                 value={utcInputVal}
                 onChange={handleUtcPickerChange}
                 className="bg-[#131a2e] border border-cyan-500/40 rounded px-3 py-1.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400 shadow-inner"
@@ -358,7 +360,7 @@ export function ArchiveModule() {
 
           <div className="h-[380px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={archiveData.lightcurves} margin={{ top: 20, right: 30, left: 10, bottom: 25 }}>
+              <LineChart data={archiveData.lightcurves} margin={{ top: 20, right: 30, left: 15, bottom: 25 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2740" opacity={0.6} />
                 <XAxis 
                   dataKey="time_display" 
@@ -369,10 +371,12 @@ export function ArchiveModule() {
                 <YAxis 
                   scale={useLogScale ? 'log' : 'auto'}
                   domain={useLogScale ? [1, 'auto'] : [0, 'auto']}
+                  ticks={useLogScale ? [1, 10, 100, 1000] : undefined}
+                  tickFormatter={(val) => useLogScale ? (val === 1 ? '1 cps' : val === 10 ? '10¹ cps' : val === 100 ? '10² cps' : val === 1000 ? '10³ cps' : `${val} cps`) : `${val} cps`}
                   allowDataOverflow
                   stroke="#6b7590"
-                  tick={{ fill: '#6b7590', fontSize: 10, fontFamily: 'monospace' }}
-                  unit=" cps"
+                  tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
+                  width={60}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 
@@ -420,6 +424,56 @@ export function ArchiveModule() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Subplot 3: XGBoost Forecast Probabilities Timeline (C%, M%, X%) matching plot_trajectory.py */}
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 font-mono flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400" />
+                XGBoost 5-min Forecast Probabilities Timeline (Full Trajectory)
+              </h3>
+              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded">
+                Model: XGBoost 74-Feature Suite
+              </span>
+            </div>
+
+            <div className="h-[240px] w-full mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={archiveData.lightcurves} margin={{ top: 15, right: 30, left: 10, bottom: 25 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2740" opacity={0.6} />
+                  <XAxis 
+                    dataKey="time_display" 
+                    stroke="#6b7590"
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
+                    interval={10}
+                  />
+                  <YAxis 
+                    domain={[0, 100]}
+                    ticks={[0, 25, 50, 75, 100]}
+                    tickFormatter={(v) => `${v}%`}
+                    stroke="#6b7590"
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}
+                    width={45}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    verticalAlign="top" 
+                    height={32} 
+                    wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingBottom: '10px' }}
+                  />
+                  <ReferenceLine 
+                    x={archiveData.lightcurves[archiveData.inference_instant_index]?.time_display} 
+                    stroke="#ef4444" 
+                    strokeWidth={2} 
+                    strokeDasharray="4 4"
+                  />
+                  <Line type="monotone" dataKey="prob_C" name="C-class Forecast (%)" stroke="#ff9f1c" strokeWidth={2} strokeDasharray="3 3" dot={false} />
+                  <Line type="monotone" dataKey="prob_M" name="M-class Forecast (%)" stroke="#ff3b5c" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="prob_X" name="X-class Forecast (%)" stroke="#e040fb" strokeWidth={2.2} strokeDasharray="8 8" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-3 border-t border-white/5 text-[10px] font-mono text-[#6b7590]">

@@ -24,13 +24,19 @@ def get_fusion_and_alert(cache: ModelCache, solexs_data: Dict[str, Any], hel1os_
             
         activity_score = hel1os_data.get("activity_score", 0.0)
         activity_state = hel1os_data.get("activity_state", "Quiet")
-        
-        # Use existing bayesian fusion
+
+        # Extract margin and uncertainty produced by prediction_core.py
+        margin      = float(solexs_data.get("margin", 0.50))
+        uncertainty = float(solexs_data.get("uncertainty", 1.0 - float(solexs_data.get("confidence", 0.0))))
+
+        # Use updated Bayesian Fusion formula
         fusion_result = fuse_prediction(
             prediction=prediction,
             probabilities=probs,
             activity_score=activity_score,
-            activity_state=activity_state
+            activity_state=activity_state,
+            margin=margin,
+            uncertainty=uncertainty,
         )
         
         # Use existing alert engine

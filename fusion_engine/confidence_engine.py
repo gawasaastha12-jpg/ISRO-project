@@ -7,11 +7,18 @@ Purpose
 -------
 Combines:
 
-1. SOLEXS forecasting probabilities
-2. HEL1OS activity score
+1. SOLEXS forecasting probabilities  (P, M, U)
+2. HEL1OS activity score             (H)
 
-to produce a final confidence score, alert level,
-and human-readable explanation.
+Using the Bayesian Fusion Formula:
+
+    C_fusion = 0.80 * [P * (0.65 + 0.35*M) * (1 - 0.25*U)] + 0.20 * H
+
+Where:
+    P = Primary model probability for top predicted class
+    M = Decision Margin (top prob - 2nd prob)  in [0, 1]
+    U = Model Uncertainty (1 - P)              in [0, 1]
+    H = Normalized HEL1OS activity score       in [0, 1]
 
 Author : Aastha
 =============================================================
@@ -22,17 +29,16 @@ from typing import Dict, List
 
 # ============================================================
 # CONFIGURATION
-# ============================================================
+import math
 
-RF_WEIGHT = 0.70
-HEL_WEIGHT = 0.30
+# Outer channel weights (must sum to 1.0)
+SOLEXS_CHANNEL_WEIGHT = 0.80   # SOLEXS XGBoost forecast channel
+HEL1OS_CHANNEL_WEIGHT  = 0.20  # HEL1OS hard X-ray channel
 
-STATE_BONUS = {
-    "Quiet": 0.00,
-    "Elevated": 0.03,
-    "Active": 0.06,
-    "Highly Active": 0.10,
-}
+# Inner P-scaling coefficients
+MARGIN_BASE   = 0.65   # Baseline margin weight
+MARGIN_SCALE  = 0.35   # Sensitivity to decision margin
+UNCERT_SCALE  = 0.25   # Penalty factor for model uncertainty
 
 
 # ============================================================
@@ -50,50 +56,74 @@ def normalize_activity_score(activity_score: float) -> float:
 
 
 # ============================================================
-# COMPUTE FUSED CONFIDENCE
+# COMPUTE SIGMOID ACTIVITY BONUS
+# ============================================================
+
+def calculate_sigmoid_bonus(activity_score: float) -> float:
+    """
+    Smooth Sigmoid Activity Bonus:
+    B = 0.10 * sigmoid((score - 50) / 10)
+    where sigmoid(x) = 1 / (1 + exp(-x))
+
+    For score = 41.8:
+    x = (41.8 - 50) / 10 = -0.82
+    sigmoid(-0.82) = 0.3058
+    B = 0.10 * 0.3058 ≈ 0.031
+    """
+    x = (activity_score - 50.0) / 10.0
+    sigmoid_val = 1.0 / (1.0 + math.exp(-x))
+    return 0.10 * sigmoid_val
+
+
+# ============================================================
+# COMPUTE FUSED CONFIDENCE  (Bayesian Fusion Formula)
 # ============================================================
 
 def compute_fused_confidence(
     rf_probability: float,
     activity_score: float,
+    margin: float = 0.50,
+    uncertainty: float = None,
 ) -> float:
     """
-    Weighted fusion of
+    Implements the exact Bayesian Fusion Formula:
 
-    RF confidence
-    +
-    HEL activity score
+        C_fusion = 0.80 * [P * (0.65 + 0.35*M) * (1 - 0.25*U)] + 0.20 * H
+
+    Parameters
+    ----------
+    rf_probability : float
+        P — Top class probability from XGBoost SOLEXS model, in [0, 1].
+    activity_score : float
+        Raw HEL1OS activity score in [0, 100]. Normalized to H in [0, 1].
+    margin : float
+        M — Decision margin (P_top - P_2nd), in [0, 1].
+        Defaults to 0.50 (moderate decisiveness) when unavailable.
+    uncertainty : float or None
+        U — Model uncertainty. If None, defaults to (1 - rf_probability).
+
+    Returns
+    -------
+    float
+        C_fusion clamped to [0.0, 1.0].
     """
+    # --- Inputs ---
+    P = max(0.0, min(rf_probability, 1.0))
+    H = normalize_activity_score(activity_score)            # [0, 1]
+    M = max(0.0, min(margin, 1.0))                         # [0, 1]
+    U = max(0.0, min(
+        uncertainty if uncertainty is not None else (1.0 - P),
+        1.0
+    ))                                                      # [0, 1]
 
-    hel_norm = normalize_activity_score(activity_score)
+    # --- Bayesian Fusion Formula ---
+    #   Inner term: P scaled by margin confidence, penalised by uncertainty
+    solexs_term = P * (MARGIN_BASE + MARGIN_SCALE * M) * (1.0 - UNCERT_SCALE * U)
 
-    confidence = (
-        RF_WEIGHT * rf_probability
-        +
-        HEL_WEIGHT * hel_norm
-    )
+    #   Outer weighted sum across SOLEXS channel and HEL1OS channel
+    c_fusion = SOLEXS_CHANNEL_WEIGHT * solexs_term + HEL1OS_CHANNEL_WEIGHT * H
 
-    return confidence
-
-
-# ============================================================
-# APPLY BONUS BASED ON ACTIVITY STATE
-# ============================================================
-
-def apply_activity_bonus(
-    confidence: float,
-    activity_state: str,
-) -> float:
-    """
-    Increase confidence if HEL1OS
-    reports elevated activity.
-    """
-
-    confidence += STATE_BONUS.get(activity_state, 0.0)
-
-    confidence = max(0.0, min(confidence, 1.0))
-
-    return confidence
+    return max(0.0, min(c_fusion, 1.0))
 
 
 # ============================================================
@@ -183,6 +213,8 @@ def fuse_prediction(
     probabilities: Dict[str, float],
     activity_score: float,
     activity_state: str,
+    margin: float = 0.50,
+    uncertainty: float = None,
 ) -> Dict:
     """
     Main entry point.
@@ -212,14 +244,14 @@ def fuse_prediction(
         else:
             rf_probability = 0.0
 
-    confidence = compute_fused_confidence(
-        rf_probability,
-        activity_score,
-    )
+    # Resolve uncertainty from margin if not explicitly provided
+    resolved_uncertainty = uncertainty if uncertainty is not None else (1.0 - rf_probability)
 
-    confidence = apply_activity_bonus(
-        confidence,
-        activity_state,
+    confidence = compute_fused_confidence(
+        rf_probability=rf_probability,
+        activity_score=activity_score,
+        margin=margin,
+        uncertainty=resolved_uncertainty,
     )
 
     alert = get_alert_level(confidence)

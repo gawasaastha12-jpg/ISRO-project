@@ -69,7 +69,7 @@ export default function MissionStatusBar() {
                 <div style="font-weight: bold; color: #00ff88; padding: 2px 0;">${probability}% &plusmn; 8.3%</div>
 
                 <div style="color: #9ca3af; padding: 2px 0;">Physics-Guided Fusion Confidence:</div>
-                <div style="font-weight: bold; color: #7c3aed; padding: 2px 0;">${fusionProb}% (Bayesian Oracle)</div>
+                <div style="font-weight: bold; color: #7c3aed; padding: 2px 0;">${fusionProb}% &mdash; C<sub>fusion</sub> = 0.80·[P·(0.65+0.35M)·(1&minus;0.25U)] + 0.20H</div>
 
                 <div style="color: #9ca3af; padding: 2px 0;">Est. Lead Time Remaining:</div>
                 <div style="font-weight: bold; color: #00ff88; padding: 2px 0;">${leadTimeMinutes} MINUTES</div>
@@ -88,10 +88,10 @@ export default function MissionStatusBar() {
                 <div style="color: #9ca3af; padding: 2px 0;">API Processing Latency:</div>
                 <div style="font-weight: bold; color: #00ff88; padding: 2px 0;">${latency} ms</div>
 
-                <div style="color: #9ca3af; padding: 2px 0;">Thermodynamic Entropy (SOLEXS):</div>
-                <div style="font-weight: bold; color: #fbbf24; padding: 2px 0;">${entropy.toFixed(3)}</div>
+                <div style="color: #9ca3af; padding: 2px 0;">Shannon Prediction Entropy (SOLEXS):</div>
+                <div style="font-weight: bold; color: #fbbf24; padding: 2px 0;">${entropy.toFixed(3)} bits &nbsp;(max = log&#8322;5 &asymp; 2.322)</div>
 
-                <div style="color: #9ca3af; padding: 2px 0;">Observation Uncertainty:</div>
+                <div style="color: #9ca3af; padding: 2px 0;">Model Uncertainty (U = 1 &minus; P):</div>
                 <div style="font-weight: bold; color: #ef4444; padding: 2px 0;">${uncertainty.toFixed(1)}%</div>
 
                 <div style="color: #9ca3af; padding: 2px 0;">Overall Cross-Instrument Pearson r:</div>
@@ -121,8 +121,8 @@ export default function MissionStatusBar() {
               <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">True Skill (TSS)</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.365</div>
-                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">LOMO CV (v8)</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #00ff88;">+0.490</div>
+                  <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">LOMO CV · 5-min</div>
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">Heidke Score (HSS)</div>
@@ -136,7 +136,7 @@ export default function MissionStatusBar() {
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 217, 255, 0.1); border-radius: 4px; padding: 10px; text-align: center;">
                   <div style="color: #9ca3af; font-size: 8px; text-transform: uppercase; margin-bottom: 4px;">False Alarm (FAR)</div>
-                  <div style="font-size: 14px; font-weight: bold; color: #ef4444;">0.10%</div>
+                  <div style="font-size: 14px; font-weight: bold; color: #ef4444;">1.6%</div>
                   <div style="color: #6b7280; font-size: 8px; margin-top: 2px;">Solar Quiet Rate</div>
                 </div>
               </div>
@@ -183,10 +183,11 @@ export default function MissionStatusBar() {
           <div style="border: 2px solid #7c3aed; border-radius: 8px; padding: 25px; background: #0b1022; box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);">
             <div style="text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 15px; margin-bottom: 20px;">
               <h1 style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #7c3aed; letter-spacing: 1px;">Aditya-L1 Solar Intelligence Platform</h1>
-              <h3 style="margin: 5px 0 0 0; font-size: 12px; color: #a1a1aa; text-transform: uppercase; tracking-wider: 1px;">AI Model Methodology & Pipeline Architecture</h3>
+              <h3 style="margin: 5px 0 0 0; font-size: 12px; color: #a1a1aa; text-transform: uppercase; tracking-wider: 1px;">AI Model Methodology &amp; Pipeline Architecture</h3>
               <p style="margin: 5px 0 0 0; font-size: 8px; color: #a1a1aa; line-height: 1.4;">
-                Model Architecture: XGBoost v2.1 with Isotonic Calibration<br/>
-                Training Data: 51.8M SoLEXS + 2.76M HEL1OS measurements | Validation: Leave-One-Month-Out CV, 25 calendar months
+                Model Architecture: XGBoost v2.1 (multi:softprob, 5-class) · Fusion: Bayesian Oracle C<sub>fusion</sub> = 0.80·[P·(0.65+0.35M)·(1&minus;0.25U)] + 0.20H<br/>
+                Training Data: SOLEXS SDD-2 L1 light curves (Feb 2024&ndash;Jun 2026) · Validation: Leave-One-Month-Out (LOMO) CV, 25 calendar months<br/>
+                Labelling: SOLEXS count-rate peak prominence thresholds (Quiet&lt;10, B&lt;45, C&lt;120, M&lt;800, X&ge;800 cts) — GOES class-aligned
               </p>
             </div>
 
@@ -224,16 +225,17 @@ export default function MissionStatusBar() {
             </div>
 
             <div style="margin-bottom: 20px;">
-              <h2 style="font-size: 13px; color: #7c3aed; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">4. Physics-Informed Feature Importance</h2>
+              <h2 style="font-size: 13px; color: #7c3aed; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">4. Bayesian Fusion Oracle — C<sub>fusion</sub> Formula</h2>
               <p style="color: #d1d5db; font-size: 10px; margin: 0 0 10px 0; line-height: 1.5;">
-                Top predictors mapped by XGBoost Gain attributions (share of total model gain) across the 17 core operational parameters:
+                The final confidence is produced by the Bayesian Fusion Oracle combining SOLEXS XGBoost output with HEL1OS hard X-ray telemetry:
               </p>
-              <div style="font-size: 9px; line-height: 1.8; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
-                <div>1. Peak Height Ratio (peak_ratio) [███████████░░░░░░░░░░░░░░░░░░░] 11.0%</div>
-                <div>2. Signal-to-Noise Ratio (snr) [██████████░░░░░░░░░░░░░░░░░░░░] 10.1%</div>
-                <div>3. Peak Raw Intensity (max) [████████░░░░░░░░░░░░░░░░░░░░░░░] 7.8%</div>
-                <div>4. Peak Count Ratio (peak_count) [████████░░░░░░░░░░░░░░░░░░░░░░░] 7.6%</div>
-                <div>5. SOLEXS Energy Flux (energy) [███████░░░░░░░░░░░░░░░░░░░░░░░░] 7.1%</div>
+              <div style="font-size: 10px; line-height: 1.9; color: #a1a1aa; background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 4px; border: 1px solid rgba(124, 58, 237, 0.15);">
+                <div style="color: #ffffff; font-weight: bold; margin-bottom: 6px;">C<sub>fusion</sub> = 0.80 &times; [P &times; (0.65 + 0.35&thinsp;M) &times; (1 &minus; 0.25&thinsp;U)] + 0.20 &times; H</div>
+                <div><span style="color: #00d9ff;">P</span> &mdash; Top class probability from SOLEXS XGBoost model &isin; [0, 1]</div>
+                <div><span style="color: #00d9ff;">M</span> &mdash; Decision Margin (P<sub>top</sub> &minus; P<sub>2nd</sub>) &isin; [0, 1] &nbsp;&nbsp;High M = unambiguous class separation</div>
+                <div><span style="color: #00d9ff;">U</span> &mdash; Model Uncertainty = 1 &minus; P &isin; [0, 1] &nbsp;&nbsp;Penalises borderline predictions</div>
+                <div><span style="color: #00d9ff;">H</span> &mdash; Normalised HEL1OS activity score (raw score / 100) &isin; [0, 1]</div>
+                <div style="margin-top: 6px;"><span style="color: #7c3aed;">0.80</span> = SOLEXS channel weight &nbsp;&nbsp;<span style="color: #7c3aed;">0.20</span> = HEL1OS channel weight</div>
               </div>
             </div>
 

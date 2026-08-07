@@ -32,7 +32,7 @@ from features_v2 import extract_features
 MODEL_FILE = os.path.join(ROOT_DIR, "SOLEXS_downloads", "models", "model_forecast_5min.pkl")
 FITS_FILE  = os.path.join(ROOT_DIR, "SOLEXS_downloads", "data", "lc_files",
                            "AL1_SLX_L1_20240211_v1.0", "SDD2",
-                           "AL1_SOLEXS_20250211_SDD2_L1.lc.gz")
+                           "AL1_SOLEXS_20240211_SDD2_L1.lc.gz")
 
 PLOT_OUT       = os.path.join(ROOT_DIR, "reports", "log_lightcurve_trajectory.png")
 BRAIN_PLOT_OUT = r"C:\Users\Aastha\.gemini\antigravity-ide\brain\c4930618-7819-4859-8c02-e8dcfddf3371\log_lightcurve_trajectory.png"

@@ -108,8 +108,8 @@ def generate_solexs_data(cache: ModelCache) -> dict:
         "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "processing_ms": round((time.time() - start_time) * 1000, 2),
         "tpr": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("tpr", 0.366),
-        "far": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("far", 0.001),
-        "tss": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("tss", 0.365),
+        "far": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("far", 0.016),
+        "tss": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("tss", 0.490),
         "engine_versions": {"solexs": cache.metadata.get("solexs", {}).get("forecast_5min", {}).get("version", "v3.0")}
     }
 
@@ -153,11 +153,17 @@ def run_pipeline():
     }
 
     # ----------------- Fusion & Alert -----------------
+    # Extract margin and uncertainty from SOLEXS forecast for Bayesian formula
+    margin      = float(forecast_data.get("margin", 0.50))
+    uncertainty = float(forecast_data.get("uncertainty", 0.50))
+
     fusion_result = fuse_prediction(
         prediction=forecast,
         probabilities=probabilities,
         activity_score=activity_score,
-        activity_state=activity_state
+        activity_state=activity_state,
+        margin=margin,
+        uncertainty=uncertainty,
     )
     alert = process_alert(fusion_result)
 
