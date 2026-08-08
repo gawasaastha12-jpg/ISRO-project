@@ -19,6 +19,8 @@ SOLEXS_downloads/scripts/catboost_info/
 
 # Generated features and outputs
 He1os_script/features/
+features/hel1os/
+*.csv
 outputs/
 fusion_engine/outputs/
 judge_preparation_notes.md
