@@ -1,0 +1,47 @@
+{
+  "training_date": "2026-08-23T12:06:36.765552Z",
+  "dataset": {
+    "total_samples": 3000,
+    "train_samples": 2400,
+    "validation_samples": 600,
+    "train_split_ratio": "80/20"
+  },
+  "metrics": {
+    "rmse_15m": 0.0217,
+    "rmse_30m": 0.0323,
+    "rmse_60m": 0.0435,
+    "alert_classifier_f1": 0.3099,
+    "alert_classifier_precision": 0.2821,
+    "alert_classifier_recall": 0.3438
+  },
+  "smote_applied": true,
+  "space_weather_note": "Includes space weather features for live execution. Statistical contribution during training is constrained by historical event rarity.",
+  "features_used": [
+    "ghi",
+    "dni",
+    "cloud_fraction",
+    "aod",
+    "mosdac_cod",
+    "mosdac_olr",
+    "prob_C",
+    "prob_M",
+    "prob_X",
+    "space_weather_flag",
+    "latitude",
+    "longitude",
+    "capacity_mw",
+    "solar_zenith",
+    "solar_azimuth",
+    "capacity_factor",
+    "hour_sin",
+    "hour_cos",
+    "day_of_year_sin",
+    "day_of_year_cos",
+    "ghi_diff_1",
+    "ghi_diff_4",
+    "cloud_diff_1",
+    "cloud_diff_4",
+    "ghi_roll_mean_1h",
+    "ghi_roll_var_1h"
+  ]
+}

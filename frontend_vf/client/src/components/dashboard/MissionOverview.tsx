@@ -5,15 +5,11 @@ import { ResponsiveContainer, LineChart, Line, YAxis, Tooltip, XAxis } from 'rec
 
 export function LiveFlareGauge() {
   const { data } = useDashboard();
-  const rawProb = data?.instruments?.solexs?.forecast_confidence ?? data?.instruments?.solexs?.confidence ?? data?.instruments?.solexs?.probability ?? 0;
-  const probability = rawProb <= 1.0 ? rawProb * 100 : rawProb;
-  const uncertainty = 100 - probability;
-
-  const fusionRaw = data?.analytics?.fusion?.forecast_confidence ?? data?.analytics?.fusion?.confidence ?? data?.analytics?.fusion?.probability ?? 0;
-  const fusionProb = fusionRaw <= 1.0 ? fusionRaw * 100 : fusionRaw;
-
-  // Individual class probabilities from team_predictions.csv / solexs_data
-  const probs = data?.instruments?.solexs?.probabilities ?? {};
+  
+  const solexs = data?.instruments?.solexs ?? {};
+  const nowcast5m = solexs?.multi_horizon?.[0] ?? {};
+  const probs = nowcast5m?.probabilities ?? solexs?.probabilities ?? {};
+  
   const getProbVal = (k1: string, k2: string) => {
     const v = probs[k1] ?? probs[k2] ?? 0;
     return v <= 1.0 ? v * 100 : v;
@@ -22,12 +18,32 @@ export function LiveFlareGauge() {
   const probM = getProbVal('M-like', 'M');
   const probX = getProbVal('X-like', 'X');
 
-  // Nowcast phase — read directly from API (set by determine_phase in write_predictions.py)
-  // Falls back to deriving it from trajectory only if nowcast_phase is not present
-  const nowcastPhase: string = data?.instruments?.solexs?.nowcast_phase
-    ?? (data?.instruments?.solexs?.trajectory === 'Escalating' ? 'Impulsive'
-      : data?.instruments?.solexs?.trajectory === 'Decaying' ? 'Decay'
-      : (data?.instruments?.solexs?.forecast === 'Quiet' || data?.instruments?.solexs?.forecast === 'B-like') ? 'Background'
+  const rawOnset = solexs?.flare_onset_probability;
+  let probability: number;
+  if (rawOnset !== undefined && rawOnset !== null) {
+    probability = rawOnset <= 1.0 ? rawOnset * 100 : rawOnset;
+  } else if (probC + probM + probX > 0) {
+    probability = probC + probM + probX;
+  } else {
+    const topForecast = nowcast5m?.forecast ?? solexs?.forecast ?? 'Quiet';
+    const rawConf = nowcast5m?.forecast_confidence ?? nowcast5m?.confidence ?? solexs?.forecast_confidence ?? solexs?.confidence ?? 0;
+    const topPct = rawConf <= 1.0 ? rawConf * 100 : rawConf;
+    if (topForecast === 'Quiet' || topForecast === 'B-like') {
+      probability = Math.max(0, 100 - topPct);
+    } else {
+      probability = topPct;
+    }
+  }
+  const uncertainty = Math.max(0, 100 - probability);
+
+  const fusionRaw = data?.analytics?.fusion?.forecast_confidence ?? data?.analytics?.fusion?.confidence ?? data?.analytics?.fusion?.probability ?? 0;
+  const fusionProb = fusionRaw <= 1.0 ? fusionRaw * 100 : fusionRaw;
+
+  // Nowcast phase — read directly from API
+  const nowcastPhase: string = solexs?.nowcast_phase
+    ?? (solexs?.trajectory === 'Escalating' ? 'Impulsive'
+      : solexs?.trajectory === 'Decaying' ? 'Decay'
+      : (solexs?.forecast === 'Quiet' || solexs?.forecast === 'B-like' || nowcast5m?.forecast === 'Quiet') ? 'Background'
       : 'Background');
 
   const phaseColor: Record<string, string> = {
@@ -152,7 +168,7 @@ export function LiveFlareGauge() {
             <div className="flex justify-between items-baseline">
               <span className="text-muted-foreground uppercase text-[8px]">Est. Lead Time</span>
               <div className="text-right">
-                <span className="text-xs font-black text-green-400">~5 MIN</span>
+                <span className="text-xs font-black text-green-400">~{leadTimeMinutes} MIN</span>
                 <span className="text-[7px] text-[#6b7590] block uppercase tracking-wider mt-0.5">VALIDATED NOWCAST (TSS +0.365)</span>
               </div>
             </div>

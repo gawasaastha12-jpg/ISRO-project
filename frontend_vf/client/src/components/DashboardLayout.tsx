@@ -12,16 +12,17 @@ import { HealthStrip } from './dashboard/HealthStrip';
 import { AlertLogsPanel } from './dashboard/AlertLogsPanel';
 import { TrajectorySummaryPanel } from './dashboard/TrajectorySummaryPanel';
 import { ArchiveModule } from './dashboard/ArchiveModule';
+import GridOperationsView from './dashboard/GridOperationsView';
 import gsap from 'gsap';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
   alertState?: string;
-  initialTab?: 'operations' | 'analysis' | 'catalogue' | 'archive';
+  initialTab?: 'operations' | 'analysis' | 'grid' | 'catalogue' | 'archive';
 }
 
 export default function DashboardLayout({ children, alertState = 'NORMAL', initialTab = 'analysis' }: DashboardLayoutProps) {
-  const [activeTab, setActiveTab] = useState<'operations' | 'analysis' | 'catalogue' | 'archive'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'operations' | 'analysis' | 'grid' | 'catalogue' | 'archive'>(initialTab);
 
   useEffect(() => {
     // GSAP sequential entrance animation
@@ -53,7 +54,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
         <div className="flex bg-[#131a2e]/90 backdrop-blur px-6 py-2 items-center justify-between border-t border-white/5">
           <div className="flex items-center space-x-3">
             <span className="text-[10px] font-bold text-[#6b7590] uppercase tracking-widest font-mono">Control Desk:</span>
-            {(['analysis', 'operations', 'catalogue', 'archive'] as const).map(tab => (
+            {(['analysis', 'operations', 'grid', 'catalogue', 'archive'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -64,7 +65,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
                 }`}
                 style={{ fontFamily: 'Orbitron, sans-serif' }}
               >
-                {tab}
+                {tab === 'grid' ? 'Grid Ops (Solar)' : tab}
               </button>
             ))}
           </div>
@@ -182,6 +183,12 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
               <div className="gsap-delay-350 w-full">
                 <CrossInstrumentTimeline />
               </div>
+            </div>
+          )}
+
+          {activeTab === 'grid' && (
+            <div className="flex flex-col space-y-6 pb-12 h-auto gsap-delay-150">
+              <GridOperationsView />
             </div>
           )}
 

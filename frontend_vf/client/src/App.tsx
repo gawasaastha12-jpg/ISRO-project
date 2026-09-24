@@ -6,12 +6,15 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ArchivePage from "./pages/ArchivePage";
+import GridOperationsView from "./components/dashboard/GridOperationsView";
 
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/grid"} component={GridOperationsView} />
+      <Route path={"/solar-grid"} component={GridOperationsView} />
       <Route path={"/archive"} component={ArchivePage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
