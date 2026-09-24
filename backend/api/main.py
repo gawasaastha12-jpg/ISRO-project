@@ -134,7 +134,7 @@ async def get_grid_status():
     Evaluates loaded XGBoost models against live NASA POWER solar irradiance,
     PVLib clear-sky physics, and Aditya-L1 flare probabilities across solar parks.
     """
-    return get_live_grid_status(global_cache, BASE_DIR)
+    return get_live_grid_status(global_cache, ROOT_DIR)
 
 @app.post("/api/dispatch-reserves", response_model=DispatchReserveResponse, status_code=200, summary="Trigger SCADA Manual Grid Intervention")
 @app.post("/api/v1/dispatch-reserves", response_model=DispatchReserveResponse, status_code=200, summary="Trigger SCADA Manual Grid Intervention")

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ROOT_API_URL } from '../../services/api';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import {
@@ -68,7 +69,7 @@ export default function GridOperationsView() {
 
   const fetchGridStatus = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/grid-status');
+      const res = await fetch(`${ROOT_API_URL}/grid-status`);
       if (res.ok) {
         const data = await res.json();
         processTelemetryData(data);
@@ -135,7 +136,7 @@ export default function GridOperationsView() {
     setDispatchStatus(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/dispatch-reserves', {
+      const response = await fetch(`${ROOT_API_URL}/dispatch-reserves`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ export default function GridOperationsView() {
       }
     } catch (error) {
       console.error("Error triggering dispatch-reserves:", error);
-      alert("Failed to connect to SCADA Dispatch API at http://localhost:8000/api/dispatch-reserves");
+      alert(`Failed to connect to SCADA Dispatch API at ${ROOT_API_URL}/dispatch-reserves`);
     } finally {
       setIsDispatching(false);
     }

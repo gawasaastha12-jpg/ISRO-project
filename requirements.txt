@@ -26,5 +26,10 @@ opencv-python-headless>=4.5.0
 # ── Dimensionality Reduction ──────────────────────────────
 umap-learn>=0.5.0
 
+# ── Solar Physics & API Clients ───────────────────────────
+pvlib>=0.9.0
+requests>=2.28.0
+
 # ── System / Utilities ────────────────────────────────────
 psutil>=5.9.0
+

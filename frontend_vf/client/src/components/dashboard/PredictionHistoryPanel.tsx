@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../services/api';
 import { 
   History, Database, Download, CheckCircle2, ChevronDown, 
   ChevronUp, RefreshCw, Layers, Filter, Search, FileText, Activity 
@@ -81,7 +82,7 @@ export function PredictionHistoryPanel() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/history');
+        const res = await fetch(`${API_BASE_URL}/history`);
         if (res.ok) {
           const data = await res.json();
           const historyArray = Array.isArray(data) 
@@ -106,7 +107,7 @@ export function PredictionHistoryPanel() {
     setTeamLoading(true);
     setTeamError(null);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/team-predictions?limit=500');
+      const res = await fetch(`${API_BASE_URL}/team-predictions?limit=500`);
       if (res.ok) {
         const data = await res.json();
         if (data.rows) {
@@ -315,7 +316,7 @@ export function PredictionHistoryPanel() {
               <div className="flex justify-between items-center font-mono">
                 <span className="text-[10px] text-muted-foreground uppercase">Showing latest catalogue nowcasts ({(Array.isArray(history) ? history.length : 0)} records)</span>
                 <a 
-                  href="http://127.0.0.1:8000/api/v1/history" 
+                  href={`${API_BASE_URL}/history`} 
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center space-x-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[10px] text-starlight-white font-bold transition-colors uppercase hover:text-[#00d9ff]"
@@ -474,7 +475,7 @@ export function PredictionHistoryPanel() {
                   </button>
 
                   <a
-                    href="http://localhost:8000/api/v1/team-predictions?limit=1000"
+                    href={`${API_BASE_URL}/team-predictions?limit=1000`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-400/50 rounded text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]"
