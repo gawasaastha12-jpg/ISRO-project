@@ -1,0 +1,43 @@
+services:
+  # --------------------------------------------------------------------------
+  # 1. FastAPI + ML Inference Backend
+  # --------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: isro_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - solar_network
+
+  # --------------------------------------------------------------------------
+  # 2. React + Vite + Three.js Frontend (Nginx Reverse Proxy)
+  # --------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: isro_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - solar_network
+
+networks:
+  solar_network:
+    driver: bridge

@@ -1,0 +1,46 @@
+# ============================================================================
+# Aditya-L1 Solar Intelligence Platform - Backend Dockerfile
+# Python FastAPI + XGBoost / Scikit-Learn Inference Engine
+# ============================================================================
+
+FROM python:3.11-slim
+
+# Prevent Python from writing .pyc files and enable unbuffered logging
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies needed for scientific libraries & OpenCV
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies first for optimal Docker layer caching
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application source directories
+COPY backend/ /app/backend/
+COPY fusion_engine/ /app/fusion_engine/
+COPY He1os_script/ /app/He1os_script/
+COPY HE1OS/ /app/HE1OS/
+COPY SOLEXS_downloads/ /app/SOLEXS_downloads/
+COPY models/ /app/models/
+COPY data/ /app/data/
+COPY features/ /app/features/
+COPY outputs/ /app/outputs/
+COPY logs/ /app/logs/
+
+# Expose backend API port
+EXPOSE 8000
+
+# Health check to ensure the API is running and responding
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Launch ASGI server
+CMD ["uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

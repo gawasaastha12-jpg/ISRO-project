@@ -1,0 +1,28 @@
+# Git & IDE
+.git
+.gitignore
+.agents
+.vscode
+.gemini
+*.code-workspace
+
+# Node / Frontend
+node_modules/
+frontend_vf/node_modules/
+frontend_vf/.manus-logs/
+frontend_vf/dist/
+
+# Python cache & virtual environments
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Large raw observation archives not needed for active inference (if any)
+scratch/
