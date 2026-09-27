@@ -414,7 +414,7 @@ export default function GridOperationsView() {
               </h2>
             </div>
             <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-              CartoDB Light Vector Layers
+              OpenStreetMap Layers
             </span>
           </div>
 
@@ -427,8 +427,8 @@ export default function GridOperationsView() {
               style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
             >
               <TileLayer
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
               {/* Circle Markers for Solar Parks */}

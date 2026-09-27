@@ -10,7 +10,11 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  const BACKEND_URL = (process.env.BACKEND_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+  let rawBackendUrl = (process.env.BACKEND_URL || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
+  if (!rawBackendUrl.startsWith("http://") && !rawBackendUrl.startsWith("https://")) {
+    rawBackendUrl = `https://${rawBackendUrl}`;
+  }
+  const BACKEND_URL = rawBackendUrl;
 
   // Reverse proxy API requests to FastAPI backend
   app.use("/api", async (req, res) => {

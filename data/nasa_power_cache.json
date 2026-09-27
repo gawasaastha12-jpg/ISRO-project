@@ -13,7 +13,7 @@
     "rh": 31.6,
     "cloud_fraction": 0.4,
     "aod": 0.25,
-    "timestamp": 1790270457.208276
+    "timestamp": 1790491125.9110425
   },
   "pavagada": {
     "location_id": "pavagada",
@@ -29,7 +29,7 @@
     "rh": 72.6,
     "cloud_fraction": 1.5,
     "aod": 0.26,
-    "timestamp": 1790270458.8770378
+    "timestamp": 1790491127.2404928
   },
   "kurnool": {
     "location_id": "kurnool",
@@ -45,7 +45,7 @@
     "rh": 67.5,
     "cloud_fraction": 4.2,
     "aod": 0.27,
-    "timestamp": 1790270460.1208906
+    "timestamp": 1790491128.508465
   },
   "rewa": {
     "location_id": "rewa",
@@ -61,6 +61,6 @@
     "rh": 68.8,
     "cloud_fraction": 21.4,
     "aod": 0.34,
-    "timestamp": 1790270461.7274458
+    "timestamp": 1790491129.824083
   }
 }

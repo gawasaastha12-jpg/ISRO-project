@@ -1,0 +1,35 @@
+services:
+  # ============================================================================
+  # 1. FastAPI Backend Service (Python / Uvicorn + ML Models)
+  # ============================================================================
+  - type: web
+    name: isro-backend
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # ============================================================================
+  # 2. React / Vite Frontend Service (Express Proxy + Static SPA)
+  # ============================================================================
+  - type: web
+    name: isro-frontend
+    runtime: node
+    plan: free
+    branch: main
+    rootDir: frontend_vf
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: isro-backend
+          property: host
