@@ -88,6 +88,28 @@ app.add_middleware(
 # Include original API routes (/api/v1/dashboard, /api/v1/forecast, etc.)
 app.include_router(router)
 
+@app.get("/", summary="Root Service Information")
+def root_index():
+    return {
+        "service": "Aditya-L1 Solar Intelligence Platform - Mission Control API",
+        "status": "online",
+        "version": "1.0.0",
+        "documentation": "/docs",
+        "health_check": "/api/v1/health",
+        "endpoints": {
+            "dashboard": "/api/v1/dashboard",
+            "forecast": "/api/v1/forecast",
+            "grid_status": "/api/v1/grid-status",
+            "hel1os": "/api/v1/hel1os",
+            "velc": "/api/v1/velc"
+        }
+    }
+
+@app.get("/health", summary="Health Check")
+def health_endpoint():
+    return {"status": "ok", "service": "aditya-l1-backend"}
+
+
 # ============================================================================
 # PYDANTIC SCHEMAS FOR TERRESTRIAL GRID & SCADA DISPATCH
 # ============================================================================
