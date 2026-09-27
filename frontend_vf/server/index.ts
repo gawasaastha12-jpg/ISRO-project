@@ -10,11 +10,23 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  let rawBackendUrl = (process.env.BACKEND_URL || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
+  let rawBackendUrl = (process.env.BACKEND_URL || process.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
   if (!rawBackendUrl.startsWith("http://") && !rawBackendUrl.startsWith("https://")) {
     rawBackendUrl = `https://${rawBackendUrl}`;
   }
+  // Strip accidental trailing /api or /api/v1 from base URL
+  rawBackendUrl = rawBackendUrl.replace(/\/api(\/v1)?\/?$/, '');
   const BACKEND_URL = rawBackendUrl;
+
+  // Diagnostics endpoint to inspect current proxy target URL
+  app.get("/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "frontend-proxy",
+      backendUrl: BACKEND_URL,
+      targetDashboard: `${BACKEND_URL}/api/v1/dashboard`
+    });
+  });
 
   // Reverse proxy API requests to FastAPI backend
   app.use("/api", async (req, res) => {

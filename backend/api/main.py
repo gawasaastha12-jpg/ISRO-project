@@ -83,6 +83,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=r"https?://.*",
 )
 
 # Include original API routes (/api/v1/dashboard, /api/v1/forecast, etc.)
