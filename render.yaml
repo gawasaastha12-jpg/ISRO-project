@@ -3,7 +3,7 @@ services:
   # 1. FastAPI Backend Service (Python / Uvicorn + ML Models)
   # ============================================================================
   - type: web
-    name: isro-backend
+    name: aditya-l1-solar-backend
     runtime: python
     plan: free
     branch: main
@@ -18,7 +18,7 @@ services:
   # 2. React / Vite Frontend Service (Express Proxy + Static SPA)
   # ============================================================================
   - type: web
-    name: isro-frontend
+    name: aditya-l1-solar-intelligence-platform
     runtime: node
     plan: free
     branch: main
@@ -31,5 +31,5 @@ services:
       - key: BACKEND_URL
         fromService:
           type: web
-          name: isro-backend
+          name: aditya-l1-solar-backend
           property: host

@@ -5,7 +5,7 @@ import { COSMIC_IMAGES } from '@/lib/cosmic-assets';
 /**
  * Overview Hero Section
  * 
- * Immersive introduction to the Cosmic Intelligence Platform
+ * Immersive introduction to the ADITYA-L1 SOLAR INTELLIGENCE PLATFORM Platform
  */
 
 interface OverviewHeroProps {
@@ -105,7 +105,7 @@ export default function OverviewHero({ onComplete }: OverviewHeroProps) {
               textShadow: '0 0 40px rgba(0, 217, 255, 0.8), 0 0 80px rgba(124, 58, 237, 0.5)',
             }}
           >
-            Cosmic Intelligence
+            ADITYA-L1 SOLAR INTELLIGENCE PLATFORM
           </h1>
 
           {/* Subtitle */}
@@ -125,7 +125,7 @@ export default function OverviewHero({ onComplete }: OverviewHeroProps) {
             className="space-y-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
             <p>
-              Welcome to the Cosmic Intelligence Platform—a cinematic exploration of solar phenomena
+              Welcome to the ADITYA-L1 SOLAR INTELLIGENCE PLATFORM Platform—a cinematic exploration of solar phenomena
               through the eyes of the Aditya-L1 space observatory.
             </p>
             <p>
