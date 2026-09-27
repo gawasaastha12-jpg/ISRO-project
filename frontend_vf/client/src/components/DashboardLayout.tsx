@@ -29,10 +29,13 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
     const delays = [0, 150, 250, 350, 500];
     
     delays.forEach(delay => {
-      gsap.fromTo(`.gsap-delay-${delay}`, 
-        { opacity: 0, y: 30 }, 
-        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: delay / 1000, clearProps: 'all' }
-      );
+      const targets = document.querySelectorAll(`.gsap-delay-${delay}`);
+      if (targets.length > 0) {
+        gsap.fromTo(targets, 
+          { opacity: 0, y: 30 }, 
+          { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: delay / 1000, clearProps: 'all' }
+        );
+      }
     });
   }, [activeTab]); // trigger animations on tab switch for smooth transition!
 
