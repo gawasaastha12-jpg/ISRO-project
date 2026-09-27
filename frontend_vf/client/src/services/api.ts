@@ -6,9 +6,27 @@ let rawBackendUrl = (
   ''
 ).trim().replace(/\/+$/, '');
 
+// If protocol is missing, add https://
 if (rawBackendUrl && !rawBackendUrl.startsWith('http://') && !rawBackendUrl.startsWith('https://')) {
   rawBackendUrl = `https://${rawBackendUrl}`;
 }
+
+// If someone provided a service name without a TLD/dot (e.g. aditya-l1-solar-backend),
+// append .onrender.com so it resolves to a valid public Render domain!
+if (rawBackendUrl) {
+  try {
+    const parsed = new URL(rawBackendUrl);
+    if (!parsed.hostname.includes('.') && parsed.hostname !== 'localhost') {
+      parsed.hostname = `${parsed.hostname}.onrender.com`;
+      rawBackendUrl = parsed.toString().replace(/\/+$/, '');
+    }
+  } catch (e) {
+    if (!rawBackendUrl.includes('.') && !rawBackendUrl.includes('localhost')) {
+      rawBackendUrl = `${rawBackendUrl}.onrender.com`;
+    }
+  }
+}
+
 // Strip accidental trailing /api or /api/v1 from base URL
 rawBackendUrl = rawBackendUrl.replace(/\/api(\/v1)?\/?$/, '');
 
