@@ -8,6 +8,7 @@ import {
   RefreshCw, Flame, Eye, Layers, Compass, Cpu,
   Download, Copy, Printer, FileText, Check, Table, Search, Code
 } from 'lucide-react';
+import { API_BASE_URL } from '../../services/api';
 
 interface NowcastData {
   timestamp: string;
@@ -225,7 +226,7 @@ export function ArchiveModule() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/archive?timestamp=${encodeURIComponent(utcIso)}`);
+      const res = await fetch(`${API_BASE_URL}/archive?timestamp=${encodeURIComponent(utcIso)}`);
       if (!res.ok) {
         throw new Error(`Archive API responded with status ${res.status}`);
       }
