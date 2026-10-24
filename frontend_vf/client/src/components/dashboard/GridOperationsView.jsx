@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { ROOT_API_URL } from '../../services/api';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import {
@@ -69,7 +68,7 @@ export default function GridOperationsView() {
 
   const fetchGridStatus = async () => {
     try {
-      const res = await fetch(`${ROOT_API_URL}/grid-status`);
+      const res = await fetch('http://localhost:8000/api/grid-status');
       if (res.ok) {
         const data = await res.json();
         processTelemetryData(data);
@@ -136,7 +135,7 @@ export default function GridOperationsView() {
     setDispatchStatus(null);
 
     try {
-      const response = await fetch(`${ROOT_API_URL}/dispatch-reserves`, {
+      const response = await fetch('http://localhost:8000/api/dispatch-reserves', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +174,7 @@ export default function GridOperationsView() {
       }
     } catch (error) {
       console.error("Error triggering dispatch-reserves:", error);
-      alert(`Failed to connect to SCADA Dispatch API at ${ROOT_API_URL}/dispatch-reserves`);
+      alert("Failed to connect to SCADA Dispatch API at http://localhost:8000/api/dispatch-reserves");
     } finally {
       setIsDispatching(false);
     }
@@ -414,7 +413,7 @@ export default function GridOperationsView() {
               </h2>
             </div>
             <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-              OpenStreetMap Layers
+              CartoDB Light Vector Layers
             </span>
           </div>
 
@@ -427,8 +426,8 @@ export default function GridOperationsView() {
               style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               />
 
               {/* Circle Markers for Solar Parks */}

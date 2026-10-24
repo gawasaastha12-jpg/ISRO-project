@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../../services/api';
 import { 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, 
   ReferenceLine, CartesianGrid, Legend 
@@ -226,7 +225,7 @@ export function ArchiveModule() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/archive?timestamp=${encodeURIComponent(utcIso)}`);
+      const res = await fetch(`http://localhost:8000/api/v1/archive?timestamp=${encodeURIComponent(utcIso)}`);
       if (!res.ok) {
         throw new Error(`Archive API responded with status ${res.status}`);
       }

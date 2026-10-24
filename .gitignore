@@ -24,4 +24,9 @@ features/hel1os/
 outputs/
 fusion_engine/outputs/
 judge_preparation_notes.md
-DEPLOYMENT.md
+
+# Dependencies and build outputs
+node_modules/
+dist/
+frontend_vf/dist/
+.manus-logs/

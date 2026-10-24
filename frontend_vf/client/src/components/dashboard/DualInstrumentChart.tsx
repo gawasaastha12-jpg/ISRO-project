@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../../services/api';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceArea, ReferenceLine } from 'recharts';
 import { Activity } from 'lucide-react';
 
@@ -19,7 +18,7 @@ export function DualInstrumentChart() {
   useEffect(() => {
     const fetchTelemetry = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/history`);
+        const res = await fetch('http://127.0.0.1:8000/api/v1/history');
         const json = await res.json();
         if (json.status === 'ONLINE' && json.predictions) {
           const formatted = json.predictions.map((p: any) => {

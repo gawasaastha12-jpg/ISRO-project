@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -16,8 +17,8 @@ class Settings(BaseSettings):
     HEL1OS_DATA_PATH: str = "He1os_script"
     VELC_DATA_PATH: str = "VELC_DOWNLOADS"
     
-    # System Paths
-    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # System Paths (project root is 3 levels up: backend/config/settings.py -> backend/config -> backend -> root)
+    BASE_DIR: str = str(Path(__file__).resolve().parent.parent.parent)
 
     class Config:
         env_file = ".env"

@@ -96,7 +96,7 @@ class DashboardResponse(BaseModel):
     instruments: InstrumentsSchema
     analytics: AnalyticsSchema
     alerts: AlertSchema
-    performance: Optional[Dict[str, Any]] = None
+    performance: Optional[Dict[str, float]] = None
     engine_versions: Optional[Dict[str, str]] = None
     history: Optional[List[Dict[str, Any]]] = None
 

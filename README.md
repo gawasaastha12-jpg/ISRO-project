@@ -95,36 +95,24 @@ $$\text{Peak Height Ratio (11.0\%)} + \text{Signal-to-Noise Ratio (10.1\%)} + \t
 | `embla-carousel-react` | ^8 | Carousel component |
 | `next-themes` | ^0.4 | Dark/light theme support |
 
-### Execution & Deployment
+### Execution Commands
 
-#### Option A: 1-Click Docker Deployment (Production Ready)
+#### 1. Install Python dependencies
 ```bash
-docker compose up --build -d
+pip install -r requirements.txt
 ```
-- Access Dashboard: `http://localhost:3000`
-- Access Backend API & Docs: `http://localhost:8000/docs`
 
-#### Option B: Local Development Execution
+#### 2. Launch Python API Server
+```bash
+python -m uvicorn backend.api.main:app --reload --port 8000
+```
 
-1. **Install Python dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Launch Python API Server**:
-   ```bash
-   python -m uvicorn backend.api.main:app --reload --port 8000
-   ```
-
-3. **Launch Frontend** (from `frontend_vf/`):
-   ```bash
-   cd frontend_vf
-   npm install
-   npm run dev
-   ```
+#### 3. Launch Frontend (from `frontend_vf/`)
+```bash
+cd frontend_vf
+npm install
+npm run dev
+```
 
 The platform is accessible locally at `http://localhost:3000/`.
-
-> 📘 **Full Cloud & Production Deployment Guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for Render, Railway, Vercel, AWS EC2, and Ubuntu VPS guides.
-
 
