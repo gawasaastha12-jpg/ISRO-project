@@ -1,5 +1,8 @@
 # Data and downloaded files
-SOLEXS_downloads/data/
+SOLEXS_downloads/data/**
+!SOLEXS_downloads/data/processed/
+!SOLEXS_downloads/data/processed/horizons/
+!SOLEXS_downloads/data/processed/horizons/*.csv
 VELC_DOWNLOADS/*
 !VELC_DOWNLOADS/VELC_SCRIPTS/
 !VELC_DOWNLOADS/features
@@ -8,9 +11,12 @@ VELC_DOWNLOADS/*
 *.zip
 *.pdf
 HE1OS
+
 # Model files
-SOLEXS_downloads/models/
+SOLEXS_downloads/models/*
+!SOLEXS_downloads/models/model_forecast_*.pkl
 *.pkl
+!SOLEXS_downloads/models/model_forecast_*.pkl
 
 # Caches and logs
 __pycache__/
@@ -18,9 +24,15 @@ __pycache__/
 SOLEXS_downloads/scripts/catboost_info/
 
 # Generated features and outputs
-He1os_script/features/
+He1os_script/features/**
+!He1os_script/features/solar_fusion/
+!He1os_script/features/solar_fusion/CORRELATED_SOLAR_EVENTS.csv
 features/hel1os/
 *.csv
+!SOLEXS_downloads/data/processed/horizons/*.csv
+!He1os_script/features/solar_fusion/CORRELATED_SOLAR_EVENTS.csv
+!VELC_DOWNLOADS/features/**/*.csv
+!VELC_DOWNLOADS/features/*.csv
 outputs/
 fusion_engine/outputs/
 judge_preparation_notes.md

@@ -21,9 +21,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const loadData = async () => {
     try {
       const result = await fetchDashboard();
-      setData(result);
-      setLastUpdated(result.mission_status.last_updated);
-      setError(null);
+      if (result) {
+        setData(result);
+        setLastUpdated(result.mission_status?.last_updated ?? new Date().toISOString());
+        setError(null);
+      }
     } catch (err) {
       console.error("Dashboard Provider error:", err);
       // Fallback to null or partial data if API fails. For now we just set error.
