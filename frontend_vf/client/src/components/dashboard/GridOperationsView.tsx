@@ -443,24 +443,27 @@ export default function GridOperationsView() {
                 Spatial GIS Monitoring Grid (India Solar Parks)
               </h2>
             </div>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">
-              CartoDB Light Vector Layers
+            <span className="text-xs bg-slate-800 text-cyan-300 px-2.5 py-1 rounded-md border border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block animate-pulse"></span>
+              OpenStreetMap GIS (Dark Theme)
             </span>
           </div>
 
-          {/* Leaflet Map Container (Light Mode) */}
-          <div className="w-full h-[420px] rounded-xl overflow-hidden border border-slate-700 relative shadow-inner">
+          {/* OpenStreetMap Container (Dark Mode) */}
+          <div className="w-full h-[420px] rounded-xl overflow-hidden border border-slate-700/80 relative shadow-2xl">
             {/* @ts-ignore */}
             <MapContainer
               center={[20.5937, 78.9629] as any}
               zoom={5}
               scrollWheelZoom={true}
-              style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
+              style={{ width: '100%', height: '100%', backgroundColor: '#0a0e1a' }}
             >
               {/* @ts-ignore */}
               <TileLayer
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                className="osm-dark-tiles"
+                maxZoom={19}
               />
 
               {/* Circle Markers for Solar Parks */}
