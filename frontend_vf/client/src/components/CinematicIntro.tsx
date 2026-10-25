@@ -128,9 +128,30 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
         background: 'radial-gradient(ellipse at center, #0f172a 0%, #050814 70%, #02040a 100%)',
       }}
     >
+      {/* Cockpit Command Deck Backdrop (Bluish Transparent Styling) */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          backgroundImage: 'url(/images/cockpit-view.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.38,
+          filter: 'hue-rotate(195deg) saturate(1.8) brightness(0.7) contrast(1.15)',
+          mixBlendMode: 'screen',
+        }}
+      />
+
+      {/* Atmospheric Space Overlay to blend cockpit seamlessly */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-15"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(14, 23, 42, 0.35) 0%, rgba(5, 8, 20, 0.75) 70%, rgba(2, 4, 10, 0.95) 100%)',
+        }}
+      />
+
       {/* Starfield particles simulation */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-40"
+        className="absolute inset-0 pointer-events-none opacity-30 z-15"
         style={{
           backgroundImage: 'radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)), radial-gradient(1px 1px at 70px 120px, #38bdf8, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 150px 80px, #ffffff, rgba(0,0,0,0)), radial-gradient(1px 1px at 240px 190px, #818cf8, rgba(0,0,0,0)), radial-gradient(2px 2px at 310px 240px, #ffffff, rgba(0,0,0,0))',
           backgroundSize: '350px 350px'
@@ -142,7 +163,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
         ref={scanlineRef}
         className="absolute inset-0 pointer-events-none z-20"
         style={{
-          background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.2), rgba(0,0,0,0.2) 1px, transparent 1px, transparent 3px)',
+          background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.18), rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)',
           mixBlendMode: 'multiply',
         }}
       />
