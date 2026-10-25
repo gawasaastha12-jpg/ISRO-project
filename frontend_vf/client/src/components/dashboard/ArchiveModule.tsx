@@ -274,33 +274,34 @@ export function ArchiveModule() {
     return isNaN(dt.getTime()) ? isoStr : dt.toUTCString().replace('GMT', 'UTC');
   };
 
-  // Trajectory Phase Color Helpers
+  // Trajectory Phase Color Helpers - Clean ISRO styling with empty background and simple border
   const getPhaseBadgeStyle = (phase: string) => {
     switch (phase) {
       case 'Impulsive':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] animate-pulse';
       case 'Peak':
-        return 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.4)]';
+        return 'border-red-500 bg-transparent text-red-400 font-mono';
       case 'Decay':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]';
+        return 'border-slate-600 bg-transparent text-slate-300 font-mono';
       default:
-        return 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30';
+        return 'border-slate-700 bg-transparent text-slate-400 font-mono';
     }
   };
 
   const getFlareClassStyle = (flareClass: string) => {
-    switch (flareClass) {
-      case 'X-Class':
-        return 'bg-gradient-to-r from-red-600 to-rose-500 text-white font-black shadow-[0_0_25px_rgba(225,29,72,0.6)] border-red-400/80';
-      case 'M-Class':
-        return 'bg-gradient-to-r from-amber-600 to-orange-500 text-white font-bold shadow-[0_0_15px_rgba(245,158,11,0.5)] border-amber-400';
-      case 'C-Class':
-        return 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black font-bold border-yellow-300';
-      case 'B-Class':
-        return 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40';
-      default:
-        return 'bg-slate-900 text-slate-400 border-slate-700';
+    const fc = (flareClass || '').toUpperCase();
+    if (fc.includes('X')) {
+      return 'border-red-500 bg-transparent text-red-400 font-mono font-bold';
     }
+    if (fc.includes('M')) {
+      return 'border-amber-500/80 bg-transparent text-amber-400 font-mono font-bold';
+    }
+    if (fc.includes('C')) {
+      return 'border-yellow-500/60 bg-transparent text-yellow-300 font-mono';
+    }
+    if (fc.includes('B')) {
+      return 'border-cyan-500/50 bg-transparent text-cyan-300 font-mono';
+    }
+    return 'border-slate-700 bg-transparent text-slate-400 font-mono';
   };
 
   const getRiskBadge = (risk: string) => {
@@ -363,7 +364,7 @@ export function ArchiveModule() {
             <button
               onClick={() => fetchArchiveData(selectedUtcIso)}
               disabled={loading}
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded border border-cyan-300/40 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-cyan-700 hover:bg-cyan-600 text-white font-bold text-xs uppercase tracking-wider rounded border border-cyan-400/40 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Querying...' : 'Query Instant'}</span>
@@ -373,12 +374,12 @@ export function ArchiveModule() {
               onClick={() => setIsAutoRefresh(!isAutoRefresh)}
               className={`flex items-center space-x-1.5 px-3 py-2 text-xs font-mono font-bold rounded border transition-all ${
                 isAutoRefresh
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/50'
                   : 'bg-[#131a2e] text-slate-400 border-white/10 hover:border-slate-500'
               }`}
               title="Toggle Real-Time 10s Auto Refresh"
             >
-              <span className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
+              <span className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-emerald-400' : 'bg-slate-500'}`} />
               <span>{isAutoRefresh ? 'LIVE AUTO-SYNC (10s)' : 'AUTO-SYNC OFF'}</span>
             </button>
           </div>
@@ -412,7 +413,7 @@ export function ArchiveModule() {
                 onClick={() => handlePresetSelect(preset.utc)}
                 className={`px-3 py-1 text-[11px] rounded font-medium border transition-all duration-200 ${
                   selectedUtcIso === preset.utc
-                    ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400 font-bold shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                    ? 'bg-cyan-950/60 text-cyan-300 border-cyan-400 font-bold'
                     : 'bg-[#0a0e1a]/60 text-[#8c9bbd] border-white/10 hover:border-cyan-500/40 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -855,7 +856,7 @@ export function ArchiveModule() {
               {/* Download CSV Button */}
               <button
                 onClick={handleDownloadCsv}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-400/50 text-cyan-300 rounded-lg text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-300 rounded-lg text-xs font-mono font-bold transition-all"
                 title="Download .csv File"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -865,7 +866,7 @@ export function ArchiveModule() {
               {/* Print CSV Button */}
               <button
                 onClick={handlePrintCsv}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-gradient-to-r from-purple-600/30 to-blue-600/30 hover:from-purple-600/40 hover:to-blue-600/40 border border-purple-400/50 text-purple-200 rounded-lg text-xs font-mono font-bold transition-all shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-200 rounded-lg text-xs font-mono font-bold transition-all"
                 title="Print Formatted CSV Telemetry Report"
               >
                 <Printer className="w-3.5 h-3.5 text-purple-300" />
