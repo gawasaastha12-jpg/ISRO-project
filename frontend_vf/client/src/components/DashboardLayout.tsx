@@ -68,7 +68,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
                 }`}
                 style={{ fontFamily: 'Orbitron, sans-serif' }}
               >
-                {tab === 'grid' ? 'Grid Ops (Solar)' : tab}
+                {tab === 'grid' ? 'Solar Grid Advisory' : tab}
               </button>
             ))}
           </div>
