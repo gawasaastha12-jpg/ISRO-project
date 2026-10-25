@@ -15,7 +15,15 @@ export default function Home() {
 }
 
 function HomeContent() {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') && !params.get('intro')) {
+        return false;
+      }
+    }
+    return true;
+  });
   const [showStoryboard, setShowStoryboard] = useState(false);
   const [scene, setScene] = useState<CosmicScene | null>(null);
   const { data } = useDashboard();
@@ -98,13 +106,22 @@ function HomeContent() {
         />
       </DashboardLayout>
       
-      {/* Floating button to watch storyboard since we removed the Overview module */}
-      <button 
-        onClick={() => setShowStoryboard(true)}
-        className="fixed bottom-4 right-4 z-50 px-3 py-1.5 bg-cosmic-navy/80 border border-electric-blue/30 rounded text-[10px] text-electric-blue uppercase tracking-widest hover:bg-electric-blue/20 backdrop-blur"
-      >
-        Watch Storyboard
-      </button>
+      {/* Floating control buttons */}
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+        <button 
+          onClick={() => setShowIntro(true)}
+          className="px-3 py-1.5 bg-[#0a0e1a]/90 border border-cyan-500/40 rounded text-[10px] font-mono text-cyan-300 uppercase tracking-widest hover:bg-cyan-950/80 hover:text-white backdrop-blur transition-all shadow-lg cursor-pointer"
+          title="Replay Aditya-L1 Mission Intro Briefing"
+        >
+          Replay Mission Intro
+        </button>
+        <button 
+          onClick={() => setShowStoryboard(true)}
+          className="px-3 py-1.5 bg-[#0a0e1a]/90 border border-purple-500/40 rounded text-[10px] font-mono text-purple-300 uppercase tracking-widest hover:bg-purple-950/80 hover:text-white backdrop-blur transition-all shadow-lg cursor-pointer"
+        >
+          Watch Storyboard
+        </button>
+      </div>
     </>
   );
 }
