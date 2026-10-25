@@ -278,6 +278,7 @@ export function ArchiveModule() {
   const getPhaseBadgeStyle = (phase: string) => {
     switch (phase) {
       case 'Impulsive':
+        return 'border-yellow-400 bg-transparent text-yellow-300 font-mono';
       case 'Peak':
         return 'border-red-500 bg-transparent text-red-400 font-mono';
       case 'Decay':
@@ -438,7 +439,7 @@ export function ArchiveModule() {
           {/* Card 1: Trajectory Phase */}
           <div className="bg-[#131a2e] border border-[#1e2740] rounded-xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-mono text-[#6b7590] uppercase tracking-wider">Nowcast Phase (T=0 UTC)</span>
+              <span className="text-[10px] font-mono text-[#f1f5f9] uppercase tracking-wider font-semibold">Nowcast Phase (T=0 UTC)</span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="mt-1">
@@ -446,7 +447,7 @@ export function ArchiveModule() {
                 <Zap className="w-4 h-4" />
                 <span>{archiveData.nowcast.phase.toUpperCase()} PHASE</span>
               </div>
-              <p className="text-[11px] text-[#6b7590] mt-2">
+              <p className="text-[11px] text-[#cbd5e1] mt-2">
                 {archiveData.nowcast.phase === 'Impulsive' && 'Flux rising rapidly (>0.15 cps/s). High flare risk.'}
                 {archiveData.nowcast.phase === 'Peak' && 'Peak emission reached. Maximum energy flux.'}
                 {archiveData.nowcast.phase === 'Decay' && 'Cooling phase. Flux decreasing steadily.'}
@@ -458,14 +459,14 @@ export function ArchiveModule() {
           {/* Card 2: Immediate Energy Level */}
           <div className="bg-[#131a2e] border border-[#1e2740] rounded-xl p-5 relative overflow-hidden flex flex-col justify-between shadow-lg">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-mono text-[#6b7590] uppercase tracking-wider">Energy Classification</span>
+              <span className="text-[10px] font-mono text-[#f1f5f9] uppercase tracking-wider font-semibold">Energy Classification</span>
               <Flame className="w-4 h-4 text-amber-400" />
             </div>
             <div className="mt-1">
               <div className={`inline-flex items-center px-3 py-1.5 rounded-lg border text-sm font-black tracking-widest ${getFlareClassStyle(archiveData.nowcast.flare_class)}`}>
                 {archiveData.nowcast.flare_class}
               </div>
-              <p className="text-[11px] text-[#6b7590] mt-2 font-mono">
+              <p className="text-[11px] text-[#cbd5e1] mt-2 font-mono">
                 Severity Index: <span className="text-white font-bold">{(archiveData.nowcast.severity_index * 100).toFixed(1)}%</span>
               </p>
             </div>
@@ -474,28 +475,28 @@ export function ArchiveModule() {
           {/* Card 3: SoLEXS Flux */}
           <div className="bg-[#131a2e] border border-[#1e2740] rounded-xl p-5 flex flex-col justify-between shadow-lg">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-mono text-[#6b7590] uppercase tracking-wider">SoLEXS Soft X-Ray (T=0 UTC)</span>
+              <span className="text-[10px] font-mono text-[#f1f5f9] uppercase tracking-wider font-semibold">SoLEXS Soft X-Ray (T=0 UTC)</span>
               <Cpu className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="mt-1">
               <div className="text-2xl font-black font-mono text-cyan-300 tracking-tight">
-                {archiveData.nowcast.flux_cps.toLocaleString()} <span className="text-xs font-normal text-[#6b7590]">cps</span>
+                {archiveData.nowcast.flux_cps.toLocaleString()} <span className="text-xs font-normal text-[#cbd5e1]">cps</span>
               </div>
-              <p className="text-[10px] text-[#6b7590] mt-1 font-mono">2 – 22 keV Energy Channel</p>
+              <p className="text-[10px] text-[#cbd5e1] mt-1 font-mono">2 – 22 keV Energy Channel</p>
             </div>
           </div>
 
           {/* Card 4: HEL1OS Hard X-Ray */}
           <div className="bg-[#131a2e] border border-[#1e2740] rounded-xl p-5 flex flex-col justify-between shadow-lg">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-mono text-[#6b7590] uppercase tracking-wider">HEL1OS Hard X-Ray (T=0 UTC)</span>
+              <span className="text-[10px] font-mono text-[#f1f5f9] uppercase tracking-wider font-semibold">HEL1OS Hard X-Ray (T=0 UTC)</span>
               <Layers className="w-4 h-4 text-purple-400" />
             </div>
             <div className="mt-1">
               <div className="text-2xl font-black font-mono text-purple-300 tracking-tight">
-                {archiveData.nowcast.hel1os_activity_score.toFixed(1)} <span className="text-xs font-normal text-[#6b7590]">cps</span>
+                {archiveData.nowcast.hel1os_activity_score.toFixed(1)} <span className="text-xs font-normal text-[#cbd5e1]">cps</span>
               </div>
-              <p className="text-[10px] text-[#6b7590] mt-1 font-mono">
+              <p className="text-[10px] text-[#cbd5e1] mt-1 font-mono">
                 Hardness Ratio: <span className="text-purple-300 font-bold">{archiveData.nowcast.spectral_hardness}</span>
               </p>
             </div>
