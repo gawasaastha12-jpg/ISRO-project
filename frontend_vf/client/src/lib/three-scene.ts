@@ -60,9 +60,6 @@ export class CosmicScene {
 
     // Add particle nebula
     this.createParticleNebula();
-    
-    // Add solar wind
-    this.createSolarWind();
 
     // Handle window resize
     window.addEventListener('resize', () => this.onWindowResize());
@@ -72,36 +69,7 @@ export class CosmicScene {
   private solarWindState: 'Quiet' | 'B' | 'C' | 'M' | 'X' | 'Extreme' = 'Quiet';
 
   private createSolarWind() {
-    const particleCount = 2000;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 200;
-      positions[i + 1] = (Math.random() - 0.5) * 100;
-      positions[i + 2] = (Math.random() - 0.5) * 50 - 20;
-
-      // Default blue
-      colors[i] = 0;
-      colors[i + 1] = 0.5;
-      colors[i + 2] = 1;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-      size: 0.15,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.4,
-      sizeAttenuation: true,
-      blending: THREE.AdditiveBlending
-    });
-
-    this.solarWindSystem = new THREE.Points(geometry, material);
-    this.scene.add(this.solarWindSystem);
+    // Disabled: left-to-right moving background particles removed per user specification
   }
 
   public setSolarWindState(state: 'Quiet' | 'B' | 'C' | 'M' | 'X' | 'Extreme') {
@@ -371,30 +339,6 @@ export class CosmicScene {
   startRenderLoop() {
     const animate = () => {
       this.animationFrameId = requestAnimationFrame(animate);
-      
-      // Animate solar wind
-      if (this.solarWindSystem) {
-        const positionsAttr = this.solarWindSystem.geometry.getAttribute('position') as THREE.BufferAttribute;
-        const positions = positionsAttr.array as Float32Array;
-        
-        let speed = 0.1; // base speed
-        if (this.solarWindState === 'B') speed = 0.2;
-        else if (this.solarWindState === 'C') speed = 0.4;
-        else if (this.solarWindState === 'M') speed = 0.8;
-        else if (this.solarWindState === 'X') speed = 1.2;
-        else if (this.solarWindState === 'Extreme') speed = 2.0;
-
-        for (let i = 0; i < positions.length; i += 3) {
-          positions[i] += speed; // Flow left to right
-          if (positions[i] > 100) {
-            positions[i] = -100; // Reset to left
-            // Randomize y/z slightly on reset
-            positions[i+1] = (Math.random() - 0.5) * 100;
-          }
-        }
-        positionsAttr.needsUpdate = true;
-      }
-
       this.renderer.render(this.scene, this.camera);
     };
     animate();
