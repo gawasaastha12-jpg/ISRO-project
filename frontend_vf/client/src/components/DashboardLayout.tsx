@@ -22,7 +22,27 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, alertState = 'NORMAL', initialTab = 'analysis' }: DashboardLayoutProps) {
-  const [activeTab, setActiveTab] = useState<'operations' | 'analysis' | 'grid' | 'catalogue' | 'archive'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'operations' | 'analysis' | 'grid' | 'catalogue' | 'archive'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab')?.toLowerCase();
+      if (tabParam === 'grid' || tabParam === 'solar') return 'grid';
+      if (tabParam === 'operations') return 'operations';
+      if (tabParam === 'catalogue') return 'catalogue';
+      if (tabParam === 'archive') return 'archive';
+      if (tabParam === 'analysis') return 'analysis';
+    }
+    return initialTab;
+  });
+
+  const handleTabChange = (tab: 'operations' | 'analysis' | 'grid' | 'catalogue' | 'archive') => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', url.toString());
+    }
+  };
 
   useEffect(() => {
     // GSAP sequential entrance animation for elements that exist in the active tab
@@ -60,7 +80,7 @@ export default function DashboardLayout({ children, alertState = 'NORMAL', initi
             {(['analysis', 'operations', 'grid', 'catalogue', 'archive'] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-wider rounded border transition-all duration-200 ${
                   activeTab === tab 
                     ? 'bg-[#22d3ee]/20 text-[#22d3ee] border-[#22d3ee]/40 shadow-[0_0_10px_rgba(34,211,238,0.2)]' 
