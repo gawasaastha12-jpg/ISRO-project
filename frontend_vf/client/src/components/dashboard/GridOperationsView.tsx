@@ -499,10 +499,6 @@ export default function GridOperationsView() {
                 Spatial GIS Monitoring Grid (India Mega Solar Parks)
               </h2>
             </div>
-            <span className="text-xs bg-slate-800 text-cyan-300 px-2.5 py-1 rounded-md border border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block animate-pulse"></span>
-              OpenStreetMap GIS (Dark Theme)
-            </span>
           </div>
 
           {/* OpenStreetMap Container (Dark Mode) */}
